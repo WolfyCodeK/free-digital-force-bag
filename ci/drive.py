@@ -630,6 +630,7 @@ def swipe_test(w, h):
     opened = False
     log(sh("logcat -d | grep KeepGestures | tail -20"))
     log("page after both swipes:", which_page())
+    digits_before = sh("logcat -d | grep -c 'KeepGestures: digit'")
     if icon:
         real_tap(icon.cx, icon.cy)
         wait(3)
@@ -638,6 +639,10 @@ def swipe_test(w, h):
         log("icon tap did not open the app; launching directly")
         launch()
     log("tap on home icon opened app:", opened)
+    wait(2)
+    digits_after = sh("logcat -d | grep -c 'KeepGestures: digit'")
+    log(sh("logcat -d | grep KeepGestures | tail -6"))
+    tap_not_counted = digits_after.strip() == digits_before.strip()
     wait(1.5)
     te_in_app = touch_exploration()
     log("touch exploration while app in front:", te_in_app)
@@ -698,6 +703,7 @@ def swipe_test(w, h):
         "touch_exploration_off_in_app": te_in_app == "0",
         "touch_exploration_back_on_after_app": te_after == "1",
         "icon_tap_opened_app": opened,
+        "icon_tap_not_counted_as_digit": tap_not_counted,
         "home_has_two_pages": two_pages,
         "raw_touch_pages_launcher": raw_ok,
         "forced_name_on_line_61": ok_line,

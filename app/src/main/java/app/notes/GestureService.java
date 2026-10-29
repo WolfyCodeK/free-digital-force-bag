@@ -240,10 +240,15 @@ public class GestureService extends AccessibilityService {
             }
             return;
         }
-        if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && pendingEndAt == 0) {
-            // A popup, menu or another app opened during the touch: not a page swipe.
-            log("window changed during the touch; ignored");
-            cancelPending();
+        if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            CharSequence from = e.getPackageName();
+            boolean fromHome = from != null && homePackages.contains(from.toString());
+            // A popup or menu opening during the touch, or any other app's window opening
+            // afterwards (a tap that launched an app), means this was not a page swipe.
+            if (pendingEndAt == 0 || !fromHome) {
+                log("window changed (" + from + "); ignored");
+                cancelPending();
+            }
             return;
         }
         if (type != AccessibilityEvent.TYPE_VIEW_SCROLLED
@@ -269,6 +274,11 @@ public class GestureService extends AccessibilityService {
         }
         String now = snapshot(root);
         log("snapshot " + pendingSnapshot.length() + " -> " + now.length() + " chars");
+        if (now.isEmpty() || pendingSnapshot.isEmpty()) {
+            // Nothing visible (an app is opening over the home screen): can't be a new page.
+            if (last) cancelPending();
+            return;
+        }
         if (!now.equals(pendingSnapshot)) {
             log("page changed (home screen looks different)");
             confirm();
