@@ -90,8 +90,10 @@ def dump(name=None):
     return []
 
 
-def find(nodes, text=None, desc=None, rid=None, contains=None):
+def find(nodes, text=None, desc=None, rid=None, contains=None, desc_has=None):
     for n in nodes:
+        if desc_has is not None and desc_has not in n.desc:
+            continue
         if text is not None and n.text != text:
             continue
         if desc is not None and n.desc != desc:
@@ -165,7 +167,7 @@ def ui_tour(mode):
     nodes = dump(f"{mode}-notes")
     if mode != "dark":
         return
-    tour = os.environ.get("TOUR", "basic")
+    tour = os.environ.get("TOUR", "full")
     # The Celebrities note, top and around the forced line.
     if step(f"{mode}-02-celebrities", text="Celebrities"):
         sh("input swipe 540 1800 540 600 300")
@@ -179,64 +181,102 @@ def ui_tour(mode):
 
 def run_full_tour(mode):
     p = mode
+    w, h = screen_size()
+    # Celebrities opened again, scrolled to the middle.
     # Drawer
     if step(f"{p}-10-drawer", desc="Open navigation drawer"):
         back()
-    # Search
-    if step(f"{p}-11-search", desc="Search Keep") or step(f"{p}-11-search", text="Search Keep"):
+    # Search landing page, then a query, then a type filter.
+    if step(f"{p}-11-search", desc="Search Keep"):
         sh("input text milk")
-        wait(1)
+        wait(1.2)
         shot(f"{p}-12-search-milk")
+        nodes = dump()
+        tap_node(nodes, desc="Clear search")
+        wait(0.8)
+        sh("input keyevent KEYCODE_BACK")
+        wait(0.8)
+        if step(f"{p}-13-search-lists", desc="Lists"):
+            back()
         back()
+    # View toggle and sort menu.
+    if step(f"{p}-14-list-view", desc="List view"):
+        step(f"{p}-15-grid-view", desc="Grid view")
+    if step(f"{p}-16-sort", desc="Sort"):
         back()
-    # View toggle
-    if step(f"{p}-13-list-view", desc="List view"):
-        step(f"{p}-14-grid-view", desc="Grid view")
-    # Sort
-    if step(f"{p}-15-sort", desc="Sort"):
-        back()
-    # FAB menu
-    if step(f"{p}-16-fab-menu", desc="Create a note"):
-        step(f"{p}-17-new-list", text="List")
-        sh("input text Batteries")
-        wait(0.6)
-        shot(f"{p}-18-new-list-typed")
-        back()
-        back()
-        wait(1)
-        shot(f"{p}-19-after-new-list")
-    # Live
-    if step(f"{p}-20-live", desc="Live"):
-        wait(2)
-    # Long-press selection
+    # FAB menu, then a new list.
+    if step(f"{p}-17-fab-menu", desc="Create a note"):
+        if step(f"{p}-18-new-list", desc="List"):
+            sh("input text Batteries")
+            wait(0.8)
+            shot(f"{p}-19-new-list-typed")
+            back()
+            back()
+            wait(1.2)
+            shot(f"{p}-20-after-new-list")
+    # Live (offline failure).
+    if step(f"{p}-21-live", desc="Live", settle=0.8):
+        wait(3)
+    # Long-press selection and its colour sheet.
     nodes = dump()
     n = find(nodes, text="Gift ideas")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {n.cx} {n.cy} 900")
         wait(1)
-        shot(f"{p}-21-selected")
-        if step(f"{p}-22-colour", desc="Change colour"):
+        shot(f"{p}-22-selected")
+        if step(f"{p}-23-colour", desc_has="Change col"):
+            back()
+        if step(f"{p}-24-select-more", desc="More options"):
             back()
         back()
-    # Editor of a checklist note
-    if step(f"{p}-23-checklist", text="Packing"):
-        if step(f"{p}-24-add-sheet", desc="Add"):
+    # A checklist note and the editor's sheets.
+    if step(f"{p}-25-checklist", text="Packing"):
+        if step(f"{p}-26-add-sheet", desc="Add"):
             back()
-        if step(f"{p}-25-colour-sheet", desc="Change colour"):
+        if step(f"{p}-27-colour-sheet", desc_has="Change col"):
             back()
-        if step(f"{p}-26-more-sheet", desc="More options"):
+        if step(f"{p}-28-more-sheet", desc="More options"):
+            back()
+        if step(f"{p}-29-format", desc="Formatting options"):
             back()
         back()
-    # Drawer destinations
-    for i, label in enumerate(["Reminders", "Archive", "Deleted", "Settings", "Help & feedback"]):
+    # A text note.
+    if step(f"{p}-30-text-note", text="To do"):
+        if step(f"{p}-31-reminder-sheet", desc="Reminder"):
+            back()
+        back()
+    # Swipe a note to archive it.
+    nodes = dump()
+    n = find(nodes, text="Books to read") or find(nodes, text="Pasta bake")
+    if n:
+        sh(f"input swipe {n.cx} {n.cy} {w - 10} {n.cy} 250")
+        wait(0.6)
+        shot(f"{p}-32-swiped-archive")
+        wait(4)
+    # Drawer destinations.
+    for i, label in enumerate(["Reminders", "Archive", "Deleted", "Create new label", "Settings", "Help & feedback"]):
         nodes = dump()
         if tap_node(nodes, desc="Open navigation drawer"):
             wait(1)
-            step(f"{p}-3{i}-{label.split()[0].lower()}", text=label, settle=1.5)
+            step(f"{p}-4{i}-{label.split()[0].lower()}", desc=label, settle=1.5)
             back()
-    # Avatar
-    if step(f"{p}-40-account", desc="Google Account"):
+            wait(0.5)
+    # Account card.
+    if step(f"{p}-50-account", desc_has="Google Account"):
         back()
+    # Drawing.
+    if step(f"{p}-51-fab", desc="Create a note"):
+        if step(f"{p}-52-drawing", desc="Drawing"):
+            sh(f"input swipe {w//4} {h//2} {3*w//4} {int(h*0.6)} 400")
+            sh(f"input swipe {w//4} {int(h*0.6)} {3*w//4} {int(h*0.45)} 400")
+            wait(0.8)
+            shot(f"{p}-53-drawing-strokes")
+            back()
+            wait(1.5)
+            shot(f"{p}-54-drawing-note")
+            back()
+            wait(1)
+            shot(f"{p}-55-notes-after-drawing")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -405,10 +445,15 @@ def gesture_home(w, h, label):
     """Swipes up from the bottom edge inside Settings and reports whether home came up."""
     sh("am start -W -a android.settings.SETTINGS")
     wait(2)
-    sh(f"input swipe {w//2} {h-2} {w//2} {int(h*0.35)} 250")
-    wait(3)
-    focus = top_package()
-    ok = home_package() in focus
+    ok = False
+    for ms in (120, 450):
+        sh(f"input swipe {w//2} {h-3} {w//2} {int(h*0.4)} {ms}")
+        wait(3)
+        focus = top_package()
+        ok = home_package() in focus
+        log("  bottom swipe", ms, "ms ->", "home" if ok else "not home")
+        if ok:
+            break
     log("gesture-nav home", label, ":", ok)
     shot(f"nav-{label}")
     home()
@@ -449,20 +494,27 @@ def swipe_test(w, h):
     icon = find(nodes, text="Keep Notes") or icon
     nav_base = gesture_home(w, h, "without-service")
 
+    # The UI tour opened the Celebrities note, which locks the number for 3 minutes. Start the
+    # swipe test from a clean slate.
+    sh(f"am force-stop {PKG}")
+    sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
     enable_service()
     home()
     wait(2)
     te = touch_exploration()
     log("touch exploration on home with service:", te)
 
-    # Digit 3: top-right cell; swipe left to page 1.
-    sh(f"input swipe {int(w*0.83)} {int(h*0.20)} {int(w*0.10)} {int(h*0.20)} 300")
+    # Digit 6: second row, right cell; swipe left to page 1. (Not the top row of page 0:
+    # Pixel's "At a glance" widget there pages its own cards.)
+    sh(f"input swipe {int(w*0.83)} {int(h*0.40)} {int(w*0.10)} {int(h*0.40)} 300")
     wait(2.5)
-    shot("home-03-after-digit3")
-    # Digit 7: third row, left cell; swipe right back to page 0.
-    sh(f"input swipe {int(w*0.17)} {int(h*0.62)} {int(w*0.90)} {int(h*0.62)} 300")
+    shot("home-03-after-digit6")
+    log("page after digit 6 swipe:", which_page())
+    # Digit 1: top row, left cell of page 1; swipe right back to page 0.
+    sh(f"input swipe {int(w*0.17)} {int(h*0.17)} {int(w*0.90)} {int(h*0.17)} 300")
     wait(2.5)
-    shot("home-04-after-digit7")
+    shot("home-04-after-digit1")
+    log("page after digit 1 swipe:", which_page())
 
     # Taps must still reach the launcher: open the app from its icon.
     opened = False
@@ -486,12 +538,20 @@ def swipe_test(w, h):
         shot("e2e-02-celebrities")
         nodes = dump("e2e-celebrities")
         text = "\n".join(n.text for n in nodes)
-        ok_line = bool(re.search(r"(^|\n)37\. " + re.escape(FORCED) + r"(\n|$)", text))
-        log("line 37 shows", FORCED, ":", ok_line)
+        ok_line = bool(re.search(r"(^|\n)61\. " + re.escape(FORCED) + r"(\n|$)", text))
+        log("line 61 shows", FORCED, ":", ok_line, "| found:", re.findall(r"\d+\. " + re.escape(FORCED), text))
+        sh(f"input swipe {w//2} {int(h*0.8)} {w//2} {int(h*0.2)} 300")
+        sh(f"input swipe {w//2} {int(h*0.8)} {w//2} {int(h*0.2)} 300")
+        wait(1)
+        shot("e2e-03-celebrities-line61")
         back()
 
-    # Gesture navigation must still work with the service running (outside the app).
+    # Leaving the app must switch touch exploration back on for the home screen.
+    home()
+    wait(2)
     te_after = touch_exploration()
+    log("touch exploration after leaving the app:", te_after)
+    # Gesture navigation must still work with the service running (outside the app).
     nav_svc = gesture_home(w, h, "with-service")
     log(sh("logcat -d | grep -iE 'TouchExplorer|AccessibilityInputFilter' | tail -20"))
 
@@ -503,7 +563,7 @@ def swipe_test(w, h):
         "touch_exploration_back_on_after_app": te_after == "1",
         "icon_tap_opened_app": opened,
         "home_has_two_pages": two_pages,
-        "forced_name_on_line_37": ok_line,
+        "forced_name_on_line_61": ok_line,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }
@@ -536,7 +596,7 @@ def main():
         f.write("\n".join(LOG))
     crashed = "FATAL EXCEPTION" in open(os.path.join(OUT, "logcat.txt")).read()
     log("app crashed:", crashed)
-    if crashed or not results["forced_name_on_line_37"] or not results["icon_tap_opened_app"]:
+    if crashed or not results["forced_name_on_line_61"] or not results["icon_tap_opened_app"]:
         sys.exit(1)
 
 
