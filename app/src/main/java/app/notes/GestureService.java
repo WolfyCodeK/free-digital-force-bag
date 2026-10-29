@@ -156,6 +156,7 @@ public class GestureService extends AccessibilityService {
         log("capturing " + want);
         AccessibilityServiceInfo info = getServiceInfo();
         if (info == null) return;
+        if (debug()) info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
         if (want) {
             info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
         } else {
@@ -192,6 +193,10 @@ public class GestureService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
         int type = e.getEventType();
+        if (debug() && e.getPackageName() != null && homePackages.contains(e.getPackageName().toString())) {
+            log("event " + AccessibilityEvent.eventTypeToString(type) + " changes=" + e.getContentChangeTypes()
+                    + " class=" + e.getClassName() + " text=" + e.getText());
+        }
         if (type == AccessibilityEvent.TYPE_TOUCH_EXPLORATION_GESTURE_START) {
             log("touch exploration started; registering again");
             // Real touch exploration must never run; get back to passthrough at once.
@@ -250,8 +255,12 @@ public class GestureService extends AccessibilityService {
         }
     }
 
+    private static boolean debug() {
+        return Log.isLoggable(TAG, Log.DEBUG);
+    }
+
     private static void log(String msg) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, msg);
+        if (debug()) Log.d(TAG, msg);
     }
 
     static int digitFor(float x, float y, int w, int h) {

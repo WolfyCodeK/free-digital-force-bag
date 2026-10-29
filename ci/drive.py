@@ -197,9 +197,21 @@ def tap_node(nodes, **kw):
     return True
 
 
+def dismiss_system_dialogs(nodes):
+    """Closes "X isn't responding" dialogs the slow CI emulator sometimes shows."""
+    for n in nodes:
+        if n.text in ("Wait",) and n.pkg == "android":
+            tap(n.cx, n.cy)
+            wait(1.5)
+            return True
+    return False
+
+
 def step(name, settle=1.2, **kw):
     """Taps the element matching kw on a fresh dump, waits, then takes a screenshot."""
     nodes = dump()
+    if find(nodes, **kw) is None and dismiss_system_dialogs(nodes):
+        nodes = dump()
     ok = tap_node(nodes, **kw)
     wait(settle)
     shot(name)
@@ -594,6 +606,10 @@ def swipe_test(w, h):
     sh(f"am force-stop {PKG}")
     sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
     sh("setprop log.tag.KeepGestures DEBUG")
+    # A real phone animates; the runner turned animations off, and the launcher may only
+    # report a settled page change from its animation path.
+    for k in ("window_animation_scale", "transition_animation_scale", "animator_duration_scale"):
+        sh(f"settings put global {k} 1")
     enable_service()
     home()
     wait(2)
@@ -663,6 +679,9 @@ def swipe_test(w, h):
     wait(1)
     sh(f"input swipe {w//2} {int(h*0.60)} {w//2} {int(h*0.30)} 300")   # row 2, middle: 8
     wait(1.5)
+    # Back to the top (a lone third swipe can't make a number).
+    sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
+    wait(1.5)
     fallback_ok = False
     nodes = dump()
     if tap_node(nodes, text="Celebrities"):
@@ -695,6 +714,7 @@ def main():
     log("android", sh("getprop ro.build.version.release"), "sdk", sh("getprop ro.build.version.sdk"))
     log(sh("settings get secure navigation_mode"), "= navigation_mode (0 three-button, 2 gesture)")
     sh("settings put system screen_off_timeout 1800000")
+    sh("settings put global hide_error_dialogs 1")
     sh("svc power stayon true")
     w, h = screen_size()
     log("screen", w, h, "density", sh("wm density"))
