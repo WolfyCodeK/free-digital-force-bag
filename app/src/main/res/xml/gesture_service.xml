@@ -6,7 +6,7 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeViewScrolled|typeAnnouncement|typeWindowStateChanged|typeTouchInteractionStart|typeTouchInteractionEnd|typeTouchExplorationGestureStart"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagIncludeNotImportantViews"
+    android:accessibilityFlags="flagIncludeNotImportantViews|flagRetrieveInteractiveWindows"
     android:canRequestTouchExplorationMode="true"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="0"

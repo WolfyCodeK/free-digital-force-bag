@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -233,6 +234,7 @@ public class GestureService extends AccessibilityService {
         if (type == AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
             if (pendingEndAt == 0) {
                 pendingEndAt = now;
+                log("touch ended after " + (now - pendingAt) + " ms");
                 handler.postDelayed(firstCheck, CHECK_1_MS);
                 handler.postDelayed(lastCheck, CHECK_2_MS);
             }
@@ -260,13 +262,13 @@ public class GestureService extends AccessibilityService {
             cancelPending();
             return;
         }
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null || root.getPackageName() == null
-                || !homePackages.contains(root.getPackageName().toString())) {
+        AccessibilityNodeInfo root = homeRoot();
+        if (root == null) {
             if (last) cancelPending();
             return;
         }
         String now = snapshot(root);
+        log("snapshot " + pendingSnapshot.length() + " -> " + now.length() + " chars");
         if (!now.equals(pendingSnapshot)) {
             log("page changed (home screen looks different)");
             confirm();
@@ -274,6 +276,30 @@ public class GestureService extends AccessibilityService {
             log("home screen unchanged; ignored");
             cancelPending();
         }
+    }
+
+    /**
+     * The home screen's window if it is what the user sees, otherwise null. Reads the window
+     * list rather than the "active window", which Android clears while a finger is down.
+     */
+    private AccessibilityNodeInfo homeRoot() {
+        Point size = screenSize();
+        Rect b = new Rect();
+        for (AccessibilityWindowInfo w : getWindows()) {
+            int type = w.getType();
+            if (type == AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY
+                    || type == AccessibilityWindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
+                    || type == AccessibilityWindowInfo.TYPE_MAGNIFICATION_OVERLAY) {
+                continue;
+            }
+            w.getBoundsInScreen(b);
+            // The status bar and navigation bar are small system windows on top of everything.
+            if (type == AccessibilityWindowInfo.TYPE_SYSTEM && b.height() < size.y / 3) continue;
+            AccessibilityNodeInfo root = w.getRoot();
+            if (root == null || root.getPackageName() == null) return null;
+            return homePackages.contains(root.getPackageName().toString()) ? root : null;
+        }
+        return null;
     }
 
     private void confirm() {
@@ -324,9 +350,9 @@ public class GestureService extends AccessibilityService {
 
     private void onTouchDown(float x, float y) {
         cancelPending();
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null || root.getPackageName() == null
-                || !homePackages.contains(root.getPackageName().toString())) {
+        AccessibilityNodeInfo root = homeRoot();
+        if (root == null) {
+            log("not on the home screen");
             return;
         }
         Point size = screenSize();

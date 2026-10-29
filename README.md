@@ -20,8 +20,10 @@ exactly that line.
    ```
 
    Two swipes make a number from 1 to 100. Single-digit numbers use a leading zero (7 is `0`
-   then `7`) and 100 is `0` then `0`. A swipe only counts if the launcher really changes page,
-   and every counted swipe gives one short vibration.
+   then `7`) and 100 is `0` then `0`. A swipe only counts if the home screen really moves to
+   another page (the service compares what the home screen shows before and after), and every
+   counted swipe gives one short vibration. Taps that open an app, long presses and pulling
+   down the notification shade don't count.
 3. Open Keep Notes and open the **Celebrities** note. It is a numbered list of 100 names, and
    the forced name (line 1 of `celebrities.txt`, "Tom Hanks" by default) is on the line with the
    spectator's number.
@@ -38,7 +40,10 @@ Needs Android 13 or newer.
    settings**. If you don't see that option, first try step 3 once: Android only offers it after
    it has blocked the setting.
 3. **Turn on the service**: Settings > Accessibility > Installed apps (Samsung: Installed apps or
-   Downloaded apps) > **Keep Notes** > On, and confirm.
+   Downloaded apps) > **Keep Notes** > On, and confirm. Android warns that the app can view and
+   control the screen; that is the standard wording for every accessibility service. Keep Notes
+   only looks at where a touch starts and whether the home screen changed page, and never
+   sends anything anywhere.
 4. **Samsung only, recommended**: Settings > Battery > Background usage limits > Never sleeping
    apps > add Keep Notes. If Android force-stops the app, it also switches the accessibility
    service off and you would have to turn it on again.
@@ -84,9 +89,10 @@ opens in a normal state.
 
 ### If the home-screen swipes don't work on your phone
 
-The swipe detection relies on the launcher reporting page changes to accessibility services.
-Google's Pixel launcher does (tested in the emulator, see below). It has **not** been tested on
-Samsung One UI Home or other launchers. If you never feel the buzz:
+The service doesn't depend on any particular launcher: it notes where the finger went down and
+then checks whether the home screen now shows a different page. This has been tested on the
+Pixel launcher of the Android 14 and Android 16 emulators (see Development). It has **not** been
+tested on a real phone, on Samsung One UI Home or on other launchers. If you never feel the buzz:
 
 - Turn the Keep Notes accessibility service **off**. The app then switches to an in-app fallback:
   open Keep Notes and make **two vertical swipes on the notes list** (as if scrolling), each
