@@ -1,13 +1,11 @@
 # Free Digital Force Bag
 
-A tiny open-source Android app for a "force" trick. It's installed as **Notes** and opens to a blank page.
+An open-source Android app for a "force" trick. It installs as **Keep Notes**, a Google Keep look-alike.
 
-## Performing
+## How it works
 
-1. Write the forced celebrity (default: **Tom Hanks**) on a card.
-2. Have the spectator think of a number from 1 to 100.
-3. In the app, swipe twice, once per digit. The screen doesn't change and the phone gives one tiny buzz per swipe.
-   Where a swipe *starts* picks the digit, using an invisible phone keypad:
+1. A small accessibility service watches your real home screen. It never changes what you see.
+2. You swipe between home-screen pages. **Where each swipe starts** picks a digit, using an invisible keypad:
 
    ```
    1 2 3
@@ -15,17 +13,19 @@ A tiny open-source Android app for a "force" trick. It's installed as **Notes** 
    7 8 9
    0 0 0   (whole bottom row is 0)
    ```
-   The columns are thirds of the screen width and the rows are quarters of the height.
-   Single-digit numbers use a leading zero: 7 is `0` then `7`. 100 is `0` then `0`. 40 is `4` then `0`.
-4. The screen then fades to a plain numbered list of 100 celebrities. The forced name sits on the spectator's number.
-5. Back, or leaving the app, resets everything.
+   Use two swipes per number. Single-digit numbers use a leading zero, so 7 is `0` then `7`, and 100 is `0` then `0`.
+   Each accepted swipe gives one tiny vibration. A swipe only counts if the launcher actually changes page.
+3. Open Keep Notes (put it on page 3). Open the **Celebrities** note. The forced name (default **Tom Hanks**, line 1 of `celebrities.txt`) is on the spectator's number.
+4. If no number was entered in the last 30 minutes, the forced name lands on a random line.
+
+## Setup on the phone
+
+1. Install the APK from the **Latest APK** release (repo, then Releases).
+2. Settings, then Accessibility, then Keep Notes, and turn it on. On Android 13+, first open App info for Keep Notes, tap the menu and choose "Allow restricted settings".
+3. It needs Android 11 or newer.
 
 ## Changing the names
 
-Edit `app/src/main/assets/celebrities.txt`. Line 1 is the forced name and the other 99 lines are fillers. Pushing rebuilds the APK.
+Edit `app/src/main/assets/celebrities.txt`: line 1 is the forced name and the other 99 lines are fillers. Pushing rebuilds the APK.
 
-## Getting the APK
-
-Every push runs the **Build APK** GitHub Action. Download `app-debug.apk` from the **Latest APK** release (repo → Releases) on your phone and install it. You'll need to allow installs from your browser.
-
-Tune the swipe length, haptics and reveal delay with the constants at the top of `MainActivity.java`.
+Tune haptics and timings with the constants at the top of `ForceService.java`.
