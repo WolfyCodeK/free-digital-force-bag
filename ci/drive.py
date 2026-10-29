@@ -142,8 +142,8 @@ def launch():
 
 
 def top_package():
-    out = sh("dumpsys window displays | grep -E 'mCurrentFocus|mFocusedApp'")
-    log("focus:", out.replace("\n", " | "))
+    out = sh("dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'")
+    log("resumed:", out.strip())
     return out
 
 
@@ -287,8 +287,82 @@ def add_home_icons():
             done = add_icons_from_host(db, intent) or done
     sh(f"am force-stop {launcher}")
     home()
-    wait(3)
+    wait_for_launcher()
+    for f in files:
+        if f.endswith(".db") and have_sqlite and "launcher" in f:
+            log("after restart", f, sh(f"sqlite3 {dbdir}/{f} \"select _id,screen,cellX,cellY,container,title from favorites\""))
     return done
+
+
+def wait_for_launcher():
+    for _ in range(20):
+        wait(1.5)
+        nodes = dump()
+        if find(nodes, text="Keep Notes") or find(nodes, text="Gmail"):
+            return nodes
+    return []
+
+
+def labels_on_screen():
+    nodes = dump()
+    names = [n.text for n in nodes if n.text and n.pkg == home_package()]
+    pages = [n.desc for n in nodes if "Page" in n.desc or "page" in n.desc]
+    return names, pages
+
+
+def which_page():
+    names, pages = labels_on_screen()
+    log("  visible:", names, pages)
+    if "Gmail" in names:
+        return 0
+    if "Keep Notes" in names:
+        return 1
+    return -1
+
+
+def ensure_second_page(w, h):
+    """Makes sure the home screen has a page 1 that a swipe from page 0 reaches."""
+    home()
+    sh(f"input swipe {int(w*0.85)} {int(h*0.45)} {int(w*0.15)} {int(h*0.45)} 400")
+    wait(2)
+    page = which_page()
+    log("after baseline swipe left, page:", page)
+    if page == 1:
+        sh(f"input swipe {int(w*0.15)} {int(h*0.45)} {int(w*0.85)} {int(h*0.45)} 400")
+        wait(2)
+        log("back, page:", which_page())
+        return True
+    home()
+    wait(1)
+    nodes = dump()
+    yt = find(nodes, text="YouTube")
+    if not yt:
+        log("no YouTube icon to drag")
+        return False
+    # Long-press the icon, hold it at the right edge until a new page opens, then drop it.
+    sh(f"input motionevent DOWN {yt.cx} {yt.cy}")
+    wait(1.5)
+    x, y = yt.cx, yt.cy
+    for i in range(1, 11):
+        sh(f"input motionevent MOVE {x + (w - 8 - x) * i // 10} {y}")
+        wait(0.05)
+    wait(2.5)
+    sh(f"input motionevent MOVE {w // 2} {y}")
+    wait(0.8)
+    sh(f"input motionevent UP {w // 2} {y}")
+    wait(2)
+    page = which_page()
+    log("after dragging YouTube to the edge, page:", page)
+    shot("home-00-created-page1")
+    home()
+    wait(1)
+    sh(f"input swipe {int(w*0.85)} {int(h*0.45)} {int(w*0.15)} {int(h*0.45)} 400")
+    wait(2)
+    page = which_page()
+    log("after second baseline swipe, page:", page)
+    sh(f"input swipe {int(w*0.15)} {int(h*0.45)} {int(w*0.85)} {int(h*0.45)} 400")
+    wait(2)
+    return page == 1
 
 
 def add_icons_from_host(db, intent):
@@ -331,10 +405,10 @@ def gesture_home(w, h, label):
     """Swipes up from the bottom edge inside Settings and reports whether home came up."""
     sh("am start -W -a android.settings.SETTINGS")
     wait(2)
-    sh(f"input swipe {w//2} {h-4} {w//2} {int(h*0.45)} 300")
-    wait(2.5)
+    sh(f"input swipe {w//2} {h-2} {w//2} {int(h*0.35)} 250")
+    wait(3)
     focus = top_package()
-    ok = home_package() in focus.split("mFocusedApp")[0]
+    ok = home_package() in focus
     log("gesture-nav home", label, ":", ok)
     shot(f"nav-{label}")
     home()
@@ -368,13 +442,11 @@ def swipe_test(w, h):
     log("icon on page 0:", icon)
     shot("home-01-page0")
 
-    # Swipe to page 1 and back, without the service, to see the launcher pages.
-    sh(f"input swipe {int(w*0.8)} {int(h*0.5)} {int(w*0.15)} {int(h*0.5)} 200")
-    wait(1.5)
-    shot("home-02-page1")
-    sh(f"input swipe {int(w*0.15)} {int(h*0.5)} {int(w*0.85)} {int(h*0.5)} 200")
-    wait(1.5)
-    shot("home-02b-back-on-page0")
+    two_pages = ensure_second_page(w, h)
+    log("home screen has a second page:", two_pages)
+    home()
+    nodes = dump("home-page0b")
+    icon = find(nodes, text="Keep Notes") or icon
     nav_base = gesture_home(w, h, "without-service")
 
     enable_service()
@@ -384,11 +456,11 @@ def swipe_test(w, h):
     log("touch exploration on home with service:", te)
 
     # Digit 3: top-right cell; swipe left to page 1.
-    sh(f"input swipe {int(w*0.83)} {int(h*0.20)} {int(w*0.10)} {int(h*0.20)} 200")
+    sh(f"input swipe {int(w*0.83)} {int(h*0.20)} {int(w*0.10)} {int(h*0.20)} 300")
     wait(2.5)
     shot("home-03-after-digit3")
     # Digit 7: third row, left cell; swipe right back to page 0.
-    sh(f"input swipe {int(w*0.17)} {int(h*0.62)} {int(w*0.90)} {int(h*0.62)} 200")
+    sh(f"input swipe {int(w*0.17)} {int(h*0.62)} {int(w*0.90)} {int(h*0.62)} 300")
     wait(2.5)
     shot("home-04-after-digit7")
 
@@ -397,7 +469,7 @@ def swipe_test(w, h):
     if icon:
         tap(icon.cx, icon.cy)
         wait(3)
-        opened = PKG in top_package().split("mFocusedApp")[0]
+        opened = PKG in top_package()
     if not opened:
         log("icon tap did not open the app; launching directly")
         launch()
@@ -430,6 +502,7 @@ def swipe_test(w, h):
         "touch_exploration_off_in_app": te_in_app == "0",
         "touch_exploration_back_on_after_app": te_after == "1",
         "icon_tap_opened_app": opened,
+        "home_has_two_pages": two_pages,
         "forced_name_on_line_37": ok_line,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
