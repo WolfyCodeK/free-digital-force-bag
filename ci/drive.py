@@ -110,6 +110,75 @@ def tap(x, y):
     sh(f"input tap {x} {y}")
 
 
+# `input tap/swipe` inject events after the accessibility input filter, so accessibility
+# services never see them. The helpers below write to the emulator's touchscreen device
+# instead, so the events take the same path as a real finger. Needs `adb root`.
+TOUCH = None
+
+
+def touch_device():
+    global TOUCH
+    if TOUCH:
+        return TOUCH
+    out = sh("getevent -lp")
+    cur, axes, found = None, {}, None
+    for line in out.splitlines() + ["add device 0: END"]:
+        m = re.match(r"add device \d+: (\S+)", line.strip())
+        if m:
+            if cur and "X" in axes and "Y" in axes and found is None:
+                found = (cur, axes)
+            cur, axes = m.group(1), {}
+            continue
+        for key, name in (("X", "ABS_MT_POSITION_X"), ("Y", "ABS_MT_POSITION_Y"),
+                          ("P", "ABS_MT_PRESSURE"), ("M", "ABS_MT_TOUCH_MAJOR")):
+            m = re.search(name + r"\s*:.*max (\d+)", line)
+            if m:
+                axes[key] = int(m.group(1))
+    TOUCH = found
+    log("touch device:", found)
+    return found
+
+
+def raw_stroke(points, hold_ms=0):
+    """Presses at points[0], moves through the rest, and lifts, as a real finger would."""
+    dev, axes = touch_device()
+    w, h = screen_size()
+    sx, sy = axes["X"] / (w - 1), axes["Y"] / (h - 1)
+    c = []
+
+    def pos(x, y):
+        c.append(f"sendevent {dev} 3 53 {int(x * sx)}")
+        c.append(f"sendevent {dev} 3 54 {int(y * sy)}")
+
+    c.append(f"sendevent {dev} 3 47 0")
+    c.append(f"sendevent {dev} 3 57 {int(time.time()) % 60000}")
+    pos(*points[0])
+    if "P" in axes:
+        c.append(f"sendevent {dev} 3 58 {max(1, axes['P'] // 2)}")
+    if "M" in axes:
+        c.append(f"sendevent {dev} 3 48 {max(1, min(axes['M'], 6))}")
+    c.append(f"sendevent {dev} 1 330 1")
+    c.append(f"sendevent {dev} 0 0 0")
+    if hold_ms:
+        c.append(f"sleep {hold_ms / 1000:.2f}")
+    for x, y in points[1:]:
+        pos(x, y)
+        c.append(f"sendevent {dev} 0 0 0")
+    c.append(f"sendevent {dev} 3 57 -1")
+    c.append(f"sendevent {dev} 1 330 0")
+    c.append(f"sendevent {dev} 0 0 0")
+    sh("; ".join(c), timeout=60)
+
+
+def real_swipe(x1, y1, x2, y2, steps=12):
+    pts = [(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps) for i in range(steps + 1)]
+    raw_stroke(pts)
+
+
+def real_tap(x, y):
+    raw_stroke([(x, y), (x, y)])
+
+
 def tap_node(nodes, **kw):
     n = find(nodes, **kw)
     if n is None:
@@ -237,8 +306,7 @@ def run_full_tour(mode):
             back()
         if step(f"{p}-28-more-sheet", desc="More options"):
             back()
-        if step(f"{p}-29-format", desc="Formatting options"):
-            back()
+        step(f"{p}-29-format", desc="Formatting options")
         back()
     # A text note.
     if step(f"{p}-30-text-note", text="To do"):
@@ -447,12 +515,12 @@ def gesture_home(w, h, label):
     sh("am start -W -a android.settings.SETTINGS")
     wait(2)
     ok = False
-    for ms in (120, 450):
-        sh(f"input swipe {w//2} {h-3} {w//2} {int(h*0.4)} {ms}")
+    for steps in (6, 16):
+        real_swipe(w // 2, h - 3, w // 2, int(h * 0.4), steps)
         wait(3)
         focus = top_package()
         ok = home_package() in focus
-        log("  bottom swipe", ms, "ms ->", "home" if ok else "not home")
+        log("  bottom swipe", steps, "steps ->", "home" if ok else "not home")
         if ok:
             break
     log("gesture-nav home", label, ":", ok)
@@ -490,6 +558,16 @@ def swipe_test(w, h):
 
     two_pages = ensure_second_page(w, h)
     log("home screen has a second page:", two_pages)
+    # The raw touchscreen events must page the launcher before the service is involved.
+    home()
+    real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))
+    wait(2)
+    raw_left = which_page()
+    real_swipe(int(w*0.17), int(h*0.40), int(w*0.90), int(h*0.40))
+    wait(2)
+    raw_right = which_page()
+    raw_ok = raw_left == 1 and raw_right == 0
+    log("raw touch baseline: left ->", raw_left, ", right ->", raw_right)
     home()
     nodes = dump("home-page0b")
     icon = find(nodes, text="Keep Notes") or icon
@@ -508,20 +586,20 @@ def swipe_test(w, h):
 
     # Digit 6: second row, right cell; swipe left to page 1. (Not the top row of page 0:
     # Pixel's "At a glance" widget there pages its own cards.)
-    sh(f"input swipe {int(w*0.83)} {int(h*0.40)} {int(w*0.10)} {int(h*0.40)} 300")
+    real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))
     wait(2.5)
     shot("home-03-after-digit6")
-    log("page after digit 6 swipe:", which_page())
     # Digit 1: top row, left cell of page 1; swipe right back to page 0.
-    sh(f"input swipe {int(w*0.17)} {int(h*0.17)} {int(w*0.90)} {int(h*0.17)} 300")
+    real_swipe(int(w*0.17), int(h*0.17), int(w*0.90), int(h*0.17))
     wait(2.5)
     shot("home-04-after-digit1")
-    log("page after digit 1 swipe:", which_page())
 
     # Taps must still reach the launcher: open the app from its icon.
     opened = False
+    log(sh("logcat -d | grep KeepGestures | tail -20"))
+    log("page after both swipes:", which_page())
     if icon:
-        tap(icon.cx, icon.cy)
+        real_tap(icon.cx, icon.cy)
         wait(3)
         opened = PKG in top_package()
     if not opened:
@@ -565,6 +643,7 @@ def swipe_test(w, h):
         "touch_exploration_back_on_after_app": te_after == "1",
         "icon_tap_opened_app": opened,
         "home_has_two_pages": two_pages,
+        "raw_touch_pages_launcher": raw_ok,
         "forced_name_on_line_61": ok_line,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
