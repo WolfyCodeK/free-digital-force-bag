@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Touch exploration is requested at runtime by GestureService, only after it is ready to
-     pass every touch straight through. -->
+     pass every touch straight through. flagIncludeNotImportantViews is needed to hear the
+     launcher's page scrolls: its workspace is not "important for accessibility". -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeViewScrolled|typeAnnouncement|typeTouchInteractionStart|typeTouchExplorationGestureStart"
     android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagIncludeNotImportantViews"
     android:canRequestTouchExplorationMode="true"
     android:notificationTimeout="0"
     android:description="@string/service_description"

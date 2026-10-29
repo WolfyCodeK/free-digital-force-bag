@@ -117,26 +117,35 @@ TOUCH = None
 
 
 def touch_device():
+    """The emulator's touchscreen for display 0 (it has one per possible display)."""
     global TOUCH
     if TOUCH:
         return TOUCH
     out = sh("getevent -lp")
-    cur, axes, found = None, {}, None
-    for line in out.splitlines() + ["add device 0: END"]:
+    devices, cur = [], None
+    for line in out.splitlines():
         m = re.match(r"add device \d+: (\S+)", line.strip())
         if m:
-            if cur and "X" in axes and "Y" in axes and found is None:
-                found = (cur, axes)
-            cur, axes = m.group(1), {}
+            cur = {"path": m.group(1), "name": "", "axes": {}}
+            devices.append(cur)
             continue
+        if cur is None:
+            continue
+        m = re.match(r'name:\s*"(.*)"', line.strip())
+        if m:
+            cur["name"] = m.group(1)
         for key, name in (("X", "ABS_MT_POSITION_X"), ("Y", "ABS_MT_POSITION_Y"),
                           ("P", "ABS_MT_PRESSURE"), ("M", "ABS_MT_TOUCH_MAJOR")):
             m = re.search(name + r"\s*:.*max (\d+)", line)
             if m:
-                axes[key] = int(m.group(1))
-    TOUCH = found
-    log("touch device:", found)
-    return found
+                cur["axes"][key] = int(m.group(1))
+    touch = [d for d in devices if "X" in d["axes"] and "Y" in d["axes"]]
+    touch.sort(key=lambda d: int(re.sub(r"\D", "", d["path"]) or 0))
+    log("touch devices:", [(d["path"], d["name"]) for d in touch])
+    first = [d for d in touch if re.search(r"multi_touch(_1)?$", d["name"])] or touch
+    TOUCH = (first[0]["path"], first[0]["axes"])
+    log("touch device:", TOUCH)
+    return TOUCH
 
 
 def raw_stroke(points, hold_ms=0):
@@ -200,6 +209,14 @@ def step(name, settle=1.2, **kw):
 def back():
     sh("input keyevent KEYCODE_BACK")
     wait(0.8)
+
+
+def back_to_notes():
+    """Presses back until the notes screen's menu button is showing (at most 3 times)."""
+    for _ in range(3):
+        back()
+        if find(dump(), desc="Open navigation drawer"):
+            return
 
 
 def home():
@@ -299,7 +316,7 @@ def run_full_tour(mode):
             back()
         back()
     # A checklist note and the editor's sheets.
-    if step(f"{p}-25-checklist", text="Packing"):
+    if step(f"{p}-25-checklist", text="Packing", settle=2):
         if step(f"{p}-26-add-sheet", desc="Add"):
             back()
         if step(f"{p}-27-colour-sheet", desc_has="Change col"):
@@ -309,13 +326,13 @@ def run_full_tour(mode):
         step(f"{p}-29-format", desc="Formatting options")
         back()
     # A text note.
-    if step(f"{p}-30-text-note", text="To do"):
+    if step(f"{p}-30-text-note", text="To do", settle=2):
         if step(f"{p}-31-reminder-sheet", desc="Reminder"):
             back()
         back()
     # Swipe a note to archive it.
     nodes = dump()
-    n = find(nodes, text="Books to read") or find(nodes, text="Pasta bake")
+    n = find(nodes, text="Gift ideas")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {w - 10} {n.cy} 250")
         wait(0.6)
@@ -326,9 +343,8 @@ def run_full_tour(mode):
         nodes = dump()
         if tap_node(nodes, desc="Open navigation drawer"):
             wait(1)
-            step(f"{p}-4{i}-{label.split()[0].lower()}", desc=label, settle=1.5)
-            back()
-            wait(0.5)
+            step(f"{p}-4{i}-{label.split()[0].lower()}", desc=label, settle=1.8)
+            back_to_notes()
     # Account card.
     if step(f"{p}-50-account", desc_has="Google Account"):
         back()
@@ -637,6 +653,27 @@ def swipe_test(w, h):
 
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
+
+    # Fallback with the service off: two vertical swipes on the notes list enter the number.
+    sh(f"am force-stop {PKG}")
+    sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
+    launch()
+    wait(2.5)
+    sh(f"input swipe {w//2} {int(h*0.22)} {w//2} {int(h*0.04)} 300")   # row 0, middle: 2
+    wait(1)
+    sh(f"input swipe {w//2} {int(h*0.60)} {w//2} {int(h*0.30)} 300")   # row 2, middle: 8
+    wait(1.5)
+    fallback_ok = False
+    nodes = dump()
+    if tap_node(nodes, text="Celebrities"):
+        wait(1.5)
+        text = "\n".join(n.text for n in dump("fallback-celebrities"))
+        fallback_ok = bool(re.search(r"(^|\n)28\. " + re.escape(FORCED) + r"(\n|$)", text))
+        log("in-app fallback, line 28 shows", FORCED, ":", fallback_ok, "| found:",
+            re.findall(r"\d+\. " + re.escape(FORCED), text))
+        shot("fallback-01-celebrities")
+        back()
+
     results = {
         "touch_exploration_on_home": te == "1",
         "touch_exploration_off_in_app": te_in_app == "0",
@@ -645,6 +682,7 @@ def swipe_test(w, h):
         "home_has_two_pages": two_pages,
         "raw_touch_pages_launcher": raw_ok,
         "forced_name_on_line_61": ok_line,
+        "in_app_fallback_line_28": fallback_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }

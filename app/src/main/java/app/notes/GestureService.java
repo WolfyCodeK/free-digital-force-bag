@@ -77,6 +77,7 @@ public class GestureService extends AccessibilityService {
     private int pendingDigit = -1;
     private long pendingAt;
     private long lastDownAt;
+    private long touchStartAt;
 
     private final TouchInteractionController.Callback callback =
             new TouchInteractionController.Callback() {
@@ -107,7 +108,8 @@ public class GestureService extends AccessibilityService {
     private final Runnable checkDownArrived = () -> {
         // A touch started but its DOWN never reached us: the system forgot that this service
         // detects gestures. Register again so touches keep passing straight through.
-        if (capturing && SystemClock.uptimeMillis() - lastDownAt > LOST_DOWN_MS) {
+        // The DOWN and the "touch started" event arrive separately, in either order.
+        if (capturing && Math.abs(touchStartAt - lastDownAt) > LOST_DOWN_MS) {
             log("touch started without a DOWN; registering again");
             reassert();
         }
@@ -198,6 +200,7 @@ public class GestureService extends AccessibilityService {
         }
         if (type == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
             if (capturing) {
+                touchStartAt = SystemClock.uptimeMillis();
                 handler.removeCallbacks(checkDownArrived);
                 handler.postDelayed(checkDownArrived, LOST_DOWN_MS);
             }
