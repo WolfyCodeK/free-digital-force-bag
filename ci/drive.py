@@ -284,6 +284,7 @@ def run_full_tour(mode):
     # Drawer
     if step(f"{p}-10-drawer", desc="Open navigation drawer"):
         back()
+        wait(1.5)
     # Search landing page, then a query, then a type filter.
     if step(f"{p}-11-search", desc="Search Keep"):
         sh("input text milk")
