@@ -8,7 +8,10 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -31,6 +34,12 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onClick(Note n);
 
         void onLongClick(Note n, RecyclerView.ViewHolder holder);
+
+        /** Whether cards can be swiped away right now. */
+        boolean canSwipe();
+
+        /** A card was swiped away (archive or unarchive it). */
+        void onSwiped(Note n);
     }
 
     /** A full-width line of text above a group of notes. */
@@ -127,6 +136,81 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             listener.onLongClick(n, card);
             return true;
         });
+        card.itemView.setOnTouchListener(new SwipeAway(n));
+    }
+
+    /** Swipe a card sideways to archive it, as in Keep. Clicks and long presses still work. */
+    private final class SwipeAway implements View.OnTouchListener {
+        private final Note note;
+        private float downX, downY;
+        private boolean swiping;
+        private VelocityTracker velocity;
+
+        SwipeAway(Note note) {
+            this.note = note;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent e) {
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    downX = e.getRawX();
+                    downY = e.getRawY();
+                    swiping = false;
+                    if (velocity != null) velocity.recycle();
+                    velocity = VelocityTracker.obtain();
+                    velocity.addMovement(e);
+                    return false;
+                case MotionEvent.ACTION_MOVE: {
+                    if (velocity != null) velocity.addMovement(e);
+                    float dx = e.getRawX() - downX, dy = e.getRawY() - downY;
+                    if (!swiping) {
+                        int slop = ViewConfiguration.get(v.getContext()).getScaledTouchSlop();
+                        if (Math.abs(dx) > slop && Math.abs(dx) > 1.5f * Math.abs(dy) && listener.canSwipe()) {
+                            swiping = true;
+                            v.getParent().requestDisallowInterceptTouchEvent(true);
+                            v.cancelLongPress();
+                            v.setPressed(false);
+                        } else {
+                            return false;
+                        }
+                    }
+                    v.setTranslationX(dx);
+                    v.setAlpha(Math.max(0.15f, 1f - Math.abs(dx) / Math.max(1, v.getWidth())));
+                    return true;
+                }
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL: {
+                    if (!swiping) return false;
+                    swiping = false;
+                    float dx = e.getRawX() - downX;
+                    float vx = 0;
+                    if (velocity != null) {
+                        velocity.addMovement(e);
+                        velocity.computeCurrentVelocity(1000);
+                        vx = velocity.getXVelocity();
+                        velocity.recycle();
+                        velocity = null;
+                    }
+                    float fling = 1000 * v.getResources().getDisplayMetrics().density;
+                    boolean away = e.getActionMasked() == MotionEvent.ACTION_UP
+                            && (Math.abs(dx) > v.getWidth() * 0.4f
+                            || (Math.abs(vx) > fling && Math.signum(vx) == Math.signum(dx)));
+                    if (away) {
+                        v.animate().translationX(Math.signum(dx) * v.getWidth() * 1.2f).alpha(0f)
+                                .setDuration(140).withEndAction(() -> {
+                                    v.setTranslationX(0);
+                                    v.setAlpha(1f);
+                                    listener.onSwiped(note);
+                                }).start();
+                    } else {
+                        v.animate().translationX(0).alpha(1f).setDuration(160).start();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /** One note card. */

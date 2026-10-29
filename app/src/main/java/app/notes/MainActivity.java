@@ -955,6 +955,19 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         if (canDrag()) touchHelper.startDrag(holder);
     }
 
+    @Override
+    public boolean canSwipe() {
+        return selected.isEmpty() && !searching
+                && (section == NOTES || section == LABEL || section == ARCHIVE || section == REMINDERS);
+    }
+
+    @Override
+    public void onSwiped(Note n) {
+        List<Note> one = new ArrayList<>();
+        one.add(n);
+        archive(one, !n.archived);
+    }
+
     private boolean canDrag() {
         return !searching && Prefs.sort(this) == SORT_CUSTOM && (section == NOTES || section == LABEL);
     }
@@ -1180,13 +1193,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
             if (pos < 0 || !(adapter.items.get(pos) instanceof Note)) return 0;
             int drag = canDrag() ? ItemTouchHelper.UP | ItemTouchHelper.DOWN
                     | ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT : 0;
-            boolean swipeable = selected.isEmpty() && !searching
-                    && (section == NOTES || section == LABEL || section == ARCHIVE || section == REMINDERS);
-            int swipe = swipeable ? ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT : 0;
-            if (android.util.Log.isLoggable("KeepGestures", android.util.Log.DEBUG)) {
-                android.util.Log.d("KeepGestures", "card flags drag=" + drag + " swipe=" + swipe);
-            }
-            return makeMovementFlags(drag, swipe);
+            // Swiping cards away is handled by the cards themselves (NoteAdapter.SwipeAway).
+            return makeMovementFlags(drag, 0);
         }
 
         @Override
@@ -1233,15 +1241,6 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
 
         @Override
         public void onSwiped(RecyclerView.ViewHolder h, int direction) {
-            if (android.util.Log.isLoggable("KeepGestures", android.util.Log.DEBUG)) {
-                android.util.Log.d("KeepGestures", "card swiped " + direction);
-            }
-            int pos = h.getBindingAdapterPosition();
-            if (pos < 0 || !(adapter.items.get(pos) instanceof Note)) return;
-            Note n = (Note) adapter.items.get(pos);
-            List<Note> one = new ArrayList<>();
-            one.add(n);
-            archive(one, !n.archived);
         }
 
         @Override
