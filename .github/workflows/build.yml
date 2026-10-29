@@ -24,6 +24,25 @@ jobs:
         with:
           name: notes-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      # The compile classpath (library classes and the generated R classes), kept under a hidden
+      # ref so the code can be type-checked without an Android SDK.
+      - name: Publish the compile classpath to a hidden ref
+        continue-on-error: true
+        run: |
+          mkdir -p cp && cd cp
+          i=0
+          for j in $(find ~/.gradle/caches -path '*transformed*' -name 'classes.jar') \
+                   $(find ~/.gradle/caches/modules-2 -name '*.jar' \( -path '*androidx*' -o -path '*org.jetbrains.kotlin*kotlin-stdlib*' -o -path '*com.google.android.material*' -o -path '*com.google.guava*listenablefuture*' \) ! -name '*sources*'); do
+            i=$((i+1)); cp "$j" "lib$i-$(basename "$(dirname "$(dirname "$j")")").jar"
+          done
+          find ../app/build -name 'R.jar' -path '*compile_and_runtime_not_namespaced_r_class_jar*' -exec cp {} R.jar \;
+          ls | head -200
+          git init -q
+          git config user.name "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Compile classpath for ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/ci/${{ github.ref_name }}/classpath"
       - name: Publish to the "latest" release
         uses: softprops/action-gh-release@v2
         with:

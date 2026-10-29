@@ -353,7 +353,8 @@ def labels_on_screen():
 def which_page():
     names, pages = labels_on_screen()
     log("  visible:", names, pages)
-    if "Gmail" in names:
+    # The dock can show one predicted app, so page 0 needs two of its own icons.
+    if sum(1 for a in ("Gmail", "Photos", "YouTube") if a in names) >= 2:
         return 0
     if "Keep Notes" in names:
         return 1
@@ -498,6 +499,7 @@ def swipe_test(w, h):
     # swipe test from a clean slate.
     sh(f"am force-stop {PKG}")
     sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
+    sh("setprop log.tag.KeepGestures DEBUG")
     enable_service()
     home()
     wait(2)
@@ -553,7 +555,7 @@ def swipe_test(w, h):
     log("touch exploration after leaving the app:", te_after)
     # Gesture navigation must still work with the service running (outside the app).
     nav_svc = gesture_home(w, h, "with-service")
-    log(sh("logcat -d | grep -iE 'TouchExplorer|AccessibilityInputFilter' | tail -20"))
+    log(sh("logcat -d | grep -E 'KeepGestures|TouchExplorer' | tail -60"))
 
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
