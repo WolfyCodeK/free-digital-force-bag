@@ -1,0 +1,4 @@
+# The Google account shown when the profile picture is tapped.
+# Line 1: your name. Line 2: your Gmail address. Lines starting with # are ignored.
+Your Name
+your.name@gmail.com

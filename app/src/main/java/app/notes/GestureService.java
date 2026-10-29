@@ -15,6 +15,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.os.VibrationAttributes;
 import android.os.VibrationEffect;
+import android.util.Log;
 import android.os.Vibrator;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -61,6 +62,9 @@ public class GestureService extends AccessibilityService {
 
     private static final Region EVERYWHERE = new Region(0, 0, 100_000, 100_000);
 
+    /** Silent unless enabled with: adb shell setprop log.tag.KeepGestures DEBUG */
+    private static final String TAG = "KeepGestures";
+
     private static GestureService instance;
     private static boolean appInFront;
 
@@ -80,6 +84,8 @@ public class GestureService extends AccessibilityService {
                 public void onMotionEvent(MotionEvent e) {
                     if (e.getActionMasked() != MotionEvent.ACTION_DOWN) return;
                     lastDownAt = SystemClock.uptimeMillis();
+                    log("down " + (int) e.getX() + "," + (int) e.getY() + " state "
+                            + TouchInteractionController.stateToString(controller.getState()));
                     if (controller.getState() != TouchInteractionController.STATE_DELEGATING) {
                         // The passthrough region was dropped: hand this touch over and set it again.
                         try {
@@ -101,7 +107,10 @@ public class GestureService extends AccessibilityService {
     private final Runnable checkDownArrived = () -> {
         // A touch started but its DOWN never reached us: the system forgot that this service
         // detects gestures. Register again so touches keep passing straight through.
-        if (capturing && SystemClock.uptimeMillis() - lastDownAt > LOST_DOWN_MS) reassert();
+        if (capturing && SystemClock.uptimeMillis() - lastDownAt > LOST_DOWN_MS) {
+            log("touch started without a DOWN; registering again");
+            reassert();
+        }
     };
 
     /** Called by App when this app's own screens come to the front or leave it. */
@@ -142,6 +151,7 @@ public class GestureService extends AccessibilityService {
         boolean want = !appInFront;
         if (want == capturing) return;
         capturing = want;
+        log("capturing " + want);
         AccessibilityServiceInfo info = getServiceInfo();
         if (info == null) return;
         if (want) {
@@ -181,6 +191,7 @@ public class GestureService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent e) {
         int type = e.getEventType();
         if (type == AccessibilityEvent.TYPE_TOUCH_EXPLORATION_GESTURE_START) {
+            log("touch exploration started; registering again");
             // Real touch exploration must never run; get back to passthrough at once.
             if (capturing) reassert();
             return;
@@ -203,6 +214,7 @@ public class GestureService extends AccessibilityService {
         }
         int d = pendingDigit;
         pendingDigit = -1;
+        log("page changed (" + AccessibilityEvent.eventTypeToString(type) + ")");
         commit(d);
     }
 
@@ -217,17 +229,26 @@ public class GestureService extends AccessibilityService {
     }
 
     private void commit(int d) {
-        if (Force.locked(this)) return;
+        if (Force.locked(this)) {
+            log("locked, ignored");
+            return;
+        }
         long now = SystemClock.uptimeMillis();
         if (now - lastDigitAt > PAIR_TIMEOUT_MS) digits.clear();
         lastDigitAt = now;
         digits.add(d);
         buzz();
+        log("digit " + d);
         if (digits.size() == 2) {
             int n = digits.get(0) * 10 + digits.get(1);
+            log("number " + (n == 0 ? 100 : n));
             Force.save(this, n == 0 ? 100 : n);
             digits.clear();
         }
+    }
+
+    private static void log(String msg) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, msg);
     }
 
     static int digitFor(float x, float y, int w, int h) {

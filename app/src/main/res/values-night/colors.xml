@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark scheme, sampled from Keep in dark mode (a Material 3 tonal palette, hue ~268). -->
+    <color name="keep_header">#333439</color>
+    <color name="keep_search">#38393E</color>
+    <color name="keep_bg">#1E1F24</color>
+    <color name="keep_card">#121318</color>
+    <color name="keep_stroke">#45454D</color>
+    <color name="keep_text">#E3E2E6</color>
+    <color name="keep_muted">#C5C6D0</color>
+    <color name="keep_outline">#8F9099</color>
+    <color name="keep_fab_small">#B0C6FF</color>
+    <color name="keep_on_fab_small">#152E60</color>
+    <color name="keep_fab_big">#2F4577</color>
+    <color name="keep_on_fab_big">#D9E2FF</color>
+    <color name="keep_primary">#B0C6FF</color>
+    <color name="keep_on_primary">#152E60</color>
+    <color name="keep_drawer">#1A1B20</color>
+    <color name="keep_selected">#404659</color>
+    <color name="keep_on_selected">#DCE2F9</color>
+    <color name="keep_surface_high">#282A2F</color>
+    <color name="keep_inverse">#E2E2E9</color>
+    <color name="keep_on_inverse">#2F3036</color>
+    <color name="keep_inverse_primary">#475D91</color>
+    <color name="keep_ring">#3185FF</color>
+    <color name="keep_scrim">#66000000</color>
+</resources>

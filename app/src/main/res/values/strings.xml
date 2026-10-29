@@ -2,4 +2,15 @@
 <resources>
     <string name="service_summary">Quick gestures for your notes</string>
     <string name="service_description">Lets Keep Notes respond to swipes so you can get back to your notes faster. Keep Notes doesn\'t collect or share anything you do.</string>
+
+    <string name="colour">Color</string>
+    <string name="colours">Colors</string>
+    <string name="change_colour">Change color</string>
+    <string name="checkboxes">Checkboxes</string>
+    <string name="hide_checkboxes">Hide checkboxes</string>
+    <string name="uncheck_all">Uncheck all items</string>
+    <string name="delete_checked">Delete checked items</string>
+    <string name="ticked_item">checked item</string>
+    <string name="ticked_items">checked items</string>
+    <string name="move_checked_bottom">Move checked items to bottom</string>
 </resources>

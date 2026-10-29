@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Launcher icon background. -->
     <color name="icon_bg">#FFFFFF</color>
+
+    <!-- Light scheme. The dark one is in values-night. -->
+    <color name="keep_header">#F0F0F7</color>
+    <color name="keep_search">#E4E5EC</color>
+    <color name="keep_bg">#F9F9FF</color>
+    <color name="keep_card">#FFFFFF</color>
+    <color name="keep_stroke">#C4C6D0</color>
+    <color name="keep_text">#1B1B1F</color>
+    <color name="keep_muted">#44474F</color>
+    <color name="keep_outline">#757780</color>
+    <color name="keep_fab_small">#B0C6FF</color>
+    <color name="keep_on_fab_small">#152E60</color>
+    <color name="keep_fab_big">#D9E2FF</color>
+    <color name="keep_on_fab_big">#001945</color>
+    <color name="keep_primary">#475D91</color>
+    <color name="keep_on_primary">#FFFFFF</color>
+    <color name="keep_drawer">#F4F3FA</color>
+    <color name="keep_selected">#DCE2F9</color>
+    <color name="keep_on_selected">#141B2C</color>
+    <color name="keep_surface_high">#E8E7EF</color>
+    <color name="keep_inverse">#2F3036</color>
+    <color name="keep_on_inverse">#F1F0F7</color>
+    <color name="keep_inverse_primary">#B0C6FF</color>
+    <color name="keep_ring">#3185FF</color>
+    <color name="keep_scrim">#52000000</color>
 </resources>

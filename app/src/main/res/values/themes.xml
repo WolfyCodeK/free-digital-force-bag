@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/keep_primary</item>
+        <item name="colorOnPrimary">@color/keep_on_primary</item>
+        <item name="colorPrimaryContainer">@color/keep_fab_big</item>
+        <item name="colorOnPrimaryContainer">@color/keep_on_fab_big</item>
+        <item name="colorSecondary">@color/keep_primary</item>
+        <item name="colorSecondaryContainer">@color/keep_selected</item>
+        <item name="colorOnSecondaryContainer">@color/keep_on_selected</item>
+        <item name="colorSurface">@color/keep_card</item>
+        <item name="colorOnSurface">@color/keep_text</item>
+        <item name="colorOnSurfaceVariant">@color/keep_muted</item>
+        <item name="colorSurfaceContainerLowest">@color/keep_card</item>
+        <item name="colorSurfaceContainerLow">@color/keep_drawer</item>
+        <item name="colorSurfaceContainer">@color/keep_bg</item>
+        <item name="colorSurfaceContainerHigh">@color/keep_surface_high</item>
+        <item name="colorSurfaceContainerHighest">@color/keep_header</item>
+        <item name="colorSurfaceInverse">@color/keep_inverse</item>
+        <item name="colorOnSurfaceInverse">@color/keep_on_inverse</item>
+        <item name="colorPrimaryInverse">@color/keep_inverse_primary</item>
+        <item name="colorOutline">@color/keep_outline</item>
+        <item name="colorOutlineVariant">@color/keep_stroke</item>
+        <item name="colorControlNormal">@color/keep_text</item>
+        <item name="android:colorBackground">@color/keep_bg</item>
+        <item name="android:windowBackground">@color/keep_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:windowLightStatusBar">@bool/light_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_bars</item>
+        <item name="android:fontFamily">@font/google_sans_text_regular</item>
+        <item name="fontFamily">@font/google_sans_text_regular</item>
+        <item name="textAppearanceDisplaySmall">@style/Text.Keep.Display</item>
+        <item name="textAppearanceHeadlineLarge">@style/Text.Keep.Headline</item>
+        <item name="textAppearanceHeadlineMedium">@style/Text.Keep.Headline</item>
+        <item name="textAppearanceHeadlineSmall">@style/Text.Keep.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/Text.Keep.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/Text.Keep.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/Text.Keep.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/Text.Keep.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/Text.Keep.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/Text.Keep.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/Text.Keep.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/Text.Keep.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/Text.Keep.LabelSmall</item>
+        <item name="bottomSheetDialogTheme">@style/Keep.BottomSheetDialog</item>
+        <item name="materialAlertDialogTheme">@style/Keep.AlertDialog</item>
+        <item name="snackbarStyle">@style/Keep.Snackbar</item>
+        <item name="snackbarTextViewStyle">@style/Keep.SnackbarText</item>
+        <item name="snackbarButtonStyle">@style/Keep.SnackbarButton</item>
+    </style>
+
+    <!-- Screens that use the note's own colour behind the system bars. -->
+    <style name="AppTheme.Editor" parent="AppTheme">
+        <item name="android:windowBackground">@color/keep_card</item>
+    </style>
+
+    <style name="Keep.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">@bool/light_bars</item>
+        <item name="enableEdgeToEdge">true</item>
+        <item name="bottomSheetStyle">@style/Keep.BottomSheet</item>
+    </style>
+
+    <style name="Keep.BottomSheet" parent="Widget.Material3.BottomSheet">
+        <item name="backgroundTint">@color/keep_card</item>
+        <item name="shapeAppearance">@style/Keep.SheetShape</item>
+    </style>
+
+    <style name="Keep.SheetShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="Keep.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/keep_surface_high</item>
+        <item name="colorSurfaceContainerHigh">@color/keep_surface_high</item>
+    </style>
+
+    <style name="Keep.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/keep_inverse</item>
+    </style>
+
+    <style name="Keep.SnackbarText" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textColor">@color/keep_on_inverse</item>
+        <item name="android:fontFamily">@font/google_sans_text_regular</item>
+    </style>
+
+    <style name="Keep.SnackbarButton" parent="Widget.Material3.Button.TextButton.Snackbar">
+        <item name="android:textColor">@color/keep_inverse_primary</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+
+    <style name="Keep.IconButton" parent="">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:tint">@color/keep_text</item>
+    </style>
+
+    <style name="Keep.BigFabShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">26dp</item>
+    </style>
+
+    <style name="Keep.SmallFabShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="Keep.CircleShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Text.Keep.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="fontFamily">@font/google_sans_regular</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+    <style name="Text.Keep.Headline" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="fontFamily">@font/google_sans_regular</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+    <style name="Text.Keep.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">@font/google_sans_regular</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+    <style name="Text.Keep.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">@font/google_sans_regular</item>
+        <item name="android:fontFamily">@font/google_sans_regular</item>
+    </style>
+    <style name="Text.Keep.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="fontFamily">@font/google_sans_medium</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+    <style name="Text.Keep.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="fontFamily">@font/google_sans_medium</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+    <style name="Text.Keep.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">@font/google_sans_text_regular</item>
+        <item name="android:fontFamily">@font/google_sans_text_regular</item>
+    </style>
+    <style name="Text.Keep.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/google_sans_text_regular</item>
+        <item name="android:fontFamily">@font/google_sans_text_regular</item>
+    </style>
+    <style name="Text.Keep.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="fontFamily">@font/google_sans_text_regular</item>
+        <item name="android:fontFamily">@font/google_sans_text_regular</item>
+    </style>
+    <style name="Text.Keep.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/google_sans_medium</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+    <style name="Text.Keep.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/google_sans_medium</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+    <style name="Text.Keep.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="fontFamily">@font/google_sans_medium</item>
+        <item name="android:fontFamily">@font/google_sans_medium</item>
+    </style>
+</resources>

@@ -5,13 +5,25 @@ import android.app.Application;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 
-/** Knows whether one of this app's screens is in front, and tells GestureService. */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Knows whether one of this app's screens is in front. Tells GestureService, and when the app
+ * is left (home, recents, another app) puts everything back to a normal state: the Celebrities
+ * note is restored, secondary screens close and the notes screen starts fresh next time.
+ */
 public class App extends Application {
+
+    /** Set while the app has sent the user to the camera, a picker or a permission prompt. */
+    static boolean external;
 
     private static int resumed;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Runnable left = () -> GestureService.setAppInFront(false);
+    private final List<Activity> alive = new ArrayList<>();
+    private final Runnable left = this::onLeft;
 
     static boolean inFront() {
         return resumed > 0;
@@ -20,13 +32,22 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Prefs.applyTheme(this);
+        Reminders.createChannel(this);
+        Celebs.restore(this);
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(Activity a, Bundle b) {
+                alive.add(a);
+            }
+
             @Override
             public void onActivityResumed(Activity a) {
                 if (resumed++ == 0) {
                     handler.removeCallbacks(left);
                     GestureService.setAppInFront(true);
                 }
+                external = false;
             }
 
             @Override
@@ -35,11 +56,28 @@ public class App extends Application {
                 if (--resumed == 0) handler.postDelayed(left, 400);
             }
 
-            @Override public void onActivityCreated(Activity a, Bundle b) {}
+            @Override
+            public void onActivityDestroyed(Activity a) {
+                alive.remove(a);
+            }
+
             @Override public void onActivityStarted(Activity a) {}
             @Override public void onActivityStopped(Activity a) {}
             @Override public void onActivitySaveInstanceState(Activity a, Bundle b) {}
-            @Override public void onActivityDestroyed(Activity a) {}
         });
+    }
+
+    private void onLeft() {
+        if (resumed > 0) return;
+        GestureService.setAppInFront(false);
+        Store.get(this).flush();
+        boolean screenOn = getSystemService(PowerManager.class).isInteractive();
+        if (external || !screenOn) return;
+        Celebs.restore(this);
+        Store.get(this).flush();
+        for (Activity a : new ArrayList<>(alive)) {
+            if (!(a instanceof MainActivity) && !a.isFinishing()) a.finish();
+        }
+        MainActivity.resetOnReturn = true;
     }
 }

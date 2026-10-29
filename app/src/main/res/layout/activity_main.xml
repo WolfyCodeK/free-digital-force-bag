@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/keep_bg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/keep_header">
+
+                <!-- Notes: menu, search pill with view toggle and sort, account. -->
+                <LinearLayout
+                    android:id="@+id/bar_main"
+                    android:layout_width="match_parent"
+                    android:layout_height="78dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/menu"
+                        style="@style/Keep.IconButton"
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="Open navigation drawer"
+                        android:src="@drawable/ic_menu" />
+
+                    <LinearLayout
+                        android:id="@+id/search_bar"
+                        android:layout_width="0dp"
+                        android:layout_height="62dp"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="6dp">
+
+                        <TextView
+                            android:id="@+id/search_hint"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:fontFamily="@font/google_sans_regular"
+                            android:maxLines="1"
+                            android:text="Search Keep"
+                            android:textColor="@color/keep_muted"
+                            android:textSize="18sp" />
+
+                        <ImageButton
+                            android:id="@+id/view_toggle"
+                            style="@style/Keep.IconButton"
+                            android:contentDescription="List view"
+                            android:src="@drawable/ic_view_agenda" />
+
+                        <ImageButton
+                            android:id="@+id/sort"
+                            style="@style/Keep.IconButton"
+                            android:contentDescription="Sort"
+                            android:src="@drawable/ic_swap_vert" />
+                    </LinearLayout>
+
+                    <app.notes.AvatarView
+                        android:id="@+id/avatar"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="10dp" />
+                </LinearLayout>
+
+                <!-- Reminders, Archive, Deleted and labels. -->
+                <LinearLayout
+                    android:id="@+id/bar_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <ImageButton
+                        android:id="@+id/section_menu"
+                        style="@style/Keep.IconButton"
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="Open navigation drawer"
+                        android:src="@drawable/ic_menu" />
+
+                    <TextView
+                        android:id="@+id/section_title"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/google_sans_regular"
+                        android:maxLines="1"
+                        android:textColor="@color/keep_text"
+                        android:textSize="22sp" />
+
+                    <ImageButton
+                        android:id="@+id/section_search"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="Search"
+                        android:src="@drawable/ic_search" />
+
+                    <ImageButton
+                        android:id="@+id/section_view_toggle"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="List view"
+                        android:src="@drawable/ic_view_agenda" />
+
+                    <ImageButton
+                        android:id="@+id/section_more"
+                        style="@style/Keep.IconButton"
+                        android:layout_marginEnd="4dp"
+                        android:contentDescription="More options"
+                        android:src="@drawable/ic_more_vert" />
+                </LinearLayout>
+
+                <!-- Selection. -->
+                <LinearLayout
+                    android:id="@+id/bar_select"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <ImageButton
+                        android:id="@+id/select_close"
+                        style="@style/Keep.IconButton"
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="Done"
+                        android:src="@drawable/ic_close" />
+
+                    <TextView
+                        android:id="@+id/select_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/google_sans_regular"
+                        android:textColor="@color/keep_text"
+                        android:textSize="22sp" />
+
+                    <ImageButton
+                        android:id="@+id/select_pin"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="Pin"
+                        android:src="@drawable/ic_push_pin" />
+
+                    <ImageButton
+                        android:id="@+id/select_remind"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="Remind me"
+                        android:src="@drawable/ic_add_alert" />
+
+                    <ImageButton
+                        android:id="@+id/select_color"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="@string/change_colour"
+                        android:src="@drawable/ic_palette" />
+
+                    <ImageButton
+                        android:id="@+id/select_label"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="Add label"
+                        android:src="@drawable/ic_label" />
+
+                    <ImageButton
+                        android:id="@+id/select_restore"
+                        style="@style/Keep.IconButton"
+                        android:contentDescription="Restore"
+                        android:src="@drawable/ic_restore_from_trash"
+                        android:visibility="gone" />
+
+                    <ImageButton
+                        android:id="@+id/select_more"
+                        style="@style/Keep.IconButton"
+                        android:layout_marginEnd="4dp"
+                        android:contentDescription="More options"
+                        android:src="@drawable/ic_more_vert" />
+                </LinearLayout>
+
+                <!-- Searching. -->
+                <LinearLayout
+                    android:id="@+id/bar_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="78dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/search_field"
+                        android:layout_width="0dp"
+                        android:layout_height="62dp"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp">
+
+                        <ImageButton
+                            android:id="@+id/search_back"
+                            style="@style/Keep.IconButton"
+                            android:contentDescription="Navigate up"
+                            android:src="@drawable/ic_arrow_back" />
+
+                        <TextView
+                            android:id="@+id/search_filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginStart="4dp"
+                            android:drawablePadding="6dp"
+                            android:fontFamily="@font/google_sans_medium"
+                            android:gravity="center_vertical"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="12dp"
+                            android:textColor="@color/keep_on_selected"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
+
+                        <EditText
+                            android:id="@+id/search_input"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="4dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:fontFamily="@font/google_sans_regular"
+                            android:hint="Search Keep"
+                            android:imeOptions="actionSearch|flagNoExtractUi"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textColor="@color/keep_text"
+                            android:textColorHint="@color/keep_muted"
+                            android:textCursorDrawable="@null"
+                            android:textSize="18sp" />
+
+                        <ImageButton
+                            android:id="@+id/search_clear"
+                            style="@style/Keep.IconButton"
+                            android:contentDescription="Clear search"
+                            android:src="@drawable/ic_close"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/refresh"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/list"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:paddingStart="5dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="5dp" />
+
+                    <LinearLayout
+                        android:id="@+id/empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingBottom="80dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/empty_icon"
+                            android:layout_width="120dp"
+                            android:layout_height="120dp"
+                            android:alpha="0.35"
+                            android:importantForAccessibility="no"
+                            app:tint="@color/keep_muted" />
+
+                        <TextView
+                            android:id="@+id/empty_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="32dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="32dp"
+                            android:fontFamily="@font/google_sans_text_regular"
+                            android:gravity="center"
+                            android:textColor="@color/keep_muted"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <androidx.core.widget.NestedScrollView
+                        android:id="@+id/search_home"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:id="@+id/search_home_content"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingStart="16dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="16dp" />
+                    </androidx.core.widget.NestedScrollView>
+                </FrameLayout>
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/scrim"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/keep_scrim"
+            android:clickable="true"
+            android:focusable="false"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/fab_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:gravity="end"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_live"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:contentDescription="Live"
+            android:src="@drawable/ic_live"
+            app:backgroundTint="@color/keep_fab_small"
+            app:borderWidth="0dp"
+            app:elevation="3dp"
+            app:fabCustomSize="64dp"
+            app:maxImageSize="28dp"
+            app:shapeAppearanceOverlay="@style/Keep.SmallFabShape"
+            app:tint="@color/keep_on_fab_small" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:contentDescription="Create a note"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/keep_fab_big"
+            app:borderWidth="0dp"
+            app:elevation="3dp"
+            app:fabCustomSize="91dp"
+            app:maxImageSize="40dp"
+            app:shapeAppearanceOverlay="@style/Keep.BigFabShape"
+            app:tint="@color/keep_on_fab_big" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <LinearLayout
+        android:id="@+id/drawer_panel"
+        android:layout_width="324dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/keep_drawer"
+        android:clickable="true"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/drawer_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/drawer_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="12dp" />
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

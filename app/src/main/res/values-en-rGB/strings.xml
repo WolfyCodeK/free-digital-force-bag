@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="colour">Colour</string>
+    <string name="colours">Colours</string>
+    <string name="change_colour">Change colour</string>
+    <string name="checkboxes">Tick boxes</string>
+    <string name="hide_checkboxes">Hide tick boxes</string>
+    <string name="uncheck_all">Untick all items</string>
+    <string name="delete_checked">Delete ticked items</string>
+    <string name="ticked_item">ticked item</string>
+    <string name="ticked_items">ticked items</string>
+    <string name="move_checked_bottom">Move ticked items to bottom</string>
+</resources>
