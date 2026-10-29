@@ -327,6 +327,38 @@ def add_icons_from_host(db, intent):
 # End-to-end swipe test
 
 
+def gesture_home(w, h, label):
+    """Swipes up from the bottom edge inside Settings and reports whether home came up."""
+    sh("am start -W -a android.settings.SETTINGS")
+    wait(2)
+    sh(f"input swipe {w//2} {h-4} {w//2} {int(h*0.45)} 300")
+    wait(2.5)
+    focus = top_package()
+    ok = home_package() in focus.split("mFocusedApp")[0]
+    log("gesture-nav home", label, ":", ok)
+    shot(f"nav-{label}")
+    home()
+    return ok
+
+
+def enable_service():
+    sh("settings put secure accessibility_enabled 0")
+    sh(f"settings put secure enabled_accessibility_services {SERVICE}")
+    sh("settings put secure accessibility_enabled 1")
+    for _ in range(10):
+        wait(1)
+        if SERVICE.split("/")[1] in sh("dumpsys accessibility | grep -i 'Bound services'"):
+            break
+    log("enabled setting:", sh("settings get secure enabled_accessibility_services"))
+    acc = sh("dumpsys accessibility")
+    with open(os.path.join(OUT, "dumpsys-accessibility.txt"), "w") as f:
+        f.write(acc)
+    for line in acc.splitlines():
+        if any(k in line for k in ("Bound services", "Enabled services", "Crashed", "touchExploration", "Binding")):
+            log("  ", line.strip()[:400])
+    log(sh("logcat -d | grep -iE 'AccessibilityManager|GestureService|keepnotes' | tail -30"))
+
+
 def swipe_test(w, h):
     global FORCED
     FORCED = open("app/src/main/assets/celebrities.txt").readline().strip()
@@ -342,13 +374,14 @@ def swipe_test(w, h):
     shot("home-02-page1")
     sh(f"input swipe {int(w*0.15)} {int(h*0.5)} {int(w*0.85)} {int(h*0.5)} 200")
     wait(1.5)
+    shot("home-02b-back-on-page0")
+    nav_base = gesture_home(w, h, "without-service")
 
-    sh(f"settings put secure enabled_accessibility_services {SERVICE}")
-    sh("settings put secure accessibility_enabled 1")
-    wait(4)
+    enable_service()
+    home()
+    wait(2)
     te = touch_exploration()
     log("touch exploration on home with service:", te)
-    log(sh("dumpsys accessibility | head -40"))
 
     # Digit 3: top-right cell; swipe left to page 1.
     sh(f"input swipe {int(w*0.83)} {int(h*0.20)} {int(w*0.10)} {int(h*0.20)} 200")
@@ -364,7 +397,7 @@ def swipe_test(w, h):
     if icon:
         tap(icon.cx, icon.cy)
         wait(3)
-        opened = PKG in top_package()
+        opened = PKG in top_package().split("mFocusedApp")[0]
     if not opened:
         log("icon tap did not open the app; launching directly")
         launch()
@@ -386,24 +419,20 @@ def swipe_test(w, h):
         back()
 
     # Gesture navigation must still work with the service running (outside the app).
-    sh("am start -W -a android.settings.SETTINGS")
-    wait(2)
-    te_settings = touch_exploration()
-    sh(f"input swipe {w//2} {h-3} {w//2} {int(h*0.45)} 150")
-    wait(2)
-    focus = top_package()
-    nav_home = "Launcher" in focus or home_package() in focus
-    log("gesture-nav home from Settings with touch exploration", te_settings, ":", nav_home)
-    shot("e2e-03-after-home-gesture")
+    te_after = touch_exploration()
+    nav_svc = gesture_home(w, h, "with-service")
+    log(sh("logcat -d | grep -iE 'TouchExplorer|AccessibilityInputFilter' | tail -20"))
 
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
     results = {
         "touch_exploration_on_home": te == "1",
         "touch_exploration_off_in_app": te_in_app == "0",
+        "touch_exploration_back_on_after_app": te_after == "1",
         "icon_tap_opened_app": opened,
         "forced_name_on_line_37": ok_line,
-        "gesture_nav_home": nav_home,
+        "gesture_nav_home_baseline": nav_base,
+        "gesture_nav_home_with_service": nav_svc,
     }
     return results
 
