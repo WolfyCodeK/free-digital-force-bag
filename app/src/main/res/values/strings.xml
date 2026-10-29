@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="service_description">Keeps notes in sync.</string>
+    <string name="service_summary">Quick gestures for your notes</string>
+    <string name="service_description">Lets Keep Notes respond to swipes so you can get back to your notes faster. Keep Notes doesn\'t collect or share anything you do.</string>
 </resources>

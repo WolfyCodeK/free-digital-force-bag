@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+"""Drives the app on a CI emulator: screenshots of every screen, then an end-to-end test of
+the home-screen swipe capture. Writes everything to ci-out/. Exits non-zero if the swipe
+test fails."""
+
+import os
+import re
+import subprocess
+import sys
+import time
+import xml.etree.ElementTree as ET
+
+PKG = "io.github.wolfycodek.keepnotes"
+SERVICE = PKG + "/app.notes.GestureService"
+OUT = "ci-out"
+FORCED = None
+LOG = []
+
+
+def log(*a):
+    line = " ".join(str(x) for x in a)
+    print(line, flush=True)
+    LOG.append(line)
+
+
+def adb(*args, timeout=60, check=False):
+    try:
+        r = subprocess.run(["adb", *args], capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        log("TIMEOUT adb", *args)
+        return ""
+    out = r.stdout.decode(errors="replace")
+    if r.returncode != 0:
+        log("adb", *args, "->", r.returncode, r.stderr.decode(errors="replace").strip())
+        if check:
+            raise RuntimeError("adb failed")
+    return out
+
+
+def sh(cmd, timeout=60):
+    return adb("shell", cmd, timeout=timeout).strip()
+
+
+def shot(name):
+    path = os.path.join(OUT, name + ".png")
+    with open(path, "wb") as f:
+        subprocess.run(["adb", "exec-out", "screencap", "-p"], stdout=f, timeout=60)
+    log("screenshot", path)
+
+
+def wait(s=1.0):
+    time.sleep(s)
+
+
+def screen_size():
+    m = re.findall(r"(\d+)x(\d+)", sh("wm size"))
+    w, h = m[-1]
+    return int(w), int(h)
+
+
+class Node:
+    def __init__(self, e):
+        self.text = e.get("text") or ""
+        self.desc = e.get("content-desc") or ""
+        self.rid = e.get("resource-id") or ""
+        self.cls = e.get("class") or ""
+        self.pkg = e.get("package") or ""
+        self.checked = e.get("checked") == "true"
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", e.get("bounds")))
+        self.bounds = (x1, y1, x2, y2)
+        self.cx, self.cy = (x1 + x2) // 2, (y1 + y2) // 2
+
+    def __repr__(self):
+        return f"<{self.cls} text={self.text[:30]!r} desc={self.desc!r} id={self.rid} {self.bounds}>"
+
+
+def dump(name=None):
+    for _ in range(3):
+        sh("rm -f /sdcard/ui.xml")
+        sh("uiautomator dump /sdcard/ui.xml", timeout=90)
+        xml = adb("exec-out", "cat", "/sdcard/ui.xml")
+        if xml.strip().startswith("<?xml"):
+            if name:
+                with open(os.path.join(OUT, name + ".xml"), "w") as f:
+                    f.write(xml)
+            root = ET.fromstring(xml)
+            return [Node(e) for e in root.iter("node")]
+        wait(1)
+    log("dump failed")
+    return []
+
+
+def find(nodes, text=None, desc=None, rid=None, contains=None):
+    for n in nodes:
+        if text is not None and n.text != text:
+            continue
+        if desc is not None and n.desc != desc:
+            continue
+        if rid is not None and not n.rid.endswith(rid):
+            continue
+        if contains is not None and contains not in n.text and contains not in n.desc:
+            continue
+        return n
+    return None
+
+
+def tap(x, y):
+    sh(f"input tap {x} {y}")
+
+
+def tap_node(nodes, **kw):
+    n = find(nodes, **kw)
+    if n is None:
+        log("not found:", kw)
+        return False
+    tap(n.cx, n.cy)
+    return True
+
+
+def step(name, settle=1.2, **kw):
+    """Taps the element matching kw on a fresh dump, waits, then takes a screenshot."""
+    nodes = dump()
+    ok = tap_node(nodes, **kw)
+    wait(settle)
+    shot(name)
+    return ok
+
+
+def back():
+    sh("input keyevent KEYCODE_BACK")
+    wait(0.8)
+
+
+def home():
+    sh("input keyevent KEYCODE_HOME")
+    wait(1.5)
+
+
+def launch():
+    sh(f"am start -W -n {PKG}/app.notes.MainActivity")
+    wait(2)
+
+
+def top_package():
+    out = sh("dumpsys window displays | grep -E 'mCurrentFocus|mFocusedApp'")
+    log("focus:", out.replace("\n", " | "))
+    return out
+
+
+def touch_exploration():
+    return sh("settings get secure touch_exploration_enabled")
+
+
+# ---------------------------------------------------------------------------------------------
+# UI tour
+
+
+def ui_tour(mode):
+    sh(f"cmd uimode night {'yes' if mode == 'dark' else 'no'}")
+    sh(f"am force-stop {PKG}")
+    wait(1)
+    launch()
+    wait(2)
+    shot(f"{mode}-01-notes")
+    nodes = dump(f"{mode}-notes")
+    if mode != "dark":
+        return
+    tour = os.environ.get("TOUR", "basic")
+    # The Celebrities note, top and around the forced line.
+    if step(f"{mode}-02-celebrities", text="Celebrities"):
+        sh("input swipe 540 1800 540 600 300")
+        wait(1)
+        shot(f"{mode}-03-celebrities-scrolled")
+        back()
+    if tour == "basic":
+        return
+    run_full_tour(mode)
+
+
+def run_full_tour(mode):
+    p = mode
+    # Drawer
+    if step(f"{p}-10-drawer", desc="Open navigation drawer"):
+        back()
+    # Search
+    if step(f"{p}-11-search", desc="Search Keep") or step(f"{p}-11-search", text="Search Keep"):
+        sh("input text milk")
+        wait(1)
+        shot(f"{p}-12-search-milk")
+        back()
+        back()
+    # View toggle
+    if step(f"{p}-13-list-view", desc="List view"):
+        step(f"{p}-14-grid-view", desc="Grid view")
+    # Sort
+    if step(f"{p}-15-sort", desc="Sort"):
+        back()
+    # FAB menu
+    if step(f"{p}-16-fab-menu", desc="Create a note"):
+        step(f"{p}-17-new-list", text="List")
+        sh("input text Batteries")
+        wait(0.6)
+        shot(f"{p}-18-new-list-typed")
+        back()
+        back()
+        wait(1)
+        shot(f"{p}-19-after-new-list")
+    # Live
+    if step(f"{p}-20-live", desc="Live"):
+        wait(2)
+    # Long-press selection
+    nodes = dump()
+    n = find(nodes, text="Gift ideas")
+    if n:
+        sh(f"input swipe {n.cx} {n.cy} {n.cx} {n.cy} 900")
+        wait(1)
+        shot(f"{p}-21-selected")
+        if step(f"{p}-22-colour", desc="Change colour"):
+            back()
+        back()
+    # Editor of a checklist note
+    if step(f"{p}-23-checklist", text="Packing"):
+        if step(f"{p}-24-add-sheet", desc="Add"):
+            back()
+        if step(f"{p}-25-colour-sheet", desc="Change colour"):
+            back()
+        if step(f"{p}-26-more-sheet", desc="More options"):
+            back()
+        back()
+    # Drawer destinations
+    for i, label in enumerate(["Reminders", "Archive", "Deleted", "Settings", "Help & feedback"]):
+        nodes = dump()
+        if tap_node(nodes, desc="Open navigation drawer"):
+            wait(1)
+            step(f"{p}-3{i}-{label.split()[0].lower()}", text=label, settle=1.5)
+            back()
+    # Avatar
+    if step(f"{p}-40-account", desc="Google Account"):
+        back()
+
+
+# ---------------------------------------------------------------------------------------------
+# Home screen
+
+
+def home_package():
+    out = sh("cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME")
+    line = out.strip().splitlines()[-1]
+    return line.split("/")[0]
+
+
+def add_home_icons():
+    """Puts the app's icon on home page 0 (next to Google's icons) and page 1 (so there is a
+    second page to swipe to), by editing the launcher database as root."""
+    launcher = home_package()
+    log("launcher:", launcher)
+    adb("root")
+    wait(3)
+    adb("wait-for-device")
+    sh(f"am force-stop {launcher}")
+    dbdir = f"/data/data/{launcher}/databases"
+    files = sh(f"ls {dbdir}").split()
+    log("launcher dbs:", files)
+    have_sqlite = bool(sh("which sqlite3"))
+    log("sqlite3 on device:", have_sqlite)
+    intent = ("#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;"
+              f"launchFlags=0x10200000;component={PKG}/app.notes.MainActivity;end")
+    done = False
+    for f in files:
+        if not f.endswith(".db"):
+            continue
+        db = f"{dbdir}/{f}"
+        if have_sqlite:
+            tables = sh(f"sqlite3 {db} .tables")
+            if "favorites" not in tables:
+                continue
+            rows = sh(f"sqlite3 {db} \"select screen,cellX,cellY,spanX,spanY,container,title from favorites\"")
+            log(f, "rows:\n" + rows)
+            sql = (f"delete from favorites where intent like '%{PKG}%';"
+                   f"insert into favorites (_id,title,intent,container,screen,cellX,cellY,spanX,spanY,itemType,profileId) "
+                   f"values (9001,'Keep Notes','{intent}',-100,0,1,2,1,1,0,0);"
+                   f"insert into favorites (_id,title,intent,container,screen,cellX,cellY,spanX,spanY,itemType,profileId) "
+                   f"values (9002,'Keep Notes','{intent}',-100,1,1,2,1,1,0,0);")
+            log(sh(f"sqlite3 {db} \"{sql}\""))
+            done = True
+        else:
+            done = add_icons_from_host(db, intent) or done
+    sh(f"am force-stop {launcher}")
+    home()
+    wait(3)
+    return done
+
+
+def add_icons_from_host(db, intent):
+    import sqlite3
+    local = os.path.join(OUT, "launcher.db")
+    for suffix in ["", "-wal", "-shm"]:
+        if os.path.exists(local + suffix):
+            os.remove(local + suffix)
+        adb("pull", db + suffix, local + suffix)
+    try:
+        con = sqlite3.connect(local)
+        names = [r[0] for r in con.execute("select name from sqlite_master where type='table'")]
+        if "favorites" not in names:
+            return False
+        for r in con.execute("select screen,cellX,cellY,spanX,spanY,container,title from favorites"):
+            log("row", r)
+        con.execute(f"delete from favorites where intent like '%{PKG}%'")
+        for _id, screen in [(9001, 0), (9002, 1)]:
+            con.execute("insert into favorites (_id,title,intent,container,screen,cellX,cellY,spanX,spanY,itemType,profileId)"
+                        " values (?,?,?,?,?,?,?,?,?,?,?)",
+                        (_id, "Keep Notes", intent, -100, screen, 1, 2, 1, 1, 0, 0))
+        con.commit()
+        con.execute("pragma wal_checkpoint(truncate)")
+        con.close()
+    except Exception as e:
+        log("sqlite error", e)
+        return False
+    owner = sh(f"stat -c %u:%g {db}")
+    adb("push", local, db)
+    sh(f"rm -f {db}-wal {db}-shm")
+    sh(f"chown {owner} {db}; chmod 660 {db}; restorecon {db}")
+    return True
+
+
+# ---------------------------------------------------------------------------------------------
+# End-to-end swipe test
+
+
+def swipe_test(w, h):
+    global FORCED
+    FORCED = open("app/src/main/assets/celebrities.txt").readline().strip()
+    home()
+    nodes = dump("home-page0")
+    icon = find(nodes, text="Keep Notes")
+    log("icon on page 0:", icon)
+    shot("home-01-page0")
+
+    # Swipe to page 1 and back, without the service, to see the launcher pages.
+    sh(f"input swipe {int(w*0.8)} {int(h*0.5)} {int(w*0.15)} {int(h*0.5)} 200")
+    wait(1.5)
+    shot("home-02-page1")
+    sh(f"input swipe {int(w*0.15)} {int(h*0.5)} {int(w*0.85)} {int(h*0.5)} 200")
+    wait(1.5)
+
+    sh(f"settings put secure enabled_accessibility_services {SERVICE}")
+    sh("settings put secure accessibility_enabled 1")
+    wait(4)
+    te = touch_exploration()
+    log("touch exploration on home with service:", te)
+    log(sh("dumpsys accessibility | head -40"))
+
+    # Digit 3: top-right cell; swipe left to page 1.
+    sh(f"input swipe {int(w*0.83)} {int(h*0.20)} {int(w*0.10)} {int(h*0.20)} 200")
+    wait(2.5)
+    shot("home-03-after-digit3")
+    # Digit 7: third row, left cell; swipe right back to page 0.
+    sh(f"input swipe {int(w*0.17)} {int(h*0.62)} {int(w*0.90)} {int(h*0.62)} 200")
+    wait(2.5)
+    shot("home-04-after-digit7")
+
+    # Taps must still reach the launcher: open the app from its icon.
+    opened = False
+    if icon:
+        tap(icon.cx, icon.cy)
+        wait(3)
+        opened = PKG in top_package()
+    if not opened:
+        log("icon tap did not open the app; launching directly")
+        launch()
+    log("tap on home icon opened app:", opened)
+    wait(1.5)
+    te_in_app = touch_exploration()
+    log("touch exploration while app in front:", te_in_app)
+    shot("e2e-01-app")
+
+    nodes = dump("e2e-notes")
+    ok_line = False
+    if tap_node(nodes, text="Celebrities"):
+        wait(1.5)
+        shot("e2e-02-celebrities")
+        nodes = dump("e2e-celebrities")
+        text = "\n".join(n.text for n in nodes)
+        ok_line = bool(re.search(r"(^|\n)37\. " + re.escape(FORCED) + r"(\n|$)", text))
+        log("line 37 shows", FORCED, ":", ok_line)
+        back()
+
+    # Gesture navigation must still work with the service running (outside the app).
+    sh("am start -W -a android.settings.SETTINGS")
+    wait(2)
+    te_settings = touch_exploration()
+    sh(f"input swipe {w//2} {h-3} {w//2} {int(h*0.45)} 150")
+    wait(2)
+    focus = top_package()
+    nav_home = "Launcher" in focus or home_package() in focus
+    log("gesture-nav home from Settings with touch exploration", te_settings, ":", nav_home)
+    shot("e2e-03-after-home-gesture")
+
+    sh("settings put secure enabled_accessibility_services ''")
+    sh("settings put secure accessibility_enabled 0")
+    results = {
+        "touch_exploration_on_home": te == "1",
+        "touch_exploration_off_in_app": te_in_app == "0",
+        "icon_tap_opened_app": opened,
+        "forced_name_on_line_37": ok_line,
+        "gesture_nav_home": nav_home,
+    }
+    return results
+
+
+def main():
+    os.makedirs(OUT, exist_ok=True)
+    adb("wait-for-device")
+    log("android", sh("getprop ro.build.version.release"), "sdk", sh("getprop ro.build.version.sdk"))
+    log(sh("settings get secure navigation_mode"), "= navigation_mode (0 three-button, 2 gesture)")
+    sh("settings put system screen_off_timeout 1800000")
+    sh("svc power stayon true")
+    w, h = screen_size()
+    log("screen", w, h, "density", sh("wm density"))
+    log(adb("install", "-r", "-g", "apk/app-debug.apk", timeout=180))
+
+    ui_tour("dark")
+    ui_tour("light")
+    sh("cmd uimode night yes")
+
+    icons = add_home_icons()
+    log("icons added:", icons)
+    results = swipe_test(w, h)
+    log("RESULTS", results)
+    adb("logcat", "-d", "-b", "main,system,crash")
+    with open(os.path.join(OUT, "logcat.txt"), "w") as f:
+        f.write(adb("logcat", "-d", "-b", "main,system,crash", timeout=120))
+    with open(os.path.join(OUT, "log.txt"), "w") as f:
+        f.write("\n".join(LOG))
+    crashed = "FATAL EXCEPTION" in open(os.path.join(OUT, "logcat.txt")).read()
+    log("app crashed:", crashed)
+    if crashed or not results["forced_name_on_line_37"] or not results["icon_tap_opened_app"]:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -242,6 +242,7 @@ public class MainActivity extends Activity {
 
     private void showEditor() {
         inEditor = true;
+        Force.revealed(this);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(card);

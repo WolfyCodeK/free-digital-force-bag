@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Touch exploration is requested at runtime by GestureService, only after it is ready to
+     pass every touch straight through. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeViewScrolled|typeAnnouncement|typeTouchInteractionStart|typeTouchExplorationGestureStart"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRequestTouchExplorationMode="true"
+    android:notificationTimeout="0"
+    android:description="@string/service_description"
+    android:summary="@string/service_summary" />

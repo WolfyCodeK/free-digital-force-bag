@@ -11,6 +11,7 @@
     </queries>
 
     <application
+        android:name=".App"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="Keep Notes"
@@ -27,7 +28,7 @@
         </activity>
 
         <service
-            android:name=".ForceService"
+            android:name=".GestureService"
             android:exported="true"
             android:label="Keep Notes"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -36,7 +37,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/force_service" />
+                android:resource="@xml/gesture_service" />
         </service>
     </application>
 </manifest>
