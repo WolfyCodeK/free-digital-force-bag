@@ -1,4 +1,5 @@
 # The Google account shown when the profile picture is tapped.
-# Line 1: your name. Line 2: your Gmail address. Lines starting with # are ignored.
-Your Name
-your.name@gmail.com
+# Put your name on the first line and your Gmail address on the second (remove the # signs).
+# Lines starting with # are ignored. With no name the picture shows a plain person outline.
+# Your Name
+# your.name@gmail.com

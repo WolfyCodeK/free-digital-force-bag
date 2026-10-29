@@ -31,6 +31,7 @@ public class AvatarView extends View {
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint letter = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Bitmap bitmap;
+    private android.graphics.drawable.Drawable person;
     private boolean showRing = true;
     private float ringDp = 2.5f;
     private float gapDp = 2f;
@@ -99,6 +100,15 @@ public class AvatarView extends View {
             s.setLocalMatrix(m);
             photo.setShader(s);
             c.drawCircle(cx, cy, inner, photo);
+        } else if (Account.name(getContext()).isEmpty()) {
+            // No picture and no name: Google's plain person outline.
+            if (person == null) {
+                person = getContext().getDrawable(R.drawable.ic_account_circle_fill1).mutate();
+                person.setTint(0xFF9AA0A6);
+            }
+            int r = Math.round(inner * 1.2f);
+            person.setBounds(Math.round(cx) - r, Math.round(cy) - r, Math.round(cx) + r, Math.round(cy) + r);
+            person.draw(c);
         } else {
             c.drawCircle(cx, cy, inner, fill);
             String name = Account.name(getContext());

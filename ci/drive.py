@@ -179,7 +179,7 @@ def raw_stroke(points, hold_ms=0):
     sh("; ".join(c), timeout=60)
 
 
-def real_swipe(x1, y1, x2, y2, steps=12):
+def real_swipe(x1, y1, x2, y2, steps=4):
     pts = [(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps) for i in range(steps + 1)]
     raw_stroke(pts)
 

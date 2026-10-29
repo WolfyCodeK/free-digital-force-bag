@@ -21,11 +21,15 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Reads a keypad digit from where a swipe starts on the home screen.
@@ -36,8 +40,12 @@ import java.util.Set;
  * that region (it does whenever it rebuilds its input filter), the touch is handed over with
  * requestDelegating() instead and the region is set again.
  *
- * <p>A digit counts only if the launcher then changes page (it sends TYPE_VIEW_SCROLLED or a page
- * announcement) shortly after the touch began. Two digits make a number, saved through Force.
+ * <p>A digit counts only if the home screen then shows another page. The service compares a
+ * small snapshot of what is visible on the home screen (labels and their rough positions) from
+ * when the finger went down with one taken just after it lifted. That works with any launcher.
+ * A scroll event or page announcement from the launcher confirms it sooner. A tap that opens an
+ * app, a long press (it opens a popup window) or a pull-down of the notification shade doesn't
+ * count. Two digits make a number, saved through Force.
  *
  * <p>While one of this app's own screens is in front, touch exploration is switched off so the
  * app behaves exactly like any other app.
@@ -46,8 +54,13 @@ public class GestureService extends AccessibilityService {
 
     /** One short buzz for every accepted digit. */
     private static final boolean HAPTIC = true;
-    /** How long after the touch starts the launcher may take to change page. */
+    /** How long after the finger lifts the launcher may take to report a page change. */
     private static final long CONFIRM_MS = 2000;
+    /** When to compare the home screen with how it looked when the finger went down. */
+    private static final long CHECK_1_MS = 450, CHECK_2_MS = 1200;
+    /** Longer touches are not page swipes. */
+    private static final long MAX_SWIPE_MS = 3000;
+    private static final Pattern CLOCK = Pattern.compile("\\d{1,2}[:.]\\d{2}");
     /** A lone first digit is forgotten after this long. */
     private static final long PAIR_TIMEOUT_MS = 45_000;
     /** If a touch starts but no DOWN reaches us within this time, re-register. */
@@ -76,6 +89,8 @@ public class GestureService extends AccessibilityService {
     private long lastDigitAt;
     private int pendingDigit = -1;
     private long pendingAt;
+    private long pendingEndAt;
+    private String pendingSnapshot;
     private long lastDownAt;
     private long touchStartAt;
 
@@ -104,6 +119,8 @@ public class GestureService extends AccessibilityService {
             };
 
     private final Runnable passthroughTask = this::applyPassthrough;
+    private final Runnable firstCheck = () -> checkPage(false);
+    private final Runnable lastCheck = () -> checkPage(true);
 
     private final Runnable checkDownArrived = () -> {
         // A touch started but its DOWN never reached us: the system forgot that this service
@@ -212,18 +229,93 @@ public class GestureService extends AccessibilityService {
             return;
         }
         if (pendingDigit < 0) return;
+        long now = SystemClock.uptimeMillis();
+        if (type == AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
+            if (pendingEndAt == 0) {
+                pendingEndAt = now;
+                handler.postDelayed(firstCheck, CHECK_1_MS);
+                handler.postDelayed(lastCheck, CHECK_2_MS);
+            }
+            return;
+        }
+        if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && pendingEndAt == 0) {
+            // A popup, menu or another app opened during the touch: not a page swipe.
+            log("window changed during the touch; ignored");
+            cancelPending();
+            return;
+        }
         if (type != AccessibilityEvent.TYPE_VIEW_SCROLLED
                 && type != AccessibilityEvent.TYPE_ANNOUNCEMENT) return;
         CharSequence pkg = e.getPackageName();
         if (pkg == null || !homePackages.contains(pkg.toString())) return;
-        if (SystemClock.uptimeMillis() - pendingAt > CONFIRM_MS) {
-            pendingDigit = -1;
+        if (pendingEndAt != 0 && now - pendingEndAt > CONFIRM_MS) return;
+        log("page changed (" + AccessibilityEvent.eventTypeToString(type) + ")");
+        confirm();
+    }
+
+    /** Compares the home screen with how it looked when the finger went down. */
+    private void checkPage(boolean last) {
+        if (pendingDigit < 0) return;
+        if (pendingEndAt - pendingAt > MAX_SWIPE_MS) {
+            cancelPending();
             return;
         }
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null || root.getPackageName() == null
+                || !homePackages.contains(root.getPackageName().toString())) {
+            if (last) cancelPending();
+            return;
+        }
+        String now = snapshot(root);
+        if (!now.equals(pendingSnapshot)) {
+            log("page changed (home screen looks different)");
+            confirm();
+        } else if (last) {
+            log("home screen unchanged; ignored");
+            cancelPending();
+        }
+    }
+
+    private void confirm() {
         int d = pendingDigit;
+        cancelPending();
+        if (d >= 0) commit(d);
+    }
+
+    private void cancelPending() {
         pendingDigit = -1;
-        log("page changed (" + AccessibilityEvent.eventTypeToString(type) + ")");
-        commit(d);
+        handler.removeCallbacks(firstCheck);
+        handler.removeCallbacks(lastCheck);
+    }
+
+    /**
+     * What the home screen shows: every visible label with its rough position. Clock-like text
+     * is left out so a widget ticking over doesn't look like a new page.
+     */
+    private String snapshot(AccessibilityNodeInfo root) {
+        Point size = screenSize();
+        List<String> parts = new ArrayList<>();
+        ArrayDeque<AccessibilityNodeInfo> queue = new ArrayDeque<>();
+        queue.add(root);
+        Rect r = new Rect();
+        int seen = 0;
+        while (!queue.isEmpty() && seen++ < 400) {
+            AccessibilityNodeInfo n = queue.poll();
+            CharSequence label = n.getText() != null && n.getText().length() > 0
+                    ? n.getText() : n.getContentDescription();
+            if (label != null && label.length() > 0 && n.isVisibleToUser()
+                    && !CLOCK.matcher(label).find()) {
+                n.getBoundsInScreen(r);
+                parts.add(label + "@" + (r.centerX() * 6 / Math.max(1, size.x)) + ","
+                        + (r.centerY() * 12 / Math.max(1, size.y)));
+            }
+            for (int i = 0; i < n.getChildCount(); i++) {
+                AccessibilityNodeInfo child = n.getChild(i);
+                if (child != null) queue.add(child);
+            }
+        }
+        Collections.sort(parts);
+        return String.join("|", parts);
     }
 
     @Override
@@ -231,9 +323,17 @@ public class GestureService extends AccessibilityService {
     }
 
     private void onTouchDown(float x, float y) {
+        cancelPending();
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null || root.getPackageName() == null
+                || !homePackages.contains(root.getPackageName().toString())) {
+            return;
+        }
         Point size = screenSize();
-        pendingDigit = digitFor(x, y, size.x, size.y);
+        pendingSnapshot = snapshot(root);
         pendingAt = SystemClock.uptimeMillis();
+        pendingEndAt = 0;
+        pendingDigit = digitFor(x, y, size.x, size.y);
     }
 
     private void commit(int d) {
