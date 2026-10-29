@@ -344,11 +344,23 @@ def run_full_tour(mode):
         back()
     # Swipe a note to archive it.
     nodes = dump()
+    sh("setprop log.tag.KeepGestures DEBUG")
     n = find(nodes, text="Gift ideas")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {w - 10} {n.cy} 250")
         wait(0.6)
         shot(f"{p}-32-swiped-archive")
+        wait(1)
+        archived = find(dump(), text="Gift ideas") is None
+        log("swipe to archive (input swipe):", archived)
+        if not archived:
+            n = find(dump(), text="Gift ideas")
+            if n:
+                real_swipe(n.cx, n.cy, w - 10, n.cy, 8)
+                wait(1)
+                shot(f"{p}-32b-swiped-archive-raw")
+                log("swipe to archive (raw touch):", find(dump(), text="Gift ideas") is None)
+        log(sh("logcat -d | grep -E 'KeepGestures: card' | tail -6"))
         wait(4)
     # Drawer destinations.
     for i, label in enumerate(["Reminders", "Archive", "Deleted", "Create new label", "Settings", "Help & feedback"]):

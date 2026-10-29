@@ -1183,6 +1183,9 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
             boolean swipeable = selected.isEmpty() && !searching
                     && (section == NOTES || section == LABEL || section == ARCHIVE || section == REMINDERS);
             int swipe = swipeable ? ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT : 0;
+            if (android.util.Log.isLoggable("KeepGestures", android.util.Log.DEBUG)) {
+                android.util.Log.d("KeepGestures", "card flags drag=" + drag + " swipe=" + swipe);
+            }
             return makeMovementFlags(drag, swipe);
         }
 
@@ -1230,6 +1233,9 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
 
         @Override
         public void onSwiped(RecyclerView.ViewHolder h, int direction) {
+            if (android.util.Log.isLoggable("KeepGestures", android.util.Log.DEBUG)) {
+                android.util.Log.d("KeepGestures", "card swiped " + direction);
+            }
             int pos = h.getBindingAdapterPosition();
             if (pos < 0 || !(adapter.items.get(pos) instanceof Note)) return;
             Note n = (Note) adapter.items.get(pos);

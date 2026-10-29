@@ -130,12 +130,29 @@ Things that need the internet behave like Keep does offline: the Live button, sy
 
 There is no need for a local Android SDK: every push is built by GitHub Actions
 (`.github/workflows/build.yml`), which publishes the APK to the "latest" release and then runs the
-app on Android 14 and Android 16 emulators (`ci/drive.py`). That job takes screenshots of every
-screen and runs an end-to-end test: it enables the accessibility service, swipes from the "6"
-and "1" keypad cells on a two-page Pixel home screen, opens the app by tapping its icon and checks
-that line 61 of Celebrities is the forced name. Screenshots are uploaded as the
-`screenshots-apiNN` artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
-(`git fetch origin refs/ci/<branch>/api34`).
+app on Android 14 and Android 16 emulators (Pixel 6 profile, Pixel launcher) with `ci/drive.py`.
+That job:
+
+- takes screenshots of every screen in dark and light mode (a tour of the notes screen, search,
+  the new-note menu, selection, the editor and its sheets, Reminders, Archive, Deleted, labels,
+  Settings, Help, the account card and drawing);
+- runs an end-to-end test of the trick with real touchscreen events (written to the emulator's
+  touch device, because `adb shell input` bypasses accessibility services): it enables the
+  service, swipes from the "6" and then the "1" keypad cell on a two-page home screen, opens
+  the app by tapping its icon and checks that line 61 of Celebrities is the forced name;
+- checks that touches still reach the launcher and gesture navigation still works with the
+  service on, that the icon tap is not counted as a digit, that touch exploration is off while
+  the app is in front, and that the in-app fallback (service off, two swipes on the notes list)
+  puts the name on line 28.
+
+All of those checks pass on both emulators. Screenshots are uploaded as the `screenshots-apiNN`
+artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
+(`git fetch origin refs/ci/<branch>/api34`). The service logs what it sees only when its debug
+tag is switched on (`adb shell setprop log.tag.KeepGestures DEBUG`), which only CI does.
+
+**Not tested on a real phone.** Nothing here has run on real hardware, on Samsung One UI, or with
+a launcher other than Pixel's. Before performing, practise on your own phone and check you feel
+one buzz per swipe; if not, use the in-app fallback described above.
 
 Fonts are Google Sans (SIL Open Font License) and icons are Material Symbols (Apache 2.0); see
 `third_party/`.
