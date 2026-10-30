@@ -9,13 +9,17 @@ import android.os.Vibrator;
 /**
  * The number entered with the swipes, and the trick's own settings (changed on the hidden
  * settings screen). Shared by GestureService, the in-app fallback and the notes screens.
+ *
+ * <p>Swipes only count while the trick is primed. Priming (on the hidden settings screen)
+ * clears the last number; once a number has been entered, opening the Celebrities note or
+ * leaving the app switches the trick off again, so the phone can be handed over and nothing
+ * buzzes or changes until it is primed again.
  */
 final class Force {
 
     static final int VIBRATION_OFF = 0, VIBRATION_LIGHT = 1, VIBRATION_MEDIUM = 2, VIBRATION_STRONG = 3;
 
     /** Choices offered on the hidden settings screen. */
-    static final long[] LOCK_CHOICES = {0, 60_000L, 3 * 60_000L, 10 * 60_000L};
     static final long[] PAIR_CHOICES = {20_000L, 45_000L, 90_000L};
 
     private Force() {}
@@ -35,14 +39,6 @@ final class Force {
         return prefs(c).getBoolean("doubleBuzz", true);
     }
 
-    /**
-     * After the Celebrities note has been opened, new numbers are ignored for this long, so a
-     * spectator playing with the phone straight after the reveal can't change the list.
-     */
-    static long lockMs(Context c) {
-        return prefs(c).getLong("lock", 3 * 60_000L);
-    }
-
     /** The second swipe must come within this time of the first. */
     static long pairMs(Context c) {
         return prefs(c).getLong("pair", 45_000L);
@@ -58,6 +54,44 @@ final class Force {
 
     static void setBool(Context c, String key, boolean value) {
         prefs(c).edit().putBoolean(key, value).apply();
+    }
+
+    // Primed or not -----------------------------------------------------------------------------
+
+    /** True while swipes enter a number: from Prime until the number has been revealed. */
+    static boolean armed(Context c) {
+        return prefs(c).getBoolean("armed", false);
+    }
+
+    /**
+     * Forgets the number, a digit in progress and the Celebrities line, and arms the trick for
+     * the next two swipes. The keypad overlay goes off and stays off while the trick is primed.
+     */
+    static void prime(Context c) {
+        reset(c);
+        prefs(c).edit().putBoolean("armed", true).putBoolean("overlay", false).apply();
+        GestureService.settingsChanged();
+    }
+
+    /**
+     * Called when the number may have been seen: the Celebrities note was opened or the app was
+     * left. Once a number has been entered, this switches the trick off until the next Prime.
+     */
+    static void performed(Context c) {
+        if (!armed(c) || current(c) < 1) return;
+        prefs(c).edit().putBoolean("armed", false).remove("d1").remove("d1t").apply();
+        GestureService.settingsChanged();
+    }
+
+    /** Whether the keypad is drawn over the home screen to practise. Never while primed. */
+    static boolean overlay(Context c) {
+        return prefs(c).getBoolean("overlay", false) && !armed(c);
+    }
+
+    static void setOverlay(Context c, boolean on) {
+        if (on && armed(c)) return;
+        prefs(c).edit().putBoolean("overlay", on).apply();
+        GestureService.settingsChanged();
     }
 
     // The number -------------------------------------------------------------------------------
@@ -79,23 +113,6 @@ final class Force {
         return prefs(c).getLong("t", 0);
     }
 
-    /** Marks the moment the Celebrities note was shown, which starts the lock. */
-    static void revealed(Context c) {
-        prefs(c).edit().putLong("r", System.currentTimeMillis()).apply();
-    }
-
-    /** How much longer new numbers are ignored, in ms (0 if they aren't). */
-    static long lockLeft(Context c) {
-        long r = prefs(c).getLong("r", 0);
-        long now = System.currentTimeMillis();
-        if (r > now) return 0;
-        return Math.max(0, r + lockMs(c) - now);
-    }
-
-    static boolean locked(Context c) {
-        return lockLeft(c) > 0;
-    }
-
     /** The first digit of a number being entered, or -1. */
     static int pendingDigit(Context c) {
         SharedPreferences p = prefs(c);
@@ -106,10 +123,10 @@ final class Force {
     /**
      * Records one swiped digit. The second digit within the pair time completes the number,
      * which rebuilds the Celebrities note straight away, while the app is still closed.
-     * Returns false if the digit was ignored (straight after a reveal).
+     * Returns false if the digit was ignored (the trick isn't primed).
      */
     static synchronized boolean addDigit(Context c, int d) {
-        if (locked(c)) return false;
+        if (!armed(c)) return false;
         int first = pendingDigit(c);
         if (first < 0) {
             prefs(c).edit().putInt("d1", d).putLong("d1t", System.currentTimeMillis()).apply();
@@ -128,17 +145,17 @@ final class Force {
 
     /** Sets the number directly (hidden settings), as if it had just been swiped. */
     static void setManually(Context c, int n) {
-        prefs(c).edit().remove("d1").remove("d1t").remove("r").apply();
+        prefs(c).edit().remove("d1").remove("d1t").apply();
         save(c, n);
         Celebs.refresh(c);
         MainActivity.numberChanged();
     }
 
     /**
-     * Forgets everything: the number, a digit in progress, the lock and the Celebrities line,
-     * which goes to a new random line the next time the note is shown.
+     * Forgets the number, a digit in progress and the Celebrities line, which goes to a new
+     * random line.
      */
-    static void reset(Context c) {
+    private static void reset(Context c) {
         prefs(c).edit().remove("n").remove("t").remove("r").remove("d1").remove("d1t").apply();
         Celebs.forgetLine(c);
         Celebs.restore(c);

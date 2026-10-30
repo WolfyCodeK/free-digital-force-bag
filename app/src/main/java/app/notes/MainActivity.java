@@ -1378,7 +1378,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         private boolean active() {
             return section == NOTES && !searching && selected.isEmpty() && !fabOpen
                     && !drawer.isDrawerOpen(GravityCompat.START) && !serviceEnabled()
-                    && !Force.locked(MainActivity.this);
+                    && Force.armed(MainActivity.this);
         }
 
         private boolean insideList(MotionEvent e) {

@@ -605,6 +605,60 @@ def enable_service():
     log(sh("logcat -d | grep -iE 'AccessibilityManager|GestureService|keepnotes' | tail -30"))
 
 
+def open_hidden_settings():
+    launch()
+    wait(1)
+    if not tap_node(dump(), desc="Search Keep"):
+        return False
+    wait(1)
+    sh("input text '*#*#'")
+    wait(2)
+    return find(dump(), text="Prime") is not None
+
+
+def prime(label):
+    """Taps Prime in the hidden settings, which should land on home page 0."""
+    if not open_hidden_settings():
+        log("hidden settings did not open")
+        shot(f"prime-{label}-failed")
+        return False
+    shot(f"prime-{label}-settings")
+    tap_node(dump(), text="Prime")
+    wait(4)
+    shot(f"prime-{label}-home")
+    return True
+
+
+def overlay_visible():
+    """True if the practice keypad window is on screen (from the window manager's dump)."""
+    out = sh("dumpsys window windows")
+    blocks = re.split(r"\n\s*Window #\d+ ", out)
+    for b in blocks:
+        if PKG in b.split("\n")[0] and "ACCESSIBILITY_OVERLAY" in b:
+            vis = re.search(r"mViewVisibility=(0x[0-9a-f]+)", b)
+            log("  overlay window:", vis.group(0) if vis else "visibility not found",
+                "| isOnScreen=true" if "isOnScreen=true" in b else "")
+            return bool(vis) and vis.group(1) == "0x0"
+    log("  no overlay window")
+    return False
+
+
+def digit_lines():
+    return sh("logcat -d | grep -c 'KeepGestures: digit'").strip()
+
+
+def celebrities_line():
+    """Opens Celebrities and returns the line number the forced name is on (or -1)."""
+    found = -1
+    if tap_node(dump(), text="Celebrities"):
+        wait(1.5)
+        text = "\n".join(n.text for n in dump())
+        m = re.search(r"(?:^|\n)(\d+)\. " + re.escape(FORCED) + r"(?:\n|$)", text)
+        found = int(m.group(1)) if m else -1
+        back()
+    return found
+
+
 def swipe_test(w, h):
     global FORCED
     FORCED = open("app/src/main/assets/celebrities.txt").readline().strip()
@@ -631,8 +685,7 @@ def swipe_test(w, h):
     icon = find(nodes, text="Keep Notes") or icon
     nav_base = gesture_home(w, h, "without-service")
 
-    # The UI tour opened the Celebrities note, which locks the number for 3 minutes. Start the
-    # swipe test from a clean slate.
+    # Start the swipe test from a clean slate (not primed).
     sh(f"am force-stop {PKG}")
     sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
     sh("setprop log.tag.KeepGestures DEBUG")
@@ -643,8 +696,21 @@ def swipe_test(w, h):
     enable_service()
     home()
     wait(2)
+    # Not primed yet: the service must not listen at all.
+    te_unprimed = touch_exploration()
+    log("touch exploration on home before priming:", te_unprimed)
+
+    # Prime from page 1: it must land on page 0 with the service listening.
+    sh(f"input swipe {int(w*0.85)} {int(h*0.45)} {int(w*0.15)} {int(h*0.45)} 400")
+    wait(2)
+    log("before priming, page:", which_page())
+    prime("1")
+    page_after_prime = which_page()
+    log("after priming, page:", page_after_prime)
+    if page_after_prime != 0:
+        home()
     te = touch_exploration()
-    log("touch exploration on home with service:", te)
+    log("touch exploration on home after priming:", te)
 
     # Digit 6: second row, right cell; swipe left to page 1. (Not the top row of page 0:
     # Pixel's "At a glance" widget there pages its own cards.)
@@ -693,11 +759,27 @@ def swipe_test(w, h):
         shot("e2e-03-celebrities-line61")
         back()
 
-    # Leaving the app must switch touch exploration back on for the home screen.
+    # The reveal switched the trick off: on the home screen nothing listens, swipes don't count
+    # and the note keeps line 61.
     home()
     wait(2)
+    te_spent = touch_exploration()
+    log("touch exploration after the reveal:", te_spent)
+    before = digit_lines()
+    real_swipe(int(w*0.50), int(h*0.40), int(w*0.10), int(h*0.40))   # from 5, to page 1
+    wait(2.5)
+    real_swipe(int(w*0.50), int(h*0.62), int(w*0.90), int(h*0.62))   # from 8, back to page 0
+    wait(2.5)
+    spent_no_digits = digit_lines() == before
+    launch()
+    spent_line = celebrities_line()
+    log("after the reveal: digits counted:", not spent_no_digits, "| forced name on line", spent_line)
+    off_after_reveal = te_spent == "0" and spent_no_digits and spent_line == 61
+
+    # Priming again switches listening back on.
+    prime("2")
     te_after = touch_exploration()
-    log("touch exploration after leaving the app:", te_after)
+    log("touch exploration after priming again:", te_after)
     # Other apps must not see touch exploration (Samsung's Recents draws a focus box if they do).
     sh("am start -W -a android.settings.SETTINGS")
     wait(2.5)
@@ -711,14 +793,53 @@ def swipe_test(w, h):
     nav_svc = gesture_home(w, h, "with-service")
     log(sh("logcat -d | grep -E 'KeepGestures|TouchExplorer' | tail -60"))
 
+    # Leaving the app after a number was entered also switches the trick off, even if the note
+    # wasn't opened.
+    home()
+    wait(2)
+    real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))   # 6
+    wait(2.5)
+    real_swipe(int(w*0.17), int(h*0.17), int(w*0.90), int(h*0.17))   # 1
+    wait(2.5)
+    launch()
+    home()
+    wait(2)
+    te_after_leave = touch_exploration()
+    log("touch exploration after leaving the app with a number:", te_after_leave)
+
+    # Practice overlay: allowed now the trick is off; swipes light up the keypad but don't count.
+    practice_ok = overlay_on = False
+    if open_hidden_settings():
+        tap_node(dump(), text="Show the keypad on the home screen")
+        wait(1)
+        shot("practice-00-settings")
+        home()
+        wait(2.5)
+        overlay_on = overlay_visible()
+        shot("practice-01-overlay")
+        before = digit_lines()
+        real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))   # 6
+        wait(0.9)
+        shot("practice-02-overlay-digit6")
+        wait(2)
+        practice_ok = ("KeepGestures: practice digit 6" in sh("logcat -d | grep 'practice digit'")
+                       and digit_lines() == before)
+        log("practice overlay shown:", overlay_on, "| practice swipe lit up without counting:", practice_ok)
+    # Priming switches the overlay off for good.
+    prime("3")
+    overlay_after_prime = overlay_visible()
+    log("overlay after priming:", overlay_after_prime)
+
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
 
     # Fallback with the service off: two vertical swipes on the notes list enter the number.
     sh(f"am force-stop {PKG}")
     sh(f"run-as {PKG} rm -f shared_prefs/f.xml shared_prefs/c.xml")
-    launch()
-    wait(2.5)
+    # Prime with the service off: it stays in the app.
+    prime("fallback")
+    back_to_notes()
+    wait(1)
     sh(f"input swipe {w//2} {int(h*0.22)} {w//2} {int(h*0.04)} 300")   # row 0, middle: 2
     wait(1)
     sh(f"input swipe {w//2} {int(h*0.60)} {w//2} {int(h*0.30)} 300")   # row 2, middle: 8
@@ -736,11 +857,27 @@ def swipe_test(w, h):
             re.findall(r"\d+\. " + re.escape(FORCED), text))
         shot("fallback-01-celebrities")
         back()
+    # The reveal switched the fallback off too.
+    sh(f"input swipe {int(w*0.17)} {int(h*0.40)} {int(w*0.17)} {int(h*0.10)} 300")   # 4
+    wait(1)
+    sh(f"input swipe {w//2} {int(h*0.40)} {w//2} {int(h*0.10)} 300")   # 5
+    wait(1.5)
+    sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
+    wait(1.5)
+    fallback_spent_line = celebrities_line()
+    log("fallback after the reveal, forced name on line", fallback_spent_line)
 
     results = {
+        "not_listening_before_prime": te_unprimed == "0",
+        "prime_lands_on_first_page": page_after_prime == 0,
         "touch_exploration_on_home": te == "1",
         "touch_exploration_off_in_app": te_in_app == "0",
-        "touch_exploration_back_on_after_app": te_after == "1",
+        "off_after_reveal": off_after_reveal,
+        "touch_exploration_back_on_after_prime": te_after == "1",
+        "off_after_leaving_with_number": te_after_leave == "0",
+        "practice_overlay_shown": overlay_on,
+        "practice_swipe_not_counted": practice_ok,
+        "overlay_off_after_prime": not overlay_after_prime,
         "touch_exploration_off_in_other_apps": te_other == "0" and te_home_again == "1",
         "icon_tap_opened_app": opened,
         "icon_tap_not_counted_as_digit": tap_not_counted,
@@ -748,6 +885,7 @@ def swipe_test(w, h):
         "raw_touch_pages_launcher": raw_ok,
         "forced_name_on_line_61": ok_line,
         "in_app_fallback_line_28": fallback_ok,
+        "fallback_off_after_reveal": fallback_spent_line == 28,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }
@@ -787,7 +925,8 @@ def main():
         f.write("\n".join(LOG))
     crashed = "FATAL EXCEPTION" in open(os.path.join(OUT, "logcat.txt")).read()
     log("app crashed:", crashed)
-    if crashed or not results["forced_name_on_line_61"] or not results["icon_tap_opened_app"]:
+    must = ("forced_name_on_line_61", "icon_tap_opened_app", "prime_lands_on_first_page", "off_after_reveal")
+    if crashed or not all(results[k] for k in must):
         sys.exit(1)
 
 

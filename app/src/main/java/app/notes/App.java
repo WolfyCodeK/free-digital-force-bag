@@ -73,6 +73,7 @@ public class App extends Application {
         Store.get(this).flush();
         boolean screenOn = getSystemService(PowerManager.class).isInteractive();
         if (external || !screenOn) return;
+        Force.performed(this);
         Celebs.restore(this);
         Store.get(this).flush();
         for (Activity a : new ArrayList<>(alive)) {

@@ -121,7 +121,7 @@ public class EditorActivity extends AppCompatActivity {
             finish();
             return;
         }
-        if (note.isCelebrities()) Force.revealed(this);
+        if (note.isCelebrities()) Force.performed(this);
         readOnly = note.trashed;
 
         buildUi();

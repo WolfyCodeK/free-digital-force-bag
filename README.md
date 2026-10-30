@@ -47,11 +47,16 @@ Needs Android 13 or newer.
 4. **Samsung only, recommended**: Settings > Battery > Background usage limits > Never sleeping
    apps > add Keep Notes. If Android force-stops the app, it also switches the accessibility
    service off and you would have to turn it on again.
-5. Put Keep Notes on your home screen, ideally on its own page, and make sure the home screen
-   has at least two pages to swipe between.
-6. **Practise**: swipe between pages and feel for the buzz after each swipe. No buzz means the
-   swipe didn't count (see "When a swipe counts" below). To check you hit the cells you meant,
-   make two swipes, open Keep Notes, type `*#*#` in the search bar and look at **Number**.
+5. Put Keep Notes on the **third page** of your home screen. **Prime** (see below) takes you to
+   the first page, so the two swipes of the trick take you from page 1 to page 2 to page 3,
+   where the app is waiting. Pressing Home while you are already on the home screen must take
+   you to the first page. On Samsung this is the "main page": pinch the home screen and check
+   the house icon is on the first page.
+6. **Practise** with the keypad overlay: open the hidden settings (type `*#*#` in the Keep Notes
+   search bar), switch on **Show the keypad on the home screen** and press Home. The keypad is
+   drawn over your home screen, and every swipe that counts lights up its cell and buzzes,
+   with the two-digit number shown at the top. Practice swipes never enter a number. Switch the
+   overlay off again in the hidden settings; **Prime** also switches it off.
 
 **Updating**: install the new APK over the old one. Afterwards check that Settings >
 Accessibility > Keep Notes is still On. If you installed an early build, the service has since
@@ -59,26 +64,30 @@ been renamed and has to be turned on again once (step 3).
 
 ## Performing, step by step
 
-1. **Before the show**: open Keep Notes, tap the search bar and type `*#*#` to open the hidden
-   settings (see below). Check that **Swipe service** says *On*, tap **Reset now**, then press
-   Home. Make sure you are on a home-screen page that has another page next to it.
+1. **Prime the trick before the show**: open Keep Notes, tap the search bar and type `*#*#` to
+   open the hidden settings. Check that **Swipe service** says *On* and tap **Prime**. The
+   phone goes straight to the first page of your home screen, and the trick is armed.
+   Nothing counts until you have primed it.
 2. The spectator thinks of (or names) a number from 1 to 100.
-3. On the home screen, make **exactly two page swipes**. Start the first swipe on the keypad cell
-   for the **tens** digit and the second on the cell for the **units** digit (7 is `0` then `7`,
-   100 is `0` then `0`). Where your finger **starts** picks the digit; after that it just has to
-   be an ordinary left or right swipe that turns the page (left or right doesn't matter).
-   You feel **one short buzz** after the first swipe and a **double buzz** after the second: the
-   number is in.
+3. On the home screen, make **exactly two page swipes** towards Keep Notes (page 1 to 2, then 2
+   to 3). Start the first swipe on the keypad cell for the **tens** digit and the second on the
+   cell for the **units** digit (7 is `0` then `7`, 100 is `0` then `0`). Where your finger
+   **starts** picks the digit; after that it just has to be an ordinary swipe that turns the
+   page. You feel **one short buzz** after the first swipe and a **double buzz** after the
+   second: the number is in.
 4. Tap the Keep Notes icon and open **Celebrities**. The forced name is on their line. Scroll
    down slowly while you talk.
-5. You can hand the phone over. For 3 minutes after the note is opened, swipes on the home screen
-   don't change anything, and as soon as anyone leaves the app the note goes back to its clean
-   state.
+5. **Opening the note switches the trick off**, and so does leaving Keep Notes once a number has
+   been entered. From then on the service doesn't even listen on the home screen: nothing can
+   buzz, and no swipe or tap can change the note, until you tap **Prime** again. You can hand
+   the phone over. As soon as anyone leaves the app, the note goes back to its clean state.
 
 ### When a swipe counts, and why sometimes it doesn't
 
 A swipe counts as a digit (and buzzes) only if **all** of these are true:
 
+- The trick is **primed** (the hidden settings show *Primed*). After a reveal it is off until
+  you tap **Prime** again.
 - The Keep Notes accessibility service is on. Android switches it off if the app is force-stopped,
   which is why the Samsung "Never sleeping apps" step matters.
 - The **home screen** is what you see: not the app drawer, Recents, the notification shade, the
@@ -98,7 +107,6 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
   example). The widget moves instead of the page, so it doesn't count.
 - Your finger lifts within 3 seconds and nothing opens: tapping an icon or long-pressing (which
   opens a menu) never counts.
-- It is not within the lock time after the Celebrities note was opened (3 minutes by default).
 
 How the digits pair up:
 
@@ -109,22 +117,27 @@ How the digits pair up:
 - Once a number is complete, the next swipe starts a **new** number. The old number stays in
   place until the new one is complete, so one stray swipe can't spoil it, but two stray swipes
   will replace it.
-- If you lose track, wait 45 seconds (or use **Reset now**) and enter the number again.
+- If you lose track, wait 45 seconds and enter the number again, or open the hidden settings
+  and tap **Prime** to start over.
 
-### How it resets
+### Priming, switching off and resetting
 
-- **Leaving the app** (Home, Recents or another app) puts the Celebrities note back to its clean
-  state, closes any open note and returns the app to the plain notes list.
-- The forced name **stays on the line of the last number** until you enter a new number or use
-  **Reset now**. It never moves on its own, so the note looks like any normal note whenever it
-  is opened. Closing the app or restarting the phone doesn't change it either.
-- After the Celebrities note is opened, new numbers are ignored for **3 minutes**, so the reveal
-  can't be disturbed. To perform again sooner, use **Reset now**.
-- A lone first digit is forgotten after **45 seconds**.
-- **Reset now** in the hidden settings forgets the number, a first digit and the lock, and moves
-  the forced name to a new random line.
-
-Both times can be changed in the hidden settings.
+- **Prime** (hidden settings) forgets the last number and any first digit, moves the forced
+  name to a new random line, switches the keypad overlay off, arms the trick and goes to the
+  first page of the home screen.
+- The trick **switches itself off** when the Celebrities note is opened after a number was
+  entered, or when Keep Notes is left after a number was entered (even if the note wasn't
+  opened). Off means completely off: the service stops listening on the home screen, nothing
+  buzzes and nothing changes until the next **Prime**. Opening the app or the note *before*
+  entering a number doesn't switch it off.
+- The forced name **stays on the line of the last number** until the next Prime. It never moves
+  on its own, so the note looks like any normal note whenever it is opened. Closing the app or
+  restarting the phone doesn't change it either.
+- **Leaving the app** (Home, Recents or another app) also puts the Celebrities note back to its
+  clean state (see below), closes any open note and returns the app to the plain notes list.
+- A lone first digit is forgotten after **45 seconds** (changeable in the hidden settings).
+- A fresh install, or an update from a build without Prime, starts switched off: prime it
+  before the first practice run.
 
 ### Why the name never moves when you open the app
 
@@ -141,15 +154,17 @@ Keep Notes card in Recents shows a plain background instead of a preview.)
 Open Keep Notes, tap the search bar and type `*#*#`. Nothing in the app points to this screen, and
 it closes as soon as the app is left. It shows:
 
-- **Status** (live): whether the swipe service is on, the last number and how long ago it was
-  entered, a first digit waiting for its partner, which line the forced name is on now, and
-  whether new numbers are being accepted or ignored (and for how much longer).
+- **Prime**: the button to tap before every performance (see above).
+- **Status** (live): whether the trick is primed or off, whether the swipe service is on, the
+  last number and how long ago it was entered, a first digit waiting for its partner, and which
+  line the forced name is on now.
+- **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
+  switched on while the trick is primed, and Prime switches it off.
 - **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
   second digit gives a double buzz.
-- **Timing**: how long new numbers are ignored after the note is opened (Off, 1, 3 or 10
-  minutes) and how long you have between the two swipes (20, 45 or 90 seconds).
-- **Actions**: **Set the number by hand** (an emergency backup if the swipes failed) and **Reset
-  now**.
+- **Timing**: how long you have between the two swipes (20, 45 or 90 seconds).
+- **Actions**: **Set the number by hand**, an emergency backup if the swipes failed. It works
+  even when the trick is off.
 
 ### How the Celebrities note behaves if someone edits it
 
@@ -171,9 +186,10 @@ Pixel launcher of the Android 14 and Android 16 emulators (see Development). It 
 tested on a real phone, on Samsung One UI Home or on other launchers. If you never feel the buzz:
 
 - Turn the Keep Notes accessibility service **off**. The app then switches to an in-app fallback:
-  open Keep Notes and make **two vertical swipes on the notes list** (as if scrolling), each
-  starting on the keypad cell for the digit. The same keypad covers the whole screen. Each
-  counted swipe buzzes, as on the home screen. Then open Celebrities.
+  tap **Prime** in the hidden settings (with the service off it stays in the app), go back to
+  the notes list and make **two vertical swipes on the list** (as if scrolling), each starting
+  on the keypad cell for the digit. The same keypad covers the whole screen. Each counted swipe
+  buzzes, as on the home screen. Then open Celebrities, which switches the trick off as usual.
 - Or, as a last resort, use **Set the number by hand** in the hidden settings.
 
 ### Troubleshooting
@@ -182,17 +198,22 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
   Early builds kept a screen-reader mode switched on everywhere. The current build only listens
   while the home screen is showing and is completely off in every other app. Install the latest
   APK from Releases, then check the service is still on.
-- **The swipes stopped buzzing**: check **Swipe service** in the hidden settings. If it says
-  *Off*, Android switched the service off (usually because the app was force-stopped or
-  "put to sleep"); turn it on again and do the Samsung "Never sleeping apps" step.
+- **Nothing buzzes**: open the hidden settings. If **Trick** isn't *Primed*, tap **Prime** (the
+  trick switches itself off after every reveal). If **Swipe service** says *Off*, Android
+  switched the service off (usually because the app was force-stopped or "put to sleep"); turn
+  it on again and do the Samsung "Never sleeping apps" step.
+- **Prime doesn't land on the first page**: Prime presses Home twice, and the second press takes
+  the launcher to its main page. On Samsung, pinch the home screen and tap the house icon at the
+  top of the first page to make it the main page. If your launcher can't do that, swipe back to
+  the first page after priming and wait 45 seconds before the real swipes: a leftover first
+  digit is forgotten by then, and a throwaway number is replaced by the real one.
 - **"Allow restricted settings" is missing**: try to turn on the service once first (step 3 of
   Setup). Android only offers the option after it has blocked the setting.
 - **The name is on the wrong line**: either a swipe started in the neighbouring keypad cell, or
   a stray swipe made just before (within 45 seconds) was still waiting as a first digit, so
   your first swipe completed a number and your second started a new one (you feel the double
-  buzz after your first swipe instead of the second). Tapping **Reset now**
-  before the show prevents the second case. To fix it on the spot, enter the number again, or
-  set it by hand.
+  buzz after your first swipe instead of the second). Priming right before the show prevents
+  the second case. To fix it on the spot, enter the number again, or set it by hand.
 
 ## Your profile picture and account
 
@@ -236,13 +257,19 @@ That job:
   Settings, Help, the account card and drawing);
 - runs an end-to-end test of the trick with real touchscreen events (written to the emulator's
   touch device, because `adb shell input` bypasses accessibility services): it enables the
-  service, swipes from the "6" and then the "1" keypad cell on a two-page home screen, opens
-  the app by tapping its icon and checks that line 61 of Celebrities is the forced name;
+  service, checks nothing listens before priming, taps **Prime** from page 2 and checks it
+  lands on page 1, swipes from the "6" and then the "1" keypad cell on a two-page home screen,
+  opens the app by tapping its icon and checks that line 61 of Celebrities is the forced name;
+- checks the trick is then off: nothing listens on the home screen, two more swipes don't
+  count and the note keeps line 61; that priming again switches listening back on; and that
+  leaving the app after entering a number (without opening the note) switches it off too;
+- checks the practice overlay shows on the home screen, lights up a swipe without entering a
+  number, and goes off when the trick is primed;
 - checks that touches still reach the launcher and gesture navigation still works with the
   service on, that the icon tap is not counted as a digit, that touch exploration (the
   screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,
-  and that the in-app fallback (service off, two swipes on the notes list) puts the name on
-  line 28.
+  and that the in-app fallback (service off, Prime, two swipes on the notes list) puts the name
+  on line 28 and is off after the reveal.
 
 All of those checks pass on both emulators. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`

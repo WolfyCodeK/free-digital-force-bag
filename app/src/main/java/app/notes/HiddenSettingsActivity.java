@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.snackbar.Snackbar;
@@ -37,7 +38,9 @@ public class HiddenSettingsActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
-    private TextView service, number, pending, line, lock;
+    private TextView trick, service, number, pending, line, overlayNote;
+    private LinearLayout overlayRow;
+    private MaterialSwitch overlaySwitch;
     private final Runnable tick = new Runnable() {
         @Override
         public void run() {
@@ -75,13 +78,52 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         scroll.addView(content, new FrameLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
         root.addView(scroll, new LinearLayout.LayoutParams(Ui.MATCH, 0, 1f));
 
+        // Prime: the one thing to tap before performing.
+        MaterialButton prime = new MaterialButton(this);
+        prime.setText("Prime");
+        prime.setAllCaps(false);
+        prime.setOnClickListener(v -> prime());
+        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(Ui.MATCH, dp(56));
+        pl.setMargins(dp(24), dp(8), dp(24), 0);
+        content.addView(prime, pl);
+        TextView primeNote = Ui.text(this, "Clears the last number, arms the next two swipes and goes to "
+                        + "the first page of your home screen. Once the number has been revealed, the trick "
+                        + "switches itself off until you prime it again.", 14, Ui.muted(this),
+                R.font.google_sans_text_regular);
+        primeNote.setPadding(dp(24), dp(12), dp(24), dp(8));
+        content.addView(primeNote);
+
         header("Status");
+        trick = value(row("Trick", null));
         service = value(row("Swipe service", v -> startActivity(
                 new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))));
         number = value(row("Number", null));
         pending = value(row("First digit", null));
         line = value(row("Celebrities", null));
-        lock = value(row("New numbers", null));
+
+        header("Practice");
+        overlayRow = new LinearLayout(this);
+        overlayRow.setGravity(Gravity.CENTER_VERTICAL);
+        overlayRow.setPadding(dp(24), dp(12), dp(16), dp(12));
+        overlayRow.setMinimumHeight(dp(56));
+        overlayRow.setBackground(Ui.rippleRounded(this, 0));
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        texts.addView(Ui.text(this, "Show the keypad on the home screen", 16, Ui.textColor(this),
+                R.font.google_sans_text_regular));
+        overlayNote = value(texts);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, Ui.WRAP, 1f);
+        tp.setMarginEnd(dp(16));
+        overlayRow.addView(texts, tp);
+        overlaySwitch = new MaterialSwitch(this);
+        overlaySwitch.setClickable(false);
+        overlayRow.addView(overlaySwitch);
+        overlayRow.setOnClickListener(v -> {
+            if (Force.armed(this)) return;
+            Force.setOverlay(this, !Force.overlay(this));
+            updateStatus();
+        });
+        content.addView(overlayRow, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
 
         header("Feedback");
         TextView vib = value(row("Vibration", null));
@@ -100,24 +142,11 @@ public class HiddenSettingsActivity extends AppCompatActivity {
                 on -> Force.setBool(this, "doubleBuzz", on));
 
         header("Timing");
-        String[] locks = {"Off", "1 minute", "3 minutes", "10 minutes"};
-        choice("After the note is opened, ignore new numbers for", locks, Force.LOCK_CHOICES,
-                Force.lockMs(this), "lock");
         String[] pairs = {"20 seconds", "45 seconds", "90 seconds"};
         choice("Time allowed between the two swipes", pairs, Force.PAIR_CHOICES, Force.pairMs(this), "pair");
 
         header("Actions");
         row("Set the number by hand", v -> askNumber());
-        row("Reset now (forget the number, the lock and the line)", v -> new MaterialAlertDialogBuilder(this)
-                .setTitle("Reset?")
-                .setMessage("Forgets the entered number, any first digit and the lock. The forced name moves to a new random line.")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Reset", (d, w) -> {
-                    Force.reset(this);
-                    updateStatus();
-                    Snackbar.make(content, "Reset", Snackbar.LENGTH_SHORT).show();
-                })
-                .show());
 
         TextView foot = Ui.text(this, "Opened by typing " + MainActivity.SECRET_CODE
                         + " in the search box. Leaving the app closes this screen.", 13, Ui.muted(this),
@@ -145,8 +174,22 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         handler.removeCallbacks(tick);
     }
 
+    private void prime() {
+        Force.prime(this);
+        updateStatus();
+        if (!GestureService.goToFirstPage()) {
+            Snackbar.make(content, "Primed. The swipe service is off: enter the number with two swipes "
+                    + "on the notes list", Snackbar.LENGTH_LONG).show();
+        }
+    }
+
     private void updateStatus() {
-        service.setText(serviceEnabled() ? "On" : "Off: two swipes on the notes list instead");
+        boolean armed = Force.armed(this);
+        boolean serviceOn = serviceEnabled();
+        trick.setText(armed ? "Primed: the next two swipes enter the number"
+                : Force.current(this) >= 1 ? "Off since the number was revealed. Tap Prime before performing"
+                : "Not primed. Tap Prime before performing");
+        service.setText(serviceOn ? "On" : "Off: two swipes on the notes list instead");
         long now = System.currentTimeMillis();
         int last = Force.current(this);
         if (last < 0) {
@@ -164,8 +207,14 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         int l = Celebs.currentLine(this);
         String forced = Celebs.names(this).get(0);
         line.setText(l < 0 ? forced + " goes on a random line" : forced + " is on line " + l);
-        long locked = Force.lockLeft(this);
-        lock.setText(locked > 0 ? "Ignored for " + (locked / 1000) + " s more (the note was opened)" : "Accepted");
+        overlaySwitch.setChecked(Force.overlay(this));
+        overlaySwitch.setEnabled(!armed);
+        overlayRow.setEnabled(!armed);
+        overlayRow.setAlpha(armed ? 0.5f : 1f);
+        overlayNote.setText(armed ? "Off while the trick is primed"
+                : !serviceOn ? "Needs the swipe service"
+                : "Draws the keypad over your home screen. Each swipe that counts lights up its "
+                        + "cell and buzzes, without entering a number");
     }
 
     private static String ago(long ms) {

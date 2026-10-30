@@ -16,6 +16,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -86,6 +87,10 @@ public class GestureService extends AccessibilityService {
     private String pendingSnapshot;
     private long lastDownAt;
     private long touchStartAt;
+    /** The practice keypad drawn over the home screen, or null until it is first needed. */
+    private KeypadOverlay overlay;
+    /** Prime asked for the first home-screen page: press Home again once home is showing. */
+    private boolean wantFirstPage;
 
     private final TouchInteractionController.Callback callback =
             new TouchInteractionController.Callback() {
@@ -131,6 +136,35 @@ public class GestureService extends AccessibilityService {
         if (instance != null) instance.updateCapturing();
     }
 
+    /** Called by Force when the trick is primed or switched off, or the overlay is toggled. */
+    static void settingsChanged() {
+        GestureService s = instance;
+        if (s != null) s.handler.post(s::updateCapturing);
+    }
+
+    /**
+     * Goes to the home screen's first page: Home, then Home again once the home screen is
+     * showing, which launchers answer by going to their main page. Returns false if the
+     * service isn't running.
+     */
+    static boolean goToFirstPage() {
+        GestureService s = instance;
+        if (s == null) return false;
+        s.wantFirstPage = true;
+        s.performGlobalAction(GLOBAL_ACTION_HOME);
+        s.handler.removeCallbacks(s.giveUpFirstPage);
+        s.handler.postDelayed(s.giveUpFirstPage, 5000);
+        return true;
+    }
+
+    private final Runnable homeAgain = () -> {
+        wantFirstPage = false;
+        log("home again for the first page");
+        performGlobalAction(GLOBAL_ACTION_HOME);
+    };
+
+    private final Runnable giveUpFirstPage = () -> wantFirstPage = false;
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
@@ -164,6 +198,11 @@ public class GestureService extends AccessibilityService {
             log("home screen " + (home ? "showing" : "gone"));
             updateCapturing();
         }
+        if (home && wantFirstPage) {
+            wantFirstPage = false;
+            handler.removeCallbacks(giveUpFirstPage);
+            handler.postDelayed(homeAgain, 600);
+        }
     };
 
     @Override
@@ -182,6 +221,13 @@ public class GestureService extends AccessibilityService {
         if (instance == this) instance = null;
         handler.removeCallbacksAndMessages(null);
         capturing = false;
+        if (overlay != null) {
+            try {
+                getSystemService(WindowManager.class).removeView(overlay);
+            } catch (RuntimeException ignored) {
+            }
+            overlay = null;
+        }
     }
 
     private void updateCapturing() {
@@ -189,7 +235,10 @@ public class GestureService extends AccessibilityService {
         // Only while the home screen itself is showing: everywhere else apps would see touch
         // exploration on and behave as if a screen reader were running (Samsung's Recents, for
         // one, draws a green focus box around the current app).
-        boolean want = !appInFront && homeInFront;
+        // And only while the trick is primed or the practice overlay is on: after the reveal
+        // the service stops listening altogether until the trick is primed again.
+        boolean want = !appInFront && homeInFront && (Force.armed(this) || Force.overlay(this));
+        updateOverlay();
         if (want == capturing) return;
         capturing = want;
         log("capturing " + want);
@@ -206,6 +255,24 @@ public class GestureService extends AccessibilityService {
         }
         setServiceInfo(info);
         if (want) reassert();
+    }
+
+    /** Shows the practice keypad while it is switched on and the home screen is showing. */
+    private void updateOverlay() {
+        boolean show = Force.overlay(this) && homeInFront && !appInFront;
+        if (overlay == null) {
+            if (!show) return;
+            overlay = new KeypadOverlay(this);
+            try {
+                getSystemService(WindowManager.class).addView(overlay, KeypadOverlay.layoutParams());
+            } catch (RuntimeException e) {
+                log("overlay failed: " + e);
+                overlay = null;
+                return;
+            }
+        }
+        overlay.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (!Force.overlay(this)) overlay.clear();
     }
 
     /**
@@ -417,8 +484,13 @@ public class GestureService extends AccessibilityService {
     private void commit(int d) {
         if (Force.addDigit(this, d)) {
             log("digit " + d + (Force.pendingDigit(this) < 0 ? ", number " + Force.current(this) : ""));
+        } else if (overlay != null && Force.overlay(this)) {
+            // Practice: light the cell and buzz, but leave the real number alone.
+            boolean complete = overlay.swiped(d);
+            Force.buzz(this, complete && Force.doubleBuzz(this));
+            log("practice digit " + d);
         } else {
-            log("locked, ignored");
+            log("not primed, ignored");
         }
     }
 
