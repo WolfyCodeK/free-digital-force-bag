@@ -80,8 +80,11 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
 
 - The Keep notes accessibility service is on. Android switches it off if the app is force-stopped,
   which is why the Samsung "Never sleeping apps" step matters.
-- The **home screen** is what you see: not the app drawer, the notification shade, the lock screen
-  or another app.
+- The **home screen** is what you see: not the app drawer, Recents, the notification shade, the
+  lock screen or another app. The service only listens while the home screen is showing, and
+  switches on a fraction of a second after it appears, so pause for a moment after pressing Home
+  before the first swipe. Everywhere else it is completely off, so other apps behave normally
+  (no screen-reader effects such as focus boxes in Recents).
 - The home screen **really moves to another page**. Swiping left on the first page or right on
   the last page bounces back and does **not** count. This is the most common reason a swipe
   "doesn't work": keep a page on both sides of the one you start on, or always swipe towards a
