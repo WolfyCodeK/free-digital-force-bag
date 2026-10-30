@@ -1036,13 +1036,18 @@ def swipe_test(w, h):
         wait(1.5)
         shot("celebrity-01-list")
         picked = False
-        for _ in range(16):
+        # The list opens scrolled to the current pick (Tom Hanks, near the end of A to Z), so
+        # look towards A first, then towards Z.
+        for i in range(16):
             n = find(dump(), text="Keanu Reeves")
             if n is not None and h * 0.2 < n.cy < h * 0.8:
                 tap(n.cx, n.cy)
                 picked = True
                 break
-            sh(f"input swipe {w//2} {int(h*0.70)} {w//2} {int(h*0.35)} 600")
+            if i < 8:
+                sh(f"input swipe {w//2} {int(h*0.35)} {w//2} {int(h*0.70)} 600")
+            else:
+                sh(f"input swipe {w//2} {int(h*0.70)} {w//2} {int(h*0.35)} 600")
             wait(1)
         log("picked Keanu Reeves from the list:", picked)
         wait(1)
