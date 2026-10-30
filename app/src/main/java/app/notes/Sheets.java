@@ -367,6 +367,8 @@ final class Sheets {
         AvatarView av = new AvatarView(a);
         av.setClickable(false);
         av.setBackground(null);
+        av.setMaxSize(76);
+        av.setRing(true, 3.5f, 3f);
         acct.addView(av, new LinearLayout.LayoutParams(Ui.dp(a, 76), Ui.dp(a, 76)));
         String name = AvatarView.Account.name(a), email = AvatarView.Account.email(a);
         if (!name.isEmpty()) {

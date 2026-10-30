@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Keep notes</string>
+    <string name="service_description">Lets Keep notes respond to swipes so you can get back to your notes faster. Keep notes doesn\'t collect or share anything you do.</string>
     <string name="colour">Colour</string>
     <string name="colours">Colours</string>
     <string name="change_colour">Change colour</string>

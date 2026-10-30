@@ -26,30 +26,30 @@
                 <LinearLayout
                     android:id="@+id/bar_main"
                     android:layout_width="match_parent"
-                    android:layout_height="78dp"
+                    android:layout_height="80dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageButton
                         android:id="@+id/menu"
                         style="@style/Keep.IconButton"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="4dp"
                         android:contentDescription="Open navigation drawer"
                         android:src="@drawable/ic_menu" />
 
                     <LinearLayout
                         android:id="@+id/search_bar"
                         android:layout_width="0dp"
-                        android:layout_height="62dp"
-                        android:layout_marginStart="2dp"
-                        android:layout_marginEnd="12dp"
+                        android:layout_height="56dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingStart="24dp"
-                        android:paddingEnd="6dp">
+                        android:paddingEnd="8dp">
 
                         <TextView
                             android:id="@+id/search_hint"
@@ -57,15 +57,16 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:ellipsize="end"
-                            android:fontFamily="@font/google_sans_regular"
+                            android:fontFamily="@font/google_sans_text_regular"
                             android:maxLines="1"
                             android:text="Search Keep"
                             android:textColor="@color/keep_muted"
-                            android:textSize="18sp" />
+                            android:textSize="16sp" />
 
                         <ImageButton
                             android:id="@+id/view_toggle"
                             style="@style/Keep.IconButton"
+                            android:layout_marginEnd="4dp"
                             android:contentDescription="List view"
                             android:src="@drawable/ic_view_agenda" />
 
@@ -80,7 +81,7 @@
                         android:id="@+id/avatar"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:layout_marginEnd="10dp" />
+                        android:layout_marginEnd="7dp" />
                 </LinearLayout>
 
                 <!-- Reminders, Archive, Deleted and labels. -->
@@ -200,7 +201,7 @@
                 <LinearLayout
                     android:id="@+id/bar_search"
                     android:layout_width="match_parent"
-                    android:layout_height="78dp"
+                    android:layout_height="80dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:visibility="gone">
@@ -208,7 +209,7 @@
                     <LinearLayout
                         android:id="@+id/search_field"
                         android:layout_width="0dp"
-                        android:layout_height="62dp"
+                        android:layout_height="56dp"
                         android:layout_marginStart="12dp"
                         android:layout_marginEnd="12dp"
                         android:layout_weight="1"
@@ -253,7 +254,7 @@
                             android:textColor="@color/keep_text"
                             android:textColorHint="@color/keep_muted"
                             android:textCursorDrawable="@null"
-                            android:textSize="18sp" />
+                            android:textSize="16sp" />
 
                         <ImageButton
                             android:id="@+id/search_clear"
@@ -280,9 +281,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:paddingStart="5dp"
-                        android:paddingTop="5dp"
-                        android:paddingEnd="5dp" />
+                        android:paddingStart="4dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="4dp" />
 
                     <LinearLayout
                         android:id="@+id/empty"
@@ -363,8 +364,8 @@
             app:backgroundTint="@color/keep_fab_small"
             app:borderWidth="0dp"
             app:elevation="3dp"
-            app:fabCustomSize="64dp"
-            app:maxImageSize="28dp"
+            app:fabCustomSize="56dp"
+            app:maxImageSize="24dp"
             app:shapeAppearanceOverlay="@style/Keep.SmallFabShape"
             app:tint="@color/keep_on_fab_small" />
 
@@ -378,8 +379,8 @@
             app:backgroundTint="@color/keep_fab_big"
             app:borderWidth="0dp"
             app:elevation="3dp"
-            app:fabCustomSize="91dp"
-            app:maxImageSize="40dp"
+            app:fabCustomSize="80dp"
+            app:maxImageSize="36dp"
             app:shapeAppearanceOverlay="@style/Keep.BigFabShape"
             app:tint="@color/keep_on_fab_big" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

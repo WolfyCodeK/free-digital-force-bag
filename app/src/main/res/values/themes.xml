@@ -107,12 +107,12 @@
 
     <style name="Keep.BigFabShape" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">26dp</item>
+        <item name="cornerSize">16dp</item>
     </style>
 
     <style name="Keep.SmallFabShape" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20dp</item>
+        <item name="cornerSize">16dp</item>
     </style>
 
     <style name="Keep.CircleShape" parent="">

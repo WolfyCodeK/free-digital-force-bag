@@ -230,7 +230,7 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             root = (FrameLayout) itemView;
             StaggeredGridLayoutManager.LayoutParams lp =
                     new StaggeredGridLayoutManager.LayoutParams(Ui.MATCH, Ui.WRAP);
-            int m = Ui.dp(c, 5);
+            int m = Ui.dp(c, 4);
             lp.setMargins(m, m, m, m);
             root.setLayoutParams(lp);
             root.setClipToOutline(true);
@@ -245,25 +245,25 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             body = new LinearLayout(c);
             body.setOrientation(LinearLayout.VERTICAL);
-            body.setPadding(Ui.dp(c, 18), Ui.dp(c, 15), Ui.dp(c, 18), Ui.dp(c, 17));
+            // Measured on Keep (16sp title, 14sp text): text 18dp in, baselines as Keep's.
+            body.setPadding(Ui.dp(c, 17.5f), Ui.dp(c, 18), Ui.dp(c, 17.5f), Ui.dp(c, 19));
             box.addView(body, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
 
-            title = Ui.text(c, "", 18, Ui.textColor(c), R.font.google_sans_medium);
+            title = Ui.text(c, "", 16, Ui.textColor(c), R.font.google_sans_medium);
             title.setMaxLines(3);
             title.setEllipsize(TextUtils.TruncateAt.END);
             body.addView(title);
 
-            text = Ui.text(c, "", 16, Ui.textColor(c), R.font.google_sans_text_regular);
+            text = Ui.text(c, "", 14, Ui.textColor(c), R.font.google_sans_text_regular);
             text.setMaxLines(MAX_LINES);
             text.setEllipsize(TextUtils.TruncateAt.END);
-            text.setLineSpacing(Ui.dp(c, 1.5f), 1f);
             body.addView(text);
 
             listBox = new LinearLayout(c);
             listBox.setOrientation(LinearLayout.VERTICAL);
             body.addView(listBox);
 
-            more = Ui.text(c, "", 15, Ui.muted(c), R.font.google_sans_text_regular);
+            more = Ui.text(c, "", 14, Ui.muted(c), R.font.google_sans_text_regular);
             body.addView(more);
 
             chips = new Wrap(c, Ui.dp(c, 6), Ui.dp(c, 6));
@@ -275,12 +275,12 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void bind(Note n, boolean isSelected, boolean grid) {
             Context c = itemView.getContext();
             int fill = Ui.noteColor(c, n.color);
-            float radius = Ui.dp(c, 14);
+            float radius = Ui.dp(c, 13);
             GradientDrawable bg;
             if (isSelected) {
                 bg = Ui.rounded(fill, radius, Ui.textColor(c), Ui.dp(c, 2.5f));
             } else if (n.color == 0) {
-                bg = Ui.rounded(fill, radius, Ui.color(c, R.color.keep_stroke), Ui.dp(c, 1.5f));
+                bg = Ui.rounded(fill, radius, Ui.color(c, R.color.keep_stroke), Ui.dp(c, 1));
             } else {
                 bg = Ui.rounded(fill, radius, 0, 0);
             }
@@ -304,9 +304,9 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 boolean hasText = !n.text.isEmpty();
                 text.setVisibility(hasText ? View.VISIBLE : View.GONE);
                 text.setText(Fmt.styled(n));
-                setTop(text, hasTitle ? 11 : 0);
+                setTop(text, hasTitle ? 12 : 0);
             }
-            setTop(listBox, hasTitle ? 9 : 0);
+            setTop(listBox, hasTitle ? 10 : 0);
 
             bindChips(n);
             boolean anyText = hasTitle || (n.list ? !n.items.isEmpty() : !n.text.isEmpty())
@@ -359,12 +359,12 @@ final class NoteAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             row.setGravity(Gravity.TOP);
             ImageView box = Ui.icon(c,
                     it.checked ? R.drawable.ic_check_box : R.drawable.ic_check_box_outline_blank,
-                    it.checked ? Ui.muted(c) : Ui.textColor(c), 18);
+                    it.checked ? Ui.muted(c) : Ui.textColor(c), 17);
             LinearLayout.LayoutParams bl = (LinearLayout.LayoutParams) box.getLayoutParams();
             bl.topMargin = Ui.dp(c, 2);
             bl.setMarginEnd(Ui.dp(c, 8));
             row.addView(box, bl);
-            TextView t = Ui.text(c, it.text, 16, it.checked ? Ui.muted(c) : Ui.textColor(c),
+            TextView t = Ui.text(c, it.text, 14, it.checked ? Ui.muted(c) : Ui.textColor(c),
                     R.font.google_sans_text_regular);
             t.setMaxLines(2);
             t.setEllipsize(TextUtils.TruncateAt.END);

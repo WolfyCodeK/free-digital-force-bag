@@ -33,8 +33,10 @@ public class AvatarView extends View {
     private Bitmap bitmap;
     private android.graphics.drawable.Drawable person;
     private boolean showRing = true;
-    private float ringDp = 2.5f;
+    /** Measured on Keep: a 40dp ring, 2.7dp thick, 2dp from the photo. */
+    private float ringDp = 2.7f;
     private float gapDp = 2f;
+    private float maxDp = 40f;
 
     public AvatarView(Context c) {
         this(c, null);
@@ -54,6 +56,12 @@ public class AvatarView extends View {
         setClickable(true);
         setFocusable(true);
         setBackground(Ui.borderless(c));
+    }
+
+    /** For bigger pictures, such as the one in the account card. */
+    void setMaxSize(float dp) {
+        this.maxDp = dp;
+        invalidate();
     }
 
     void setRing(boolean show, float ringDp, float gapDp) {
@@ -82,7 +90,7 @@ public class AvatarView extends View {
         float d = getResources().getDisplayMetrics().density;
         float size = Math.min(getWidth(), getHeight()) - getPaddingLeft() - getPaddingRight();
         float cx = getWidth() / 2f, cy = getHeight() / 2f;
-        float outer = Math.min(size, 42 * d) / 2f;
+        float outer = Math.min(size, maxDp * d) / 2f;
         float inner = outer;
         if (showRing) {
             float rw = ringDp * d;

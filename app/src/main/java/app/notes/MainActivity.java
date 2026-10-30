@@ -218,21 +218,22 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         });
     }
 
+    /** Measured on Keep: 16dp from the edge, 40dp above the navigation bar, 16dp apart. */
     private void positionFabs() {
-        int bottom = Math.max(dp(52), navBottom + dp(20));
+        int bottom = navBottom + dp(40);
         CoordinatorLayout.LayoutParams big = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-        big.setMargins(0, 0, dp(20), bottom);
+        big.setMargins(0, 0, fabOpen ? dp(16 + (80 - 56) / 2) : dp(16), fabOpen ? bottom + dp(12) : bottom);
         fab.setLayoutParams(big);
         CoordinatorLayout.LayoutParams small = (CoordinatorLayout.LayoutParams) fabLive.getLayoutParams();
-        small.setMargins(0, 0, dp(20), bottom + dp(91 + 16));
+        small.setMargins(0, 0, dp(16), bottom + dp(80 + 16));
         fabLive.setLayoutParams(small);
         CoordinatorLayout.LayoutParams menu = (CoordinatorLayout.LayoutParams) fabMenu.getLayoutParams();
-        menu.setMargins(0, 0, dp(20), bottom + dp(56 + 10));
+        menu.setMargins(0, 0, dp(16), bottom + dp(12 + 56 + 10));
         fabMenu.setLayoutParams(menu);
     }
 
     private void setupHeader() {
-        searchBar.setBackground(Ui.ripple(this, Ui.rounded(Ui.color(this, R.color.keep_search), dp(31), 0, 0)));
+        searchBar.setBackground(Ui.ripple(this, Ui.rounded(Ui.color(this, R.color.keep_search), dp(28), 0, 0)));
         searchBar.setContentDescription("Search Keep");
         searchBar.setOnClickListener(v -> startSearch());
         findViewById(R.id.menu).setOnClickListener(v -> drawer.openDrawer(GravityCompat.START));
@@ -326,9 +327,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         fab.setImageResource(R.drawable.ic_close);
         fab.setMaxImageSize(dp(24));
         fab.setContentDescription("Close");
-        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-        lp.rightMargin = dp(20 + (91 - 56) / 2);
-        fab.setLayoutParams(lp);
+        positionFabs();
         fabLive.hide();
         scrim.setAlpha(0f);
         scrim.setVisibility(View.VISIBLE);
@@ -346,16 +345,14 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
     private void closeFab(boolean animate) {
         if (!fabOpen) return;
         fabOpen = false;
-        fab.setCustomSize(dp(91));
-        fab.setShapeAppearanceModel(ShapeAppearanceModel.builder().setAllCornerSizes(dp(26)).build());
+        fab.setCustomSize(dp(80));
+        fab.setShapeAppearanceModel(ShapeAppearanceModel.builder().setAllCornerSizes(dp(16)).build());
         fab.setBackgroundTintList(ColorStateList.valueOf(Ui.color(this, R.color.keep_fab_big)));
         fab.setImageTintList(ColorStateList.valueOf(Ui.color(this, R.color.keep_on_fab_big)));
         fab.setImageResource(R.drawable.ic_add);
-        fab.setMaxImageSize(dp(40));
+        fab.setMaxImageSize(dp(36));
         fab.setContentDescription("Create a note");
-        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-        lp.rightMargin = dp(20);
-        fab.setLayoutParams(lp);
+        positionFabs();
         if (animate) {
             scrim.animate().alpha(0f).setDuration(120).withEndAction(() -> scrim.setVisibility(View.GONE)).start();
         } else {
@@ -427,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
 
     private void setupSearch() {
         LinearLayout field = findViewById(R.id.search_field);
-        field.setBackground(Ui.rounded(Ui.color(this, R.color.keep_search), dp(31), 0, 0));
+        field.setBackground(Ui.rounded(Ui.color(this, R.color.keep_search), dp(28), 0, 0));
         findViewById(R.id.search_back).setOnClickListener(v -> stopSearch());
         searchClear.setOnClickListener(v -> {
             searchInput.setText("");
