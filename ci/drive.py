@@ -665,13 +665,17 @@ def tap_setting(text):
     """Taps a row of the hidden settings, scrolling it well clear of the navigation bar first.
     Scrolls slowly (no fling) and only taps once the row has stopped moving."""
     w, h = screen_size()
+    wait(1.5)   # let the screen settle (the search box's keyboard closing moves the rows)
     for _ in range(5):
         n = find(dump(), text=text)
         if n is not None and n.cy < h * 0.85:
             wait(0.6)
             again = find(dump(), text=text)
             if again is not None and again.cy == n.cy:
+                log(f"tapping '{text}' at {n.cx},{n.cy}")
                 tap(n.cx, n.cy)
+                wait(0.4)
+                shot("tapped-" + re.sub(r"[^a-z]+", "-", text.lower()).strip("-"))
                 return True
             continue
         sh(f"input swipe {w//2} {int(h*0.70)} {w//2} {int(h*0.45)} 1200")
@@ -984,8 +988,12 @@ def swipe_test(w, h):
     sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
     wait(1.5)
     fallback_ok = False
-    nodes = dump()
-    if tap_node(nodes, text="Celebrities"):
+    n = find_note("Celebrities")
+    if n is None:
+        log("not found: Celebrities")
+        shot("fallback-00-no-celebrities")
+    else:
+        tap(n.cx, n.cy)
         wait(1.5)
         text = "\n".join(n.text for n in dump("fallback-celebrities"))
         fallback_ok = bool(re.search(r"(^|\n)58\. " + re.escape(FORCED) + r"(\n|$)", text))

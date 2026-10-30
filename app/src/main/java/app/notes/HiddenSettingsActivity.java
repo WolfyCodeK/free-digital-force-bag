@@ -54,6 +54,9 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setRecentsScreenshotEnabled(false);
+        // Opened from the search box: don't carry its keyboard over (it would also shift the
+        // rows under a finger that is about to tap one).
+        getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
