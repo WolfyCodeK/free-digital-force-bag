@@ -15,6 +15,7 @@ SERVICE = PKG + "/app.notes.GestureService"
 OUT = "ci-out"
 FORCED = None
 LOG = []
+SDK = 0
 
 
 def log(*a):
@@ -688,7 +689,8 @@ def overlay_visible():
         f.write(out + "\n\n")
     blocks = re.split(r"\n\s*Window #\d+ ", out)
     for b in blocks:
-        if PKG in b and "ACCESSIBILITY_OVERLAY" in b:
+        # Android 14 prints the window type as a number (2032), later versions by name.
+        if PKG in b and ("ACCESSIBILITY_OVERLAY" in b or "ty=2032" in b):
             vis = re.search(r"mViewVisibility=(0x[0-9a-f]+)", b)
             log("  overlay window:", vis.group(0) if vis else "visibility not found",
                 "| isOnScreen=true" if "isOnScreen=true" in b else "")
@@ -910,11 +912,10 @@ def swipe_test(w, h):
     overlay_after_prime = overlay_visible()
     log("overlay after priming:", overlay_after_prime)
 
-    # Quick swipes back to back, the second on the last page where the page can't turn: both
-    # count (6 then 3).
+    # Quick swipes straight after each other (6 then 1, both turning the page): both count.
     log("quick swipes, page before:", which_page())
     swipe_from(6, "left", w, h)
-    swipe_from(3, "left", w, h)
+    swipe_from(1, "right", w, h)
     wait(2.5)
     shot("quick-01-after-swipes")
     log("page after quick swipes:", which_page())
@@ -922,6 +923,21 @@ def swipe_test(w, h):
     launch()
     quick_line = celebrities_line()
     log("quick swipes: forced name on line", quick_line)
+
+    # Android 15 and later: a sideways swipe on the last page, where the page can't turn, still
+    # counts (6 turns to page 1, the last; then 3 bounces).
+    last_page_line = None
+    if SDK >= 35:
+        prime("4")
+        swipe_from(6, "left", w, h)
+        wait(3)
+        swipe_from(3, "left", w, h)
+        wait(3)
+        shot("lastpage-01-after-swipes")
+        log(sh("logcat -d | grep -E 'KeepGestures: (watching|can.t watch|touch ended|sideways|digit|home screen unchanged)' | tail -12"))
+        launch()
+        last_page_line = celebrities_line()
+        log("last-page swipe: forced name on line", last_page_line)
 
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
@@ -952,8 +968,9 @@ def swipe_test(w, h):
             re.findall(r"\d+\. " + re.escape(FORCED), text))
         shot("fallback-01-celebrities")
         back()
-    # The reveal switched the fallback off too.
-    back_to_notes()
+    # The reveal switched the fallback off too. (Celebrities was closed: already on the notes.)
+    if not find(dump(), desc="Open navigation drawer"):
+        back_to_notes()
     x, y = cell(4, w, h)
     sh(f"input swipe {x} {y} {x} {int(h*0.08)} 300")   # 4
     wait(1)
@@ -1012,7 +1029,8 @@ def swipe_test(w, h):
         "forced_name_on_line_61": ok_line,
         "in_app_fallback_line_58": fallback_ok,
         "fallback_off_after_reveal": fallback_spent_line == 58,
-        "quick_swipes_and_last_page": quick_line == 63,
+        "quick_swipes": quick_line == 61,
+        "last_page_swipe_android15plus": (last_page_line == 63) if SDK >= 35 else "n/a",
         "keypad_setup_works": setup_ok,
         "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,
@@ -1024,7 +1042,9 @@ def swipe_test(w, h):
 def main():
     os.makedirs(OUT, exist_ok=True)
     adb("wait-for-device")
-    log("android", sh("getprop ro.build.version.release"), "sdk", sh("getprop ro.build.version.sdk"))
+    global SDK
+    SDK = int(sh("getprop ro.build.version.sdk") or 0)
+    log("android", sh("getprop ro.build.version.release"), "sdk", SDK)
     log(sh("settings get secure navigation_mode"), "= navigation_mode (0 three-button, 2 gesture)")
     sh("settings put system screen_off_timeout 1800000")
     sh("settings put global hide_error_dialogs 1")

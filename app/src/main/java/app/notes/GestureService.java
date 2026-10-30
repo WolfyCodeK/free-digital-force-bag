@@ -10,11 +10,13 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.hardware.display.DisplayManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
+import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -22,6 +24,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
 
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,19 +103,11 @@ public class GestureService extends AccessibilityService {
             new TouchInteractionController.Callback() {
                 @Override
                 public void onMotionEvent(MotionEvent e) {
-                    int action = e.getActionMasked();
-                    if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                        multiTouch = true;
+                    // Touches pass straight through to the launcher, so only their DOWN comes here.
+                    if (e.getActionMasked() != MotionEvent.ACTION_DOWN) {
+                        followFinger(e);
                         return;
                     }
-                    if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP) {
-                        curX = e.getX();
-                        curY = e.getY();
-                        moved = true;
-                        if (action == MotionEvent.ACTION_UP) onTouchUp();
-                        return;
-                    }
-                    if (action != MotionEvent.ACTION_DOWN) return;
                     lastDownAt = SystemClock.uptimeMillis();
                     log("down " + (int) e.getX() + "," + (int) e.getY() + " state "
                             + TouchInteractionController.stateToString(controller.getState()));
@@ -295,6 +290,7 @@ public class GestureService extends AccessibilityService {
         } else {
             info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
         }
+        watchTouches(info, want);
         setServiceInfo(info);
         if (want) reassert();
     }
@@ -410,6 +406,55 @@ public class GestureService extends AccessibilityService {
         if (!mostlySideways()) return;
         log("page changed (" + AccessibilityEvent.eventTypeToString(type) + ")");
         confirm();
+    }
+
+    /**
+     * Android 15 and later: the touchscreen's motion events, watched without taking them (the
+     * launcher still gets every touch). They say where the finger moved and lifted, which the
+     * touch-interaction controller doesn't, so a sideways swipe on the last page can count.
+     */
+    @Override
+    public void onMotionEvent(MotionEvent e) {
+        if (capturing && e.getActionMasked() != MotionEvent.ACTION_DOWN) followFinger(e);
+    }
+
+    private void followFinger(MotionEvent e) {
+        int action = e.getActionMasked();
+        if (action == MotionEvent.ACTION_POINTER_DOWN) {
+            multiTouch = true;
+        } else if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP) {
+            curX = e.getX();
+            curY = e.getY();
+            moved = true;
+            if (action == MotionEvent.ACTION_UP) onTouchUp();
+        }
+    }
+
+    /**
+     * Asks to watch (not take) the touchscreen's motion events while capturing. Only on Android
+     * 15 and later, where watching exists; the call is looked up at run time because this app
+     * is compiled against Android 14. If it can't be switched on, nothing is asked for at all,
+     * so touches can never end up taken by this service.
+     */
+    private void watchTouches(AccessibilityServiceInfo info, boolean on) {
+        if (Build.VERSION.SDK_INT < 35) return;
+        try {
+            Method observe = AccessibilityServiceInfo.class.getMethod("setObservedMotionEventSources", int.class);
+            if (on) {
+                info.setMotionEventSources(InputDevice.SOURCE_TOUCHSCREEN);
+                observe.invoke(info, InputDevice.SOURCE_TOUCHSCREEN);
+            } else {
+                observe.invoke(info, 0);
+                info.setMotionEventSources(0);
+            }
+            log("watching touches " + on);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            try {
+                info.setMotionEventSources(0);
+            } catch (RuntimeException ignored) {
+            }
+            log("can't watch touches: " + e);
+        }
     }
 
     /** The finger lifted (from the motion events, or the "touch ended" event if those are missing). */

@@ -27,7 +27,8 @@ exactly that line.
 
    Two swipes make a number from 1 to 100. Single-digit numbers use a leading zero (7 is `0`
    then `7`) and 100 is `0` then `0`. A keypad swipe counts if the home screen turns to another page,
-   or if it is a clear sideways swipe even though the page can't turn (on the last page). Every
+   or (Android 15 and later) if it is a clear sideways swipe even though the page can't turn, on
+   the last page. Every
    counted swipe buzzes (a double buzz when the second digit completes the number). Taps,
    long presses, swipes up into the app drawer and pulling down the notification shade don't
    count.
@@ -106,11 +107,14 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
   switches on a fraction of a second after it appears, so pause for a moment after pressing Home
   before the first swipe. Everywhere else it is completely off, so other apps behave normally
   (no screen-reader effects such as focus boxes in Recents).
-- It is a **sideways** swipe: the page turns, or, where there's no page to turn to (on the
-  last page, where Keep Notes is), your finger moves clearly sideways (at least about a
-  centimetre, and more sideways than up or down). So if a swipe on the last page didn't buzz,
-  just swipe again there: the page bounces back but the digit still counts. Swipes up (app
-  drawer) or down (notification shade) never count.
+- It is a **sideways** swipe that **turns the page**. On **Android 15 and later** there is one
+  more case: where there's no page to turn to (the last page, where Keep Notes is), a clear
+  sideways swipe still counts (at least about a centimetre, more sideways than up or down).
+  So if a swipe on the last page didn't buzz, just swipe again there: the page bounces back
+  but the digit still counts. **On Android 13 and 14 that isn't possible**: Android only tells
+  the service where a touch started, not where the finger went, so on those versions a swipe
+  must turn the page to count. Check your version in Settings > About phone > Software
+  information. Swipes up (app drawer) or down (notification shade) never count.
 - The swipe doesn't start right at the edge of the screen. With gesture navigation, a swipe from
   the left or right edge is **Back** and one from the bottom edge is **Home** or switches apps,
   so the service ignores swipes that start within a few millimetres of the side edges or the
@@ -312,8 +316,9 @@ That job:
 - checks the practice overlay shows on the home screen, lights up a swipe without entering a
   number, and goes off when the trick is primed; sets the keypad up by tapping three spots on
   the home screen and checks a swipe from the new "2" counts as 2;
-- makes two quick swipes back to back, the second on the last page where the page can't turn,
-  and checks both count (line 63);
+- makes two quick swipes straight after each other and checks both count (line 61), and on
+  Android 16 checks a swipe on the last page, where the page can't turn, still counts
+  (line 63);
 - checks that touches still reach the launcher and gesture navigation still works with the
   service on, that the icon tap is not counted as a digit, that touch exploration (the
   screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,
