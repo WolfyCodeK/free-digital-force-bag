@@ -1040,7 +1040,7 @@ public class EditorActivity extends AppCompatActivity {
         }
         col.addView(Ui.row(this, R.drawable.ic_help, "Help & feedback", fg, v -> {
             d[0].dismiss();
-            startActivity(new Intent(this, HelpActivity.class));
+            HelpActivity.open(this);
         }));
         d[0] = Sheets.sheet(this, noteColor(), col);
         d[0].show();

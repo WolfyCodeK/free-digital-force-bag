@@ -294,9 +294,10 @@ Deleted, Settings, Help & feedback), long-press multi-select (pin, reminder, col
 archive, delete, make a copy, send), drag to reorder, swipe to archive with undo, note colours,
 labels, reminders with notifications, archive, Deleted with restore (emptied after 7 days),
 checklists, text formatting, images (camera or gallery), drawings, voice recordings, undo/redo,
-and the new-note menu. Everything is stored on the phone and the app never uses the network.
-Things that need the internet behave like Keep does offline: the Live button, sync
-(pull to refresh) and Help & feedback.
+and the new-note menu. Everything is stored on the phone and the app itself never uses the
+network. Nothing ever shows a "no connection" message: the voice button above the + opens the
+phone's own speech recogniser (Google's "Speak now") and turns what you say into a new note,
+Help & feedback opens Keep's help centre in the browser, and pull to refresh just refreshes.
 
 ## Development
 

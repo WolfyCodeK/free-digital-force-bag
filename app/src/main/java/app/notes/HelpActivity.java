@@ -40,6 +40,21 @@ import com.google.android.material.snackbar.Snackbar;
  */
 public class HelpActivity extends AppCompatActivity {
 
+    /** Keep's help centre, which is what Help & feedback shows on a phone that is online. */
+    private static final String HELP_URL = "https://support.google.com/keep/";
+
+    /**
+     * Help & feedback: Keep's help centre in the browser, like any app's help link. This screen
+     * (Google's offline help page) only shows if the phone has no browser at all.
+     */
+    static void open(android.app.Activity a) {
+        try {
+            a.startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(HELP_URL)));
+        } catch (android.content.ActivityNotFoundException e) {
+            a.startActivity(new Intent(a, HelpActivity.class));
+        }
+    }
+
     private static final int MENU_PLAY_STORE = 1;
 
     private final Handler handler = new Handler(Looper.getMainLooper());

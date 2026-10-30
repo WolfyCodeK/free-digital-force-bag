@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -111,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
     private android.animation.ValueAnimator liftAnim;
 
     private ActivityResultLauncher<PickVisualMediaRequest> pickImage;
+    private ActivityResultLauncher<Intent> speech;
     private Recorder recorder;
     private final Keypad keypad = new Keypad();
 
@@ -126,6 +128,16 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         store = Store.get(this);
         pickImage = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
                 this::onImagePicked);
+        speech = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
+            if (r.getResultCode() != RESULT_OK || r.getData() == null) return;
+            ArrayList<String> said = r.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (said == null || said.isEmpty() || said.get(0).trim().isEmpty()) return;
+            String text = said.get(0).trim();
+            Note n = newNote();
+            n.text = Character.toUpperCase(text.charAt(0)) + text.substring(1);
+            store.changed();
+            openEditor(n.id);
+        });
         recorder = new Recorder(this);
 
         drawer = findViewById(R.id.drawer);
@@ -320,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
             if (fabOpen) closeFab(true);
             else openFab();
         });
-        fabLive.setOnClickListener(v -> snack("Can't connect right now. Check your internet connection and try again.", null));
+        fabLive.setOnClickListener(v -> dictate());
         scrim.setOnClickListener(v -> closeFab(true));
         String[] labels = {"Audio", "Image", "Drawing", "List", "Text"};
         int[] icons = {R.drawable.ic_mic, R.drawable.ic_image, R.drawable.ic_brush,
@@ -422,6 +434,22 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
                         .putExtra(EditorActivity.EXTRA_LIST, kind == 3)
                         .putExtra(EditorActivity.EXTRA_LABEL, section == LABEL ? sectionLabel : null));
                 break;
+        }
+    }
+
+    /**
+     * The voice button: the phone's own speech recogniser (Google's "Speak now"), and what was
+     * said becomes a new note. Without a recogniser it records an audio note instead.
+     */
+    private void dictate() {
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        try {
+            App.external = true;
+            speech.launch(i);
+        } catch (android.content.ActivityNotFoundException e) {
+            App.external = false;
+            create(0);
         }
     }
 
@@ -663,7 +691,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         });
         drawerItem(R.drawable.ic_help, "Help & feedback", false, v -> {
             drawer.closeDrawer(GravityCompat.START);
-            startActivity(new Intent(this, HelpActivity.class));
+            HelpActivity.open(this);
         });
     }
 

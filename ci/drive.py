@@ -327,7 +327,10 @@ def run_full_tour(mode):
             shot(f"{p}-20-after-new-list")
     # Live (offline failure).
     if step(f"{p}-21-live", desc="Live", settle=0.8):
-        wait(3)
+        # Opens the speech recogniser (or, without one, the audio recorder): back out of it.
+        wait(2)
+        shot(f"{p}-21b-live-opened")
+        back_to_notes()
     # Long-press selection and its colour sheet.
     nodes = dump()
     n = find(nodes, text="Oyakodon")
