@@ -867,6 +867,30 @@ def swipe_test(w, h):
     fallback_spent_line = celebrities_line()
     log("fallback after the reveal, forced name on line", fallback_spent_line)
 
+    # The forced name can be changed in the hidden settings. Keanu Reeves is also one of the
+    # other names, so he must move to the spectator's line and Tom Hanks take his old place.
+    name_ok = False
+    if open_hidden_settings():
+        tap_node(dump(), text="Celebrity")
+        wait(1.5)
+        sh("input keyevent KEYCODE_MOVE_END " + " ".join(["KEYCODE_DEL"] * 20))
+        sh("input text 'Keanu%sReeves'")
+        wait(0.5)
+        shot("celebrity-01-dialog")
+        tap_node(dump(), text="Save")
+        wait(1)
+        shot("celebrity-02-settings")
+        back_to_notes()
+        if tap_node(dump(), text="Celebrities"):
+            wait(1.5)
+            text = "\n".join(n.text for n in dump("celebrity-note"))
+            keanu = re.findall(r"(?:^|\n)(\d+)\. Keanu Reeves(?=\n|$)", text)
+            default = re.findall(r"(?:^|\n)(\d+)\. " + re.escape(FORCED) + r"(?=\n|$)", text)
+            log("Keanu Reeves on lines", keanu, "|", FORCED, "on lines", default)
+            name_ok = keanu == ["28"] and len(default) == 1
+            shot("celebrity-03-note")
+            back()
+
     results = {
         "not_listening_before_prime": te_unprimed == "0",
         "prime_lands_on_first_page": page_after_prime == 0,
@@ -886,6 +910,7 @@ def swipe_test(w, h):
         "forced_name_on_line_61": ok_line,
         "in_app_fallback_line_28": fallback_ok,
         "fallback_off_after_reveal": fallback_spent_line == 28,
+        "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }

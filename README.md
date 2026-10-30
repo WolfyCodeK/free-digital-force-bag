@@ -155,6 +155,10 @@ Open Keep Notes, tap the search bar and type `*#*#`. Nothing in the app points t
 it closes as soon as the app is left. It shows:
 
 - **Prime**: the button to tap before every performance (see above).
+- **Celebrity**: the forced name. Tap it, type any name and Save; the Celebrities note is rebuilt
+  at once with that name on the same line. **Default** goes back to line 1 of
+  `celebrities.txt`. If the name you type is one of the other 99, the default name takes its
+  place in the list, so no name is ever there twice.
 - **Status** (live): whether the trick is primed or off, whether the swipe service is on, the
   last number and how long ago it was entered, a first digit waiting for its partner, and which
   line the forced name is on now.
@@ -240,8 +244,11 @@ yourself are kept. The text lives in `addStarterNotes` in
 
 ## Changing the names
 
-Edit `app/src/main/assets/celebrities.txt`: line 1 is the forced name and the other 99 lines are
-the fillers. This is the only file to edit. Pushing rebuilds the APK.
+On the phone: **Celebrity** in the hidden settings changes the forced name (see Hidden settings).
+
+In the code: edit `app/src/main/assets/celebrities.txt`. Line 1 is the default forced name and
+the other 99 lines are the rest of the list. This is the only file to edit. Pushing rebuilds
+the APK.
 
 Vibration strength and the timings are changed in the hidden settings (type `*#*#` in search).
 

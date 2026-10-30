@@ -44,6 +44,21 @@ final class Force {
         return prefs(c).getLong("pair", 45_000L);
     }
 
+    /** The name the trick forces: set on the hidden settings screen, or line 1 of celebrities.txt. */
+    static String forcedName(Context c) {
+        String s = prefs(c).getString("forced", "");
+        return s.isEmpty() ? Celebs.names(c).get(0) : s;
+    }
+
+    /** Sets the forced name and rebuilds the Celebrities note; empty goes back to the default. */
+    static void setForcedName(Context c, String name) {
+        name = name == null ? "" : name.trim().replaceAll("\\s+", " ");
+        if (name.equals(Celebs.names(c).get(0))) name = "";
+        prefs(c).edit().putString("forced", name).apply();
+        Celebs.restore(c);
+        MainActivity.numberChanged();
+    }
+
     static void setInt(Context c, String key, int value) {
         prefs(c).edit().putInt(key, value).apply();
     }

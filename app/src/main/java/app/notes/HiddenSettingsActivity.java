@@ -38,7 +38,7 @@ public class HiddenSettingsActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
-    private TextView trick, service, number, pending, line, overlayNote;
+    private TextView trick, service, number, pending, line, celebrity, overlayNote;
     private LinearLayout overlayRow;
     private MaterialSwitch overlaySwitch;
     private final Runnable tick = new Runnable() {
@@ -92,6 +92,8 @@ public class HiddenSettingsActivity extends AppCompatActivity {
                 R.font.google_sans_text_regular);
         primeNote.setPadding(dp(24), dp(12), dp(24), dp(8));
         content.addView(primeNote);
+
+        celebrity = value(row("Celebrity", v -> askName()));
 
         header("Status");
         trick = value(row("Trick", null));
@@ -204,8 +206,9 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             long left = Force.pairMs(this) - (now - getSharedPreferences("f", MODE_PRIVATE).getLong("d1t", now));
             pending.setText(first + ", waiting for the second swipe (" + Math.max(0, left / 1000) + " s left)");
         }
+        celebrity.setText(Force.forcedName(this));
         int l = Celebs.currentLine(this);
-        String forced = Celebs.names(this).get(0);
+        String forced = Force.forcedName(this);
         line.setText(l < 0 ? forced + " goes on a random line" : forced + " is on line " + l);
         overlaySwitch.setChecked(Force.overlay(this));
         overlaySwitch.setEnabled(!armed);
@@ -236,6 +239,40 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    private void askName() {
+        EditText e = new EditText(this);
+        e.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        e.setSingleLine(true);
+        e.setText(Force.forcedName(this));
+        e.setSelectAllOnFocus(true);
+        FrameLayout box = new FrameLayout(this);
+        box.setPadding(dp(24), dp(8), dp(24), 0);
+        box.addView(e);
+        String def = Celebs.names(this).get(0);
+        androidx.appcompat.app.AlertDialog d = new MaterialAlertDialogBuilder(this)
+                .setTitle("Celebrity")
+                .setMessage("The name on the spectator's line. The default, " + def
+                        + ", is line 1 of celebrities.txt.")
+                .setView(box)
+                .setNegativeButton("Cancel", null)
+                .setNeutralButton("Default", (x, w) -> {
+                    Force.setForcedName(this, "");
+                    updateStatus();
+                })
+                .setPositiveButton("Save", (x, w) -> {
+                    Force.setForcedName(this, e.getText().toString());
+                    updateStatus();
+                })
+                .create();
+        d.setOnShowListener(x -> {
+            e.requestFocus();
+            if (d.getWindow() != null) {
+                d.getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            }
+        });
+        d.show();
     }
 
     private void askNumber() {

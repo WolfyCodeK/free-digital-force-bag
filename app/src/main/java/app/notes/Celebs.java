@@ -12,7 +12,8 @@ import java.util.Random;
 
 /**
  * The "Celebrities" note: a numbered list of names from assets/celebrities.txt, with the forced
- * name (line 1 of that file) on the line given by the captured number.
+ * name (line 1 of that file, or the name set on the hidden settings screen) on the line given by
+ * the captured number.
  *
  * <p>How the note behaves, so that nobody can break the trick by touching it:
  * <ul>
@@ -65,12 +66,19 @@ final class Celebs {
     /** The whole list with the forced name on the given line (1-based). */
     static String text(Context c, int line) {
         List<String> all = names(c);
+        String forced = Force.forcedName(c);
+        // If the forced name is one of the fillers, the default forced name takes its place, so
+        // no name is on the list twice.
+        List<String> fillers = new ArrayList<>(all.subList(1, all.size()));
+        for (int i = 0; i < fillers.size(); i++) {
+            if (fillers.get(i).equalsIgnoreCase(forced)) fillers.set(i, all.get(0));
+        }
         int count = count(c);
         line = Math.max(1, Math.min(count, line));
         StringBuilder sb = new StringBuilder();
-        int filler = 1;
+        int filler = 0;
         for (int i = 1; i <= count; i++) {
-            String name = i == line ? all.get(0) : all.get(filler++);
+            String name = i == line ? forced : fillers.get(filler++);
             sb.append(i).append(". ").append(name);
             if (i < count) sb.append('\n');
         }
