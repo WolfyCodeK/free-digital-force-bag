@@ -13,10 +13,7 @@ import android.hardware.display.DisplayManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.os.VibrationAttributes;
-import android.os.VibrationEffect;
 import android.util.Log;
-import android.os.Vibrator;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.WindowManager;
@@ -53,8 +50,6 @@ import java.util.regex.Pattern;
  */
 public class GestureService extends AccessibilityService {
 
-    /** One short buzz for every accepted digit. */
-    private static final boolean HAPTIC = true;
     /** How long after the finger lifts the launcher may take to report a page change. */
     private static final long CONFIRM_MS = 2000;
     /** When to compare the home screen with how it looked when the finger went down. */
@@ -62,8 +57,6 @@ public class GestureService extends AccessibilityService {
     /** Longer touches are not page swipes. */
     private static final long MAX_SWIPE_MS = 3000;
     private static final Pattern CLOCK = Pattern.compile("\\d{1,2}[:.]\\d{2}");
-    /** A lone first digit is forgotten after this long. */
-    private static final long PAIR_TIMEOUT_MS = 45_000;
     /** If a touch starts but no DOWN reaches us within this time, re-register. */
     private static final long LOST_DOWN_MS = 300;
 
@@ -83,11 +76,9 @@ public class GestureService extends AccessibilityService {
     private static boolean appInFront;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final List<Integer> digits = new ArrayList<>();
     private final Set<String> homePackages = new HashSet<>();
     private TouchInteractionController controller;
     private boolean capturing;
-    private long lastDigitAt;
     private int pendingDigit = -1;
     private long pendingAt;
     private long pendingEndAt;
@@ -373,21 +364,10 @@ public class GestureService extends AccessibilityService {
     }
 
     private void commit(int d) {
-        if (Force.locked(this)) {
+        if (Force.addDigit(this, d)) {
+            log("digit " + d + (Force.pendingDigit(this) < 0 ? ", number " + Force.last(this) : ""));
+        } else {
             log("locked, ignored");
-            return;
-        }
-        long now = SystemClock.uptimeMillis();
-        if (now - lastDigitAt > PAIR_TIMEOUT_MS) digits.clear();
-        lastDigitAt = now;
-        digits.add(d);
-        buzz();
-        log("digit " + d);
-        if (digits.size() == 2) {
-            int n = digits.get(0) * 10 + digits.get(1);
-            log("number " + (n == 0 ? 100 : n));
-            Force.save(this, n == 0 ? 100 : n);
-            digits.clear();
         }
     }
 
@@ -416,14 +396,6 @@ public class GestureService extends AccessibilityService {
         Display d = getSystemService(DisplayManager.class).getDisplay(Display.DEFAULT_DISPLAY);
         d.getRealSize(p);
         return p;
-    }
-
-    private void buzz() {
-        if (!HAPTIC) return;
-        Vibrator vib = getSystemService(Vibrator.class);
-        if (vib == null || !vib.hasVibrator()) return;
-        vib.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE),
-                VibrationAttributes.createForUsage(VibrationAttributes.USAGE_ACCESSIBILITY));
     }
 
     /** Every installed launcher, except the system's own fallback screens. */

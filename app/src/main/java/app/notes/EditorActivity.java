@@ -97,6 +97,7 @@ public class EditorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        setRecentsScreenshotEnabled(false);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         store = Store.get(this);
         pickImage = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), this::addImage);

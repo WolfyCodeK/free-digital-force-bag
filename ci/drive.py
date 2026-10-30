@@ -370,6 +370,12 @@ def run_full_tour(mode):
             wait(1)
             step(f"{p}-4{i}-{label.split()[0].lower()}", desc=label, settle=1.8)
             back_to_notes()
+    # Hidden settings: typed into search.
+    if step(f"{p}-49a-search-again", desc="Search Keep"):
+        sh("input text '*#*#'")
+        wait(2)
+        shot(f"{p}-49b-hidden-settings")
+        back_to_notes()
     # Account card.
     if step(f"{p}-50-account", desc_has="Google Account"):
         back()

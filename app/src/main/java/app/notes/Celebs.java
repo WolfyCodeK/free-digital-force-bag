@@ -96,6 +96,16 @@ final class Celebs {
         return random;
     }
 
+    /** The line the forced name is on right now, or -1 if none has been chosen yet. */
+    static int currentLine(Context c) {
+        return prefs(c).getInt("n", -1);
+    }
+
+    /** Forgets the current line, so the next showing picks a new random one. */
+    static void forgetLine(Context c) {
+        prefs(c).edit().clear().apply();
+    }
+
     /** Brings the note up to date before it is shown. */
     static void refresh(Context c) {
         Store store = Store.get(c);

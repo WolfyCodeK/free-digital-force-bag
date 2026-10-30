@@ -68,6 +68,9 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
 
     /** Set by App when the app is left, so the next visit starts from a normal state. */
     static boolean resetOnReturn;
+    /** Typed into search, opens the hidden settings. */
+    static final String SECRET_CODE = "*#*#";
+    private static java.lang.ref.WeakReference<MainActivity> live;
     /** A message to show when coming back from the editor, with an optional undo. */
     static String pendingMessage;
     static Runnable pendingUndo;
@@ -112,8 +115,12 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        // Never show a screenshot of how the notes looked last time while the app opens: the
+        // Celebrities note may have changed since, and the change must not be seen happening.
+        setRecentsScreenshotEnabled(false);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_main);
+        live = new java.lang.ref.WeakReference<>(this);
         store = Store.get(this);
         pickImage = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
                 this::onImagePicked);
@@ -168,6 +175,23 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
             }
         });
         if (state == null) introduceSearchHint();
+    }
+
+    /** A new number was entered: redraw now, while the app is still out of sight. */
+    static void numberChanged() {
+        MainActivity a = live != null ? live.get() : null;
+        if (a == null || a.isDestroyed()) return;
+        a.runOnUiThread(() -> {
+            if (!a.isDestroyed()) a.render();
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bring the Celebrities note up to date before anything is drawn.
+        Celebs.refresh(this);
+        render();
     }
 
     @Override
@@ -439,6 +463,11 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
             @Override
             public void afterTextChanged(Editable s) {
                 if (!searching) return;
+                if (SECRET_CODE.equals(s.toString().trim())) {
+                    stopSearch();
+                    startActivity(new Intent(MainActivity.this, HiddenSettingsActivity.class));
+                    return;
+                }
                 query = s.toString();
                 render();
             }
@@ -1286,8 +1315,6 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
     private final class Keypad {
         private float downX, downY;
         private boolean tracking;
-        private final List<Integer> digits = new ArrayList<>();
-        private long lastAt;
 
         void onTouch(MotionEvent e) {
             switch (e.getActionMasked()) {
@@ -1322,22 +1349,9 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         }
 
         private void swiped() {
-            android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
             android.graphics.Rect b = getWindowManager().getMaximumWindowMetrics().getBounds();
             int d = GestureService.digitFor(downX, downY, b.width(), b.height());
-            long now = System.currentTimeMillis();
-            if (now - lastAt > 45_000) digits.clear();
-            lastAt = now;
-            digits.add(d);
-            list.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK,
-                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-            if (digits.size() == 2) {
-                int n = digits.get(0) * 10 + digits.get(1);
-                digits.clear();
-                Force.save(MainActivity.this, n == 0 ? 100 : n);
-                Celebs.refresh(MainActivity.this);
-                render();
-            }
+            Force.addDigit(MainActivity.this, d);
         }
     }
 

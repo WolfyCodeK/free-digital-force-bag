@@ -22,7 +22,8 @@ exactly that line.
    Two swipes make a number from 1 to 100. Single-digit numbers use a leading zero (7 is `0`
    then `7`) and 100 is `0` then `0`. A swipe only counts if the home screen really moves to
    another page (the service compares what the home screen shows before and after), and every
-   counted swipe gives one short vibration. Taps that open an app, long presses and pulling
+   counted swipe buzzes (a double buzz when the second digit completes the number). Taps that
+   open an app, long presses and pulling
    down the notification shade don't count.
 3. Open Keep Notes and open the **Celebrities** note. It is a numbered list of 100 names, and
    the forced name (line 1 of `celebrities.txt`, "Tom Hanks" by default) is on the line with the
@@ -55,25 +56,79 @@ Needs Android 13 or newer.
 Updating from a version before November 2026: the service was renamed, so turn it on again
 once (step 3).
 
-## Performing
+## Performing, step by step
 
-1. Have the spectator name a number from 1 to 100 (or force one).
-2. Go to the home screen and swipe between pages twice, starting each swipe on the right keypad
-   cell. Feel two buzzes. Swipe left or right, whichever way your pages go.
-3. Open Keep Notes from the home screen and open **Celebrities**. The forced name is on their
-   line. Scroll down slowly while you talk.
+1. **Before the show**: open Keep notes, tap the search bar and type `*#*#` to open the hidden
+   settings (see below). Check that **Swipe service** says *On*, tap **Reset now**, then press
+   Home. Make sure you are on a home-screen page that has another page next to it.
+2. The spectator thinks of (or names) a number from 1 to 100.
+3. On the home screen, make **exactly two page swipes**. Start the first swipe on the keypad cell
+   for the **tens** digit and the second on the cell for the **units** digit (7 is `0` then `7`,
+   100 is `0` then `0`). Only where your finger **starts** matters, not the direction or length.
+   You feel **one short buzz** after the first swipe and a **double buzz** after the second: the
+   number is in.
+4. Tap the Keep notes icon and open **Celebrities**. The list was already rebuilt the moment the
+   second swipe counted, while the app was closed, so nothing moves on screen when the app opens.
+   The forced name is on their line. Scroll down slowly while you talk.
+5. You can hand the phone over. For 3 minutes after the note is opened, swipes on the home screen
+   don't change anything, and as soon as anyone leaves the app the note goes back to its clean
+   state.
 
-Rules worth knowing:
+### When a swipe counts, and why sometimes it doesn't
 
-- A number is used if you open the note within **30 minutes** of entering it.
-- After the Celebrities note has been opened, new numbers are ignored for **3 minutes**, so a
-  spectator swiping around the home screen afterwards can't move the name. To perform again
-  sooner, wait out the 3 minutes.
-- A lone first digit is forgotten after 45 seconds, so a stray swipe can't spoil the next number.
-- After entering the number, open Keep Notes directly. Don't open the app drawer and scroll
-  through it, because scrolling inside the launcher can count as more swipes.
-- With no number entered, the forced name sits on a random line, and stays there like any
-  normal note.
+A swipe counts as a digit (and buzzes) only if **all** of these are true:
+
+- The Keep notes accessibility service is on. Android switches it off if the app is force-stopped,
+  which is why the Samsung "Never sleeping apps" step matters.
+- The **home screen** is what you see: not the app drawer, the notification shade, the lock screen
+  or another app.
+- The home screen **really moves to another page**. Swiping left on the first page or right on
+  the last page bounces back and does **not** count. This is the most common reason a swipe
+  "doesn't work": keep a page on both sides of the one you start on, or always swipe towards a
+  page that exists.
+- Your finger lifts within 3 seconds and nothing opens: tapping an icon or long-pressing (which
+  opens a menu) never counts.
+- It is not within the lock time after the Celebrities note was opened (3 minutes by default).
+
+How the digits pair up:
+
+- The first counted swipe is the tens digit. The next counted swipe within **45 seconds**
+  completes the number (double buzz).
+- If no second swipe comes within 45 seconds, the first digit is forgotten and the next swipe
+  starts again as a tens digit.
+- Once a number is complete, the next swipe starts a **new** number. The old number stays in
+  place until the new one is complete, so one stray swipe can't spoil it, but two stray swipes
+  will replace it.
+- If you lose track, wait 45 seconds (or use **Reset now**) and enter the number again.
+
+### How it resets
+
+- **Leaving the app** (Home, Recents or another app) puts the Celebrities note back to its clean
+  state, closes any open note and returns the app to the plain notes list.
+- A number is used for **30 minutes**. Opening the note after that leaves the name where it was,
+  like any normal note, until you enter a new number.
+- After the Celebrities note is opened, new numbers are ignored for **3 minutes**, so the reveal
+  can't be disturbed. To perform again sooner, use **Reset now**.
+- A lone first digit is forgotten after **45 seconds**.
+- **Reset now** in the hidden settings forgets the number, a first digit and the lock, and moves
+  the forced name to a new random line.
+
+All three times can be changed in the hidden settings.
+
+### Hidden settings
+
+Open Keep notes, tap the search bar and type `*#*#`. Nothing in the app points to this screen, and
+it closes as soon as the app is left. It shows:
+
+- **Status** (live): whether the swipe service is on, the last number and how long ago it was
+  entered, a first digit waiting for its partner, which line the forced name is on now, and
+  whether new numbers are being accepted or ignored (and for how much longer).
+- **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
+  second digit gives a double buzz.
+- **Timing**: how long a number stays valid, how long new numbers are ignored after the note is
+  opened, and how long you have between the two swipes.
+- **Actions**: **Set the number by hand** (an emergency backup if the swipes failed) and **Reset
+  now**.
 
 ### How the Celebrities note behaves if someone edits it
 
@@ -97,22 +152,25 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
 - Turn the Keep Notes accessibility service **off**. The app then switches to an in-app fallback:
   open Keep Notes and make **two vertical swipes on the notes list** (as if scrolling), each
   starting on the keypad cell for the digit. The same keypad covers the whole screen. Each
-  counted swipe gives a light tick. Then open Celebrities.
+  counted swipe buzzes, as on the home screen. Then open Celebrities.
 
 ## Your profile picture and account
 
-- Profile picture: put a square-ish photo at `app/src/main/res/drawable-nodpi/profile.jpg` (or
-  `.png`/`.webp`). The app crops it to a circle inside Google's blue ring. Without one, the
-  avatar shows the first letter of your name.
+- Profile picture: `app/src/main/res/drawable-nodpi/profile.jpg`. It is cropped from the original
+  photo to the same square Google uses for the account picture, and the app draws it in a circle
+  inside Google's blue ring. Replace the file to change it; without one, the avatar shows Google's
+  plain person outline.
 - Name and email shown when the picture is tapped: edit `app/src/main/assets/account.txt`
-  (line 1 name, line 2 email).
+  (line 1 name, line 2 email). Until then the account card shows just the picture.
+- The app is called "Keep notes" on phones set to UK English and "Keep Notes" elsewhere, exactly
+  like Google Keep.
 
 ## Changing the names
 
 Edit `app/src/main/assets/celebrities.txt`: line 1 is the forced name and the other 99 lines are
 the fillers. This is the only file to edit. Pushing rebuilds the APK.
 
-Haptics and timings are constants at the top of `GestureService.java` and `Force.java`.
+Vibration strength and the timings are changed in the hidden settings (type `*#*#` in search).
 
 ## What works in the app
 

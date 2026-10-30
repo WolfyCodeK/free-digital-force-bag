@@ -59,6 +59,11 @@
         <activity
             android:name=".HelpActivity"
             android:exported="false" />
+        <activity
+            android:name=".HiddenSettingsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/app_name" />
 
         <receiver
             android:name=".Reminders$Receiver"
