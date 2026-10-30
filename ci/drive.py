@@ -267,11 +267,11 @@ def ui_tour(mode):
         return
     tour = os.environ.get("TOUR", "full")
     # The Celebrities note, top and around the forced line.
-    if step(f"{mode}-02-celebrities", text="Celebrities"):
+    if step(f"{mode}-02-celebrities", text="Celebrities", settle=2):
         sh("input swipe 540 1800 540 600 300")
         wait(1)
         shot(f"{mode}-03-celebrities-scrolled")
-        back()
+        back_to_notes()
     if tour == "basic":
         return
     run_full_tour(mode)
