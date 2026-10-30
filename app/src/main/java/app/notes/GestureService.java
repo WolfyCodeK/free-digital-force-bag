@@ -193,6 +193,9 @@ public class GestureService extends AccessibilityService {
         if (want == capturing) return;
         capturing = want;
         log("capturing " + want);
+        // A digit only counts while the home screen is still showing: a tap that opened an app
+        // (this one included) must never be confirmed later.
+        if (!want) cancelPending();
         AccessibilityServiceInfo info = getServiceInfo();
         if (info == null) return;
         if (debug()) info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
@@ -298,6 +301,10 @@ public class GestureService extends AccessibilityService {
     /** Compares the home screen with how it looked when the finger went down. */
     private void checkPage(boolean last) {
         if (pendingDigit < 0) return;
+        if (!capturing || !homeShowing()) {
+            cancelPending();
+            return;
+        }
         if (pendingEndAt - pendingAt > MAX_SWIPE_MS) {
             cancelPending();
             return;

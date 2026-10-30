@@ -207,8 +207,17 @@ def dismiss_system_dialogs(nodes):
     return False
 
 
+def ensure_app():
+    """Brings the app back if an earlier step left it (the tour must not wander off)."""
+    if PKG not in sh("dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'"):
+        log("app not in front; relaunching")
+        launch()
+        wait(1.5)
+
+
 def step(name, settle=1.2, **kw):
     """Taps the element matching kw on a fresh dump, waits, then takes a screenshot."""
+    ensure_app()
     nodes = dump()
     if find(nodes, **kw) is None and dismiss_system_dialogs(nodes):
         nodes = dump()
@@ -282,8 +291,10 @@ def run_full_tour(mode):
     w, h = screen_size()
     # Celebrities opened again, scrolled to the middle.
     # Drawer
-    if step(f"{p}-10-drawer", desc="Open navigation drawer"):
-        back()
+    wait(1)
+    if step(f"{p}-10-drawer", desc="Open navigation drawer", settle=1.5):
+        if find(dump(), text="Google Keep"):
+            back()
         wait(1.5)
     # Search landing page, then a query, then a type filter.
     if step(f"{p}-11-search", desc="Search Keep"):
