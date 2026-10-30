@@ -416,7 +416,7 @@ public class GestureService extends AccessibilityService {
 
     private void commit(int d) {
         if (Force.addDigit(this, d)) {
-            log("digit " + d + (Force.pendingDigit(this) < 0 ? ", number " + Force.last(this) : ""));
+            log("digit " + d + (Force.pendingDigit(this) < 0 ? ", number " + Force.current(this) : ""));
         } else {
             log("locked, ignored");
         }

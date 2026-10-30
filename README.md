@@ -23,8 +23,7 @@ exactly that line.
    then `7`) and 100 is `0` then `0`. A swipe only counts if the home screen really moves to
    another page (the service compares what the home screen shows before and after), and every
    counted swipe buzzes (a double buzz when the second digit completes the number). Taps that
-   open an app, long presses and pulling
-   down the notification shade don't count.
+   open an app, long presses and pulling down the notification shade don't count.
 3. Open Keep Notes and open the **Celebrities** note. It is a numbered list of 100 names, and
    the forced name (line 1 of `celebrities.txt`, "Tom Hanks" by default) is on the line with the
    spectator's number.
@@ -51,25 +50,27 @@ Needs Android 13 or newer.
 5. Put Keep Notes on your home screen, ideally on its own page, and make sure the home screen
    has at least two pages to swipe between.
 6. **Practise**: swipe between pages and feel for the buzz after each swipe. No buzz means the
-   swipe didn't count (see "If the home-screen swipes don't work" below).
+   swipe didn't count (see "When a swipe counts" below). To check you hit the cells you meant,
+   make two swipes, open Keep Notes, type `*#*#` in the search bar and look at **Number**.
 
-Updating from a version before November 2026: the service was renamed, so turn it on again
-once (step 3).
+**Updating**: install the new APK over the old one. Afterwards check that Settings >
+Accessibility > Keep Notes is still On. If you installed an early build, the service has since
+been renamed and has to be turned on again once (step 3).
 
 ## Performing, step by step
 
-1. **Before the show**: open Keep notes, tap the search bar and type `*#*#` to open the hidden
+1. **Before the show**: open Keep Notes, tap the search bar and type `*#*#` to open the hidden
    settings (see below). Check that **Swipe service** says *On*, tap **Reset now**, then press
    Home. Make sure you are on a home-screen page that has another page next to it.
 2. The spectator thinks of (or names) a number from 1 to 100.
 3. On the home screen, make **exactly two page swipes**. Start the first swipe on the keypad cell
    for the **tens** digit and the second on the cell for the **units** digit (7 is `0` then `7`,
-   100 is `0` then `0`). Only where your finger **starts** matters, not the direction or length.
+   100 is `0` then `0`). Where your finger **starts** picks the digit; after that it just has to
+   be an ordinary left or right swipe that turns the page (left or right doesn't matter).
    You feel **one short buzz** after the first swipe and a **double buzz** after the second: the
    number is in.
-4. Tap the Keep notes icon and open **Celebrities**. The list was already rebuilt the moment the
-   second swipe counted, while the app was closed, so nothing moves on screen when the app opens.
-   The forced name is on their line. Scroll down slowly while you talk.
+4. Tap the Keep Notes icon and open **Celebrities**. The forced name is on their line. Scroll
+   down slowly while you talk.
 5. You can hand the phone over. For 3 minutes after the note is opened, swipes on the home screen
    don't change anything, and as soon as anyone leaves the app the note goes back to its clean
    state.
@@ -78,7 +79,7 @@ once (step 3).
 
 A swipe counts as a digit (and buzzes) only if **all** of these are true:
 
-- The Keep notes accessibility service is on. Android switches it off if the app is force-stopped,
+- The Keep Notes accessibility service is on. Android switches it off if the app is force-stopped,
   which is why the Samsung "Never sleeping apps" step matters.
 - The **home screen** is what you see: not the app drawer, Recents, the notification shade, the
   lock screen or another app. The service only listens while the home screen is showing, and
@@ -89,6 +90,12 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
   the last page bounces back and does **not** count. This is the most common reason a swipe
   "doesn't work": keep a page on both sides of the one you start on, or always swipe towards a
   page that exists.
+- The swipe doesn't start right at the edge of the screen. With gesture navigation, a swipe from
+  the left or right edge is **Back** and one from the bottom edge is **Home** or switches apps,
+  so the page doesn't turn and nothing counts. Start about a thumb's width in from the edges.
+  This matters most for 1, 4 and 7 (left edge), 3, 6 and 9 (right edge) and 0 (bottom).
+- The swipe doesn't start on a widget that scrolls by itself (a calendar or photo widget, for
+  example). The widget moves instead of the page, so it doesn't count.
 - Your finger lifts within 3 seconds and nothing opens: tapping an icon or long-pressing (which
   opens a menu) never counts.
 - It is not within the lock time after the Celebrities note was opened (3 minutes by default).
@@ -108,19 +115,30 @@ How the digits pair up:
 
 - **Leaving the app** (Home, Recents or another app) puts the Celebrities note back to its clean
   state, closes any open note and returns the app to the plain notes list.
-- A number is used for **30 minutes**. Opening the note after that leaves the name where it was,
-  like any normal note, until you enter a new number.
+- The forced name **stays on the line of the last number** until you enter a new number or use
+  **Reset now**. It never moves on its own, so the note looks like any normal note whenever it
+  is opened. Closing the app or restarting the phone doesn't change it either.
 - After the Celebrities note is opened, new numbers are ignored for **3 minutes**, so the reveal
   can't be disturbed. To perform again sooner, use **Reset now**.
 - A lone first digit is forgotten after **45 seconds**.
 - **Reset now** in the hidden settings forgets the number, a first digit and the lock, and moves
   the forced name to a new random line.
 
-All three times can be changed in the hidden settings.
+Both times can be changed in the hidden settings.
+
+### Why the name never moves when you open the app
+
+The list is rebuilt the moment the second swipe counts, while the app is still closed. When you
+open Keep Notes, the very first picture it draws already has the name on the right line, so
+there is nothing left to change on screen. When an app is still in memory, Android normally
+shows a saved picture of its last screen while it opens (from the home screen and from Recents),
+and that picture is what made the name visibly jump in early builds. Keep Notes no longer lets
+Android keep that picture, so an old version of the list can never appear. (The side effect: the
+Keep Notes card in Recents shows a plain background instead of a preview.)
 
 ### Hidden settings
 
-Open Keep notes, tap the search bar and type `*#*#`. Nothing in the app points to this screen, and
+Open Keep Notes, tap the search bar and type `*#*#`. Nothing in the app points to this screen, and
 it closes as soon as the app is left. It shows:
 
 - **Status** (live): whether the swipe service is on, the last number and how long ago it was
@@ -128,8 +146,8 @@ it closes as soon as the app is left. It shows:
   whether new numbers are being accepted or ignored (and for how much longer).
 - **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
   second digit gives a double buzz.
-- **Timing**: how long a number stays valid, how long new numbers are ignored after the note is
-  opened, and how long you have between the two swipes.
+- **Timing**: how long new numbers are ignored after the note is opened (Off, 1, 3 or 10
+  minutes) and how long you have between the two swipes (20, 45 or 90 seconds).
 - **Actions**: **Set the number by hand** (an emergency backup if the swipes failed) and **Reset
   now**.
 
@@ -156,6 +174,22 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
   open Keep Notes and make **two vertical swipes on the notes list** (as if scrolling), each
   starting on the keypad cell for the digit. The same keypad covers the whole screen. Each
   counted swipe buzzes, as on the home screen. Then open Celebrities.
+- Or, as a last resort, use **Set the number by hand** in the hidden settings.
+
+### Troubleshooting
+
+- **A green box around apps in Recents, or the keyboard won't type**: you are on an old build.
+  Early builds kept a screen-reader mode switched on everywhere. The current build only listens
+  while the home screen is showing and is completely off in every other app. Install the latest
+  APK from Releases, then check the service is still on.
+- **The swipes stopped buzzing**: check **Swipe service** in the hidden settings. If it says
+  *Off*, Android switched the service off (usually because the app was force-stopped or
+  "put to sleep"); turn it on again and do the Samsung "Never sleeping apps" step.
+- **"Allow restricted settings" is missing**: try to turn on the service once first (step 3 of
+  Setup). Android only offers the option after it has blocked the setting.
+- **The name is on the wrong line**: one of the swipes probably didn't count (no buzz), so a
+  stray swipe paired up with the next one. Use **Reset now** and enter the number again, or set
+  it by hand.
 
 ## Your profile picture and account
 
@@ -202,9 +236,10 @@ That job:
   service, swipes from the "6" and then the "1" keypad cell on a two-page home screen, opens
   the app by tapping its icon and checks that line 61 of Celebrities is the forced name;
 - checks that touches still reach the launcher and gesture navigation still works with the
-  service on, that the icon tap is not counted as a digit, that touch exploration is off while
-  the app is in front, and that the in-app fallback (service off, two swipes on the notes list)
-  puts the name on line 28.
+  service on, that the icon tap is not counted as a digit, that touch exploration (the
+  screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,
+  and that the in-app fallback (service off, two swipes on the notes list) puts the name on
+  line 28.
 
 All of those checks pass on both emulators. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`

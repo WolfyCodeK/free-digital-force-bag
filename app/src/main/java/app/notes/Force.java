@@ -15,7 +15,6 @@ final class Force {
     static final int VIBRATION_OFF = 0, VIBRATION_LIGHT = 1, VIBRATION_MEDIUM = 2, VIBRATION_STRONG = 3;
 
     /** Choices offered on the hidden settings screen. */
-    static final long[] MAX_AGE_CHOICES = {10 * 60_000L, 30 * 60_000L, 60 * 60_000L, 120 * 60_000L};
     static final long[] LOCK_CHOICES = {0, 60_000L, 3 * 60_000L, 10 * 60_000L};
     static final long[] PAIR_CHOICES = {20_000L, 45_000L, 90_000L};
 
@@ -34,11 +33,6 @@ final class Force {
     /** Buzz twice when the second digit completes the number. */
     static boolean doubleBuzz(Context c) {
         return prefs(c).getBoolean("doubleBuzz", true);
-    }
-
-    /** A captured number is used only if the Celebrities note is shown within this time. */
-    static long maxAgeMs(Context c) {
-        return prefs(c).getLong("maxAge", 30 * 60_000L);
     }
 
     /**
@@ -72,15 +66,11 @@ final class Force {
         prefs(c).edit().putInt("n", n).putLong("t", System.currentTimeMillis()).apply();
     }
 
-    /** The last captured number (1-100), or -1 if there is none or it is too old. */
+    /**
+     * The last captured number (1-100), or -1 if there is none. It stays until a new number is
+     * entered or everything is reset; the note was already rebuilt for it when it was captured.
+     */
     static int current(Context c) {
-        SharedPreferences p = prefs(c);
-        if (System.currentTimeMillis() - p.getLong("t", 0) > maxAgeMs(c)) return -1;
-        return p.getInt("n", -1);
-    }
-
-    /** The last captured number even if it is too old to be used, or -1. */
-    static int last(Context c) {
         return prefs(c).getInt("n", -1);
     }
 

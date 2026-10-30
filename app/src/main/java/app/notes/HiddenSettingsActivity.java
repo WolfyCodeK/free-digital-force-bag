@@ -100,8 +100,6 @@ public class HiddenSettingsActivity extends AppCompatActivity {
                 on -> Force.setBool(this, "doubleBuzz", on));
 
         header("Timing");
-        String[] ages = {"10 minutes", "30 minutes", "1 hour", "2 hours"};
-        choice("A number stays valid for", ages, Force.MAX_AGE_CHOICES, Force.maxAgeMs(this), "maxAge");
         String[] locks = {"Off", "1 minute", "3 minutes", "10 minutes"};
         choice("After the note is opened, ignore new numbers for", locks, Force.LOCK_CHOICES,
                 Force.lockMs(this), "lock");
@@ -150,12 +148,11 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     private void updateStatus() {
         service.setText(serviceEnabled() ? "On" : "Off: two swipes on the notes list instead");
         long now = System.currentTimeMillis();
-        int last = Force.last(this);
+        int last = Force.current(this);
         if (last < 0) {
             number.setText("None yet");
         } else {
-            long age = now - Force.capturedAt(this);
-            number.setText(last + ", entered " + ago(age) + (Force.current(this) < 0 ? " (too old now)" : ""));
+            number.setText(last + ", entered " + ago(now - Force.capturedAt(this)));
         }
         int first = Force.pendingDigit(this);
         if (first < 0) {
