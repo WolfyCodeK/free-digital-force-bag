@@ -739,9 +739,15 @@ def main():
     log("screen", w, h, "density", sh("wm density"))
     log(adb("install", "-r", "-g", "apk/app-debug.apk", timeout=180))
 
+    # The user's phone runs at 3 px/dp (360dp wide): take the tour at the same density so the
+    # screenshots line up with theirs, then go back for the home-screen test.
+    sh("wm density 480")
+    wait(3)
     ui_tour("dark")
     ui_tour("light")
     sh("cmd uimode night yes")
+    sh("wm density reset")
+    wait(3)
 
     icons = add_home_icons()
     log("icons added:", icons)
