@@ -53,8 +53,11 @@ jobs:
 
   # Boots an emulator, takes screenshots of every screen and tests the home-screen swipes.
   # The screenshots are uploaded as the "screenshots-apiNN" artifact of each run.
+  # About 20 minutes per Android version, so only when asked for: a manual run, or a commit whose
+  # message contains [test]. Every push still builds and publishes the APK (about 3 minutes).
   emulator:
     needs: build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[test]')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:

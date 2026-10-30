@@ -302,9 +302,12 @@ Help & feedback opens Keep's help centre in the browser, and pull to refresh jus
 ## Development
 
 There is no need for a local Android SDK: every push is built by GitHub Actions
-(`.github/workflows/build.yml`), which publishes the APK to the "latest" release and then runs the
-app on Android 14 and Android 16 emulators (Pixel 6 profile, Pixel launcher) with `ci/drive.py`.
-That job:
+(`.github/workflows/build.yml`), which publishes the APK to the "latest" release (about 3
+minutes). The emulator tests run the app on Android 14 and Android 16 emulators (Pixel 6 profile,
+Pixel launcher) with `ci/drive.py`. They take about 20 minutes each, so they only run when asked
+for: start the workflow by hand (Actions > Build APK > Run workflow) or put `[test]` in a commit
+message. GitHub's free plan includes 2,000 Actions minutes a month for private repositories. That
+job:
 
 - takes screenshots of every screen in dark and light mode (a tour of the notes screen, search,
   the new-note menu, selection, the editor and its sheets, Reminders, Archive, Deleted, labels,
