@@ -187,9 +187,12 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
   "put to sleep"); turn it on again and do the Samsung "Never sleeping apps" step.
 - **"Allow restricted settings" is missing**: try to turn on the service once first (step 3 of
   Setup). Android only offers the option after it has blocked the setting.
-- **The name is on the wrong line**: one of the swipes probably didn't count (no buzz), so a
-  stray swipe paired up with the next one. Use **Reset now** and enter the number again, or set
-  it by hand.
+- **The name is on the wrong line**: either a swipe started in the neighbouring keypad cell, or
+  a stray swipe made just before (within 45 seconds) was still waiting as a first digit, so
+  your first swipe completed a number and your second started a new one (you feel the double
+  buzz after your first swipe instead of the second). Tapping **Reset now**
+  before the show prevents the second case. To fix it on the spot, enter the number again, or
+  set it by hand.
 
 ## Your profile picture and account
 
