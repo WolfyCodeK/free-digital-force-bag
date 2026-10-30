@@ -67,13 +67,6 @@ public class GestureService extends AccessibilityService {
      */
     private static final float SIDEWAYS_DP = 56, SIDE_EDGE_DP = 28, BOTTOM_EDGE_DP = 48;
 
-    private static final int[][] KEYPAD = {
-            {1, 2, 3},
-            {4, 5, 6},
-            {7, 8, 9},
-            {0, 0, 0},
-    };
-
     private static final Region EVERYWHERE = new Region(0, 0, 100_000, 100_000);
 
     /** Silent unless enabled with: adb shell setprop log.tag.KeepGestures DEBUG */
@@ -100,6 +93,8 @@ public class GestureService extends AccessibilityService {
     private KeypadOverlay overlay;
     /** Prime asked for the first home-screen page: press Home again once home is showing. */
     private boolean wantFirstPage;
+    /** Setting the keypad up: the overlay asks for the 1, 9 and 0 apps on the home screen. */
+    private boolean calibrating;
 
     private final TouchInteractionController.Callback callback =
             new TouchInteractionController.Callback() {
@@ -154,7 +149,33 @@ public class GestureService extends AccessibilityService {
     /** Called by App when this app's own screens come to the front or leave it. */
     static void setAppInFront(boolean inFront) {
         appInFront = inFront;
-        if (instance != null) instance.updateCapturing();
+        if (instance == null) return;
+        if (inFront) instance.calibrating = false;
+        instance.updateCapturing();
+    }
+
+    /**
+     * Goes to the home screen and asks for the apps to use as 1, 9 and 0. Returns false if the
+     * service isn't running.
+     */
+    static boolean setUpKeypad() {
+        GestureService s = instance;
+        if (s == null) return false;
+        s.calibrating = true;
+        s.performGlobalAction(GLOBAL_ACTION_HOME);
+        s.handler.post(s::updateCapturing);
+        return true;
+    }
+
+    /** The overlay finished setting the keypad up (k) or it was cancelled (null). */
+    private void keypadSetUp(float[] k) {
+        calibrating = false;
+        if (k != null) {
+            Force.setKeypad(this, k);
+            Force.buzz(this, false);
+        }
+        log(k != null ? "keypad set up" : "keypad set-up cancelled");
+        updateCapturing();
     }
 
     /** Called by Force when the trick is primed or switched off, or the overlay is toggled. */
@@ -278,22 +299,31 @@ public class GestureService extends AccessibilityService {
         if (want) reassert();
     }
 
-    /** Shows the practice keypad while it is switched on and the home screen is showing. */
+    /**
+     * Shows the practice keypad while it is switched on and the home screen is showing, and the
+     * keypad set-up screen while that is running.
+     */
     private void updateOverlay() {
-        boolean show = Force.overlay(this) && homeInFront && !appInFront;
-        if (overlay == null) {
-            if (!show) return;
-            overlay = new KeypadOverlay(this);
-            try {
-                getSystemService(WindowManager.class).addView(overlay, KeypadOverlay.layoutParams());
-            } catch (RuntimeException e) {
-                log("overlay failed: " + e);
-                overlay = null;
-                return;
+        boolean practice = Force.overlay(this);
+        boolean show = (practice || calibrating) && homeInFront && !appInFront;
+        WindowManager wm = getSystemService(WindowManager.class);
+        try {
+            if (overlay == null) {
+                if (!show) return;
+                overlay = new KeypadOverlay(this, this::keypadSetUp);
+                overlay.setSettingUp(calibrating);
+                wm.addView(overlay, KeypadOverlay.layoutParams(calibrating));
+            } else if (overlay.isSettingUp() != calibrating) {
+                overlay.setSettingUp(calibrating);
+                wm.updateViewLayout(overlay, KeypadOverlay.layoutParams(calibrating));
             }
+        } catch (RuntimeException e) {
+            log("overlay failed: " + e);
+            overlay = null;
+            return;
         }
         overlay.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (!Force.overlay(this)) overlay.clear();
+        if (!practice) overlay.clear();
     }
 
     /**
@@ -546,11 +576,17 @@ public class GestureService extends AccessibilityService {
             log("not on the home screen");
             return;
         }
+        if (calibrating) return;
         Point size = screenSize();
+        int d = digitFor(x, y, size.x, size.y, Force.keypad(this));
+        if (d < 0) {
+            log("outside the keypad");
+            return;
+        }
         pendingSnapshot = now;
         pendingAt = SystemClock.uptimeMillis();
         pendingEndAt = 0;
-        pendingDigit = digitFor(x, y, size.x, size.y, Force.keypadBottom(this));
+        pendingDigit = d;
     }
 
     private void commit(int d) {
@@ -575,13 +611,17 @@ public class GestureService extends AccessibilityService {
     }
 
     /**
-     * The keypad covers the screen from the top down to {@code bottom} (a fraction of its height,
-     * so the 0 row can sit above the dock). Anything lower counts as the 0 row.
+     * The digit of the keypad cell a touch starts in (see Force.keypad), or -1 if it starts
+     * anywhere else: those swipes never count, so pages can be turned freely from outside it.
+     * Each cell is one app position: the 3x3 between the 1 and 9 keys, and one cell around 0.
      */
-    static int digitFor(float x, float y, int w, int h, float bottom) {
-        int col = Math.max(0, Math.min(2, (int) (x / w * 3)));
-        int row = Math.max(0, Math.min(3, (int) (y / (h * bottom) * 4)));
-        return KEYPAD[row][col];
+    static int digitFor(float x, float y, int w, int h, float[] k) {
+        float x1 = k[0] * w, y1 = k[1] * h, cw = (k[2] - k[0]) * w / 2, ch = (k[3] - k[1]) * h / 2;
+        if (cw <= 0 || ch <= 0) return -1;
+        float fx = (x - x1) / cw + 0.5f, fy = (y - y1) / ch + 0.5f;
+        if (fx >= 0 && fx < 3 && fy >= 0 && fy < 3) return (int) fy * 3 + (int) fx + 1;
+        if (Math.abs(x - k[4] * w) <= cw / 2 && Math.abs(y - k[5] * h) <= ch / 2) return 0;
+        return -1;
     }
 
     /** The full size of the screen in its current rotation, system bars included. */

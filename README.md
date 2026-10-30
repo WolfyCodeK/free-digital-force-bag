@@ -9,20 +9,24 @@ exactly that line.
 
 1. A small accessibility service ("Keep Notes") notices where each touch starts on the home
    screen. It never changes what you see: every touch goes straight to your launcher, untouched.
-2. Where each sideways swipe **starts** picks a digit from an invisible phone keypad. It covers
-   the full width of the screen, from the top down to just above the dock (75% of the screen
-   height by default, adjustable in the hidden settings):
+2. The app you start each sideways swipe **on** picks a digit. The keypad is the 3x3 block of
+   app positions in the bottom-right of the home screen, just above the dock, under your thumb,
+   with 0 the app to the left of the 7. On a four-column home screen:
 
    ```
-   1 2 3
-   4 5 6
-   7 8 9
-   0 0 0   (the whole fourth row is 0)
-   - - -   (the dock: not part of the keypad)
+   .  1  2  3
+   .  4  5  6
+   0  7  8  9
+   [   dock   ]
    ```
+
+   It is the same positions on every page, whichever apps are there (an empty spot works too).
+   Swipes that start anywhere else never count, so you can move between pages freely by
+   starting a swipe outside the keypad. **Set up the keypad** in the hidden settings lets you
+   choose the apps for 1, 9 and 0 by tapping them, if your home screen is laid out differently.
 
    Two swipes make a number from 1 to 100. Single-digit numbers use a leading zero (7 is `0`
-   then `7`) and 100 is `0` then `0`. A swipe counts if the home screen turns to another page,
+   then `7`) and 100 is `0` then `0`. A keypad swipe counts if the home screen turns to another page,
    or if it is a clear sideways swipe even though the page can't turn (on the last page). Every
    counted swipe buzzes (a double buzz when the second digit completes the number). Taps,
    long presses, swipes up into the app drawer and pulling down the notification shade don't
@@ -55,11 +59,15 @@ Needs Android 13 or newer.
    where the app is waiting. Pressing Home while you are already on the home screen must take
    you to the first page. On Samsung this is the "main page": pinch the home screen and check
    the house icon is on the first page.
-6. **Practise** with the keypad overlay: open the hidden settings (type `*#*#` in the Keep Notes
-   search bar), switch on **Show the keypad on the home screen** and press Home. The keypad is
-   drawn over your home screen, and every swipe that counts lights up its cell and buzzes,
-   with the two-digit number shown at the top. Practice swipes never enter a number. Switch the
-   overlay off again in the hidden settings; **Prime** also switches it off.
+6. **Check the keypad**: open the hidden settings (type `*#*#` in the Keep Notes search bar),
+   switch on **Show the keypad on the home screen** and press Home. The ten keys are outlined
+   over your apps. If they don't line up with your bottom-right 3x3, tap **Set up the keypad**:
+   it goes to your home screen and asks you to tap the app for 1 (top-left of the 3x3), then
+   9 (bottom-right), then 0. Nothing opens while you tap, and **Cancel** stops it. **Use the
+   default keypad** goes back to the standard layout.
+7. **Practise** with the overlay on: every swipe that counts lights up its key and buzzes, with
+   the two-digit number shown above the keypad. Practice swipes never enter a number. Switch
+   the overlay off again in the hidden settings; **Prime** also switches it off.
 
 **Updating**: install the new APK over the old one. Afterwards check that Settings >
 Accessibility > Keep Notes is still On. If you installed an early build, the service has since
@@ -106,11 +114,11 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
 - The swipe doesn't start right at the edge of the screen. With gesture navigation, a swipe from
   the left or right edge is **Back** and one from the bottom edge is **Home** or switches apps,
   so the service ignores swipes that start within a few millimetres of the side edges or the
-  bottom edge. Start about a thumb's width in. This matters most for 1, 4 and 7 (left edge)
-  and 3, 6 and 9 (right edge).
-- It starts on the keypad, not the dock: swipes on the dock don't turn the page. The keypad
-  ends at 75% of the screen height by default; if your dock reaches higher, lower that in the
-  hidden settings and check with the practice overlay.
+  bottom edge (unless the page turns). Start on the app icon itself, not at the very edge.
+  This matters most for 3, 6 and 9, the right-hand column.
+- It starts **on a keypad key** (one of the ten app positions). Anywhere else is ignored on
+  purpose, so you can turn pages freely without entering a digit. Check where the keys are with
+  the practice overlay.
 - Your finger lifts within 3 seconds and nothing opens: tapping an icon or long-pressing (which
   opens a menu) never counts.
 
@@ -179,9 +187,10 @@ it closes as soon as the app is left. It shows:
   last number and how long ago it was entered, a first digit waiting for its partner, and which
   line the forced name is on now.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
-  switched on while the trick is primed, and Prime switches it off. **Keypad ends at** moves the
-  keypad's bottom edge (60% to 85% of the screen height, or the whole screen) so the 0 row sits
-  above your dock; the overlay shades the area below it.
+  switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
+  the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
+  **Use the default keypad** goes back to the bottom-right 3x3 with 0 left of the 7. Neither
+  works while the trick is primed.
 - **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
   second digit gives a double buzz.
 - **Timing**: how long you have between the two swipes (20, 45 or 90 seconds).
@@ -210,7 +219,7 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
 - Turn the Keep Notes accessibility service **off**. The app then switches to an in-app fallback:
   tap **Prime** in the hidden settings (with the service off it stays in the app), go back to
   the notes list and make **two vertical swipes on the list** (as if scrolling), each starting
-  on the keypad cell for the digit. The same keypad covers the whole screen. Each counted swipe
+  on the keypad key for the digit (the same screen positions as on the home screen). Each counted swipe
   buzzes, as on the home screen. Then open Celebrities, which switches the trick off as usual.
 - Or, as a last resort, use **Set the number by hand** in the hidden settings.
 
@@ -231,7 +240,7 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
   digit is forgotten by then, and a throwaway number is replaced by the real one.
 - **"Allow restricted settings" is missing**: try to turn on the service once first (step 3 of
   Setup). Android only offers the option after it has blocked the setting.
-- **The name is on the wrong line**: either a swipe started in the neighbouring keypad cell, or
+- **The name is on the wrong line**: either a swipe started on the neighbouring keypad key, or
   a stray swipe made just before (within 45 seconds) was still waiting as a first digit, so
   your first swipe completed a number and your second started a new one (you feel the double
   buzz after your first swipe instead of the second). Priming right before the show prevents
@@ -295,13 +304,14 @@ That job:
 - runs an end-to-end test of the trick with real touchscreen events (written to the emulator's
   touch device, because `adb shell input` bypasses accessibility services): it enables the
   service, checks nothing listens before priming, taps **Prime** from page 2 and checks it
-  lands on page 1, swipes from the "6" and then the "1" keypad cell on a two-page home screen,
+  lands on page 1, swipes from the "6" and then the "1" keypad key on a two-page home screen,
   opens the app by tapping its icon and checks that line 61 of Celebrities is the forced name;
 - checks the trick is then off: nothing listens on the home screen, two more swipes don't
   count and the note keeps line 61; that priming again switches listening back on; and that
   leaving the app after entering a number (without opening the note) switches it off too;
 - checks the practice overlay shows on the home screen, lights up a swipe without entering a
-  number, and goes off when the trick is primed;
+  number, and goes off when the trick is primed; sets the keypad up by tapping three spots on
+  the home screen and checks a swipe from the new "2" counts as 2;
 - makes two quick swipes back to back, the second on the last page where the page can't turn,
   and checks both count (line 63);
 - checks that touches still reach the launcher and gesture navigation still works with the

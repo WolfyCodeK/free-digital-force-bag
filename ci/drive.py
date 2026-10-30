@@ -619,16 +619,17 @@ def dismiss_stylus_sheet():
     return False
 
 
-# The keypad covers the top 75% of the screen by default, so the 0 row sits above the dock.
-KEYPAD_BOTTOM = 0.75
+# The default keypad (Force.DEFAULT_KEYPAD): centres of the 1, 9 and 0 keys as fractions of the
+# screen. The bottom-right 3x3 of a four-column home screen, 0 to the left of the 7.
+KEYPAD = (0.375, 0.42, 0.875, 0.72, 0.125, 0.72)
 
 
-def cell(d, w, h):
+def cell(d, w, h, k=KEYPAD):
     """The middle of a digit's keypad cell."""
     if d == 0:
-        return int(w * 0.5), int(h * KEYPAD_BOTTOM * 7 / 8)
+        return int(w * k[4]), int(h * k[5])
     row, col = (d - 1) // 3, (d - 1) % 3
-    return int(w * (col + 0.5) / 3), int(h * KEYPAD_BOTTOM * (row + 0.5) / 4)
+    return int(w * (k[0] + col * (k[2] - k[0]) / 2)), int(h * (k[1] + row * (k[3] - k[1]) / 2))
 
 
 def swipe_from(d, direction, w, h):
@@ -653,6 +654,17 @@ def open_hidden_settings():
             return True
         dismiss_stylus_sheet()
         back_to_notes()
+    return False
+
+
+def tap_setting(text):
+    """Taps a row of the hidden settings, scrolling down to it if needed."""
+    for _ in range(3):
+        if tap_node(dump(), text=text):
+            return True
+        w, h = screen_size()
+        sh(f"input swipe {w//2} {int(h*0.75)} {w//2} {int(h*0.35)} 300")
+        wait(1)
     return False
 
 
@@ -808,9 +820,9 @@ def swipe_test(w, h):
     te_spent = touch_exploration()
     log("touch exploration after the reveal:", te_spent)
     before = digit_lines()
-    real_swipe(int(w*0.50), int(h*0.40), int(w*0.10), int(h*0.40))   # from 5, to page 1
+    swipe_from(5, "left", w, h)    # to page 1
     wait(2.5)
-    real_swipe(int(w*0.50), int(h*0.62), int(w*0.90), int(h*0.62))   # from 8, back to page 0
+    swipe_from(8, "right", w, h)   # back to page 0
     wait(2.5)
     spent_no_digits = digit_lines() == before
     launch()
@@ -852,7 +864,7 @@ def swipe_test(w, h):
     # Practice overlay: allowed now the trick is off; swipes light up the keypad but don't count.
     practice_ok = overlay_on = False
     if open_hidden_settings():
-        tap_node(dump(), text="Show the keypad on the home screen")
+        tap_setting("Show the keypad on the home screen")
         wait(1)
         shot("practice-00-settings")
         home()
@@ -867,6 +879,32 @@ def swipe_test(w, h):
         practice_ok = ("KeepGestures: practice digit 6" in sh("logcat -d | grep 'practice digit'")
                        and digit_lines() == before)
         log("practice overlay shown:", overlay_on, "| practice swipe lit up without counting:", practice_ok)
+
+    # Set the keypad up on the home screen with three taps, then check a swipe from the new 2
+    # (outside the default keypad) counts as 2. Then back to the default.
+    custom = (0.20, 0.30, 0.70, 0.54, 0.90, 0.54)
+    if open_hidden_settings():
+        tap_setting("Set up the keypad")
+        wait(3)
+        shot("setup-01-ask-for-1")
+        for d in (1, 9, 0):
+            x, y = cell(d, w, h, custom)
+            sh(f"input tap {x} {y}")
+            wait(1)
+        shot("setup-02-done")
+        wait(1)
+        x, y = cell(2, w, h, custom)
+        real_swipe(x, y, int(w * 0.05), y)
+        wait(2.5)
+        shot("setup-03-swiped-new-2")
+        setup_ok = "KeepGestures: practice digit 2" in sh("logcat -d | grep 'practice digit'")
+        log("keypad set up on the home screen, new 2 counted:", setup_ok)
+        log(sh("logcat -d | grep -E 'KeepGestures: (keypad|outside|practice)' | tail -8"))
+        if open_hidden_settings():
+            tap_setting("Use the default keypad")
+            wait(1)
+    else:
+        setup_ok = False
     # Priming switches the overlay off for good.
     prime("3")
     overlay_after_prime = overlay_visible()
@@ -916,9 +954,11 @@ def swipe_test(w, h):
         back()
     # The reveal switched the fallback off too.
     back_to_notes()
-    sh(f"input swipe {int(w*0.17)} {int(h*0.40)} {int(w*0.17)} {int(h*0.10)} 300")   # 4
+    x, y = cell(4, w, h)
+    sh(f"input swipe {x} {y} {x} {int(h*0.08)} 300")   # 4
     wait(1)
-    sh(f"input swipe {w//2} {int(h*0.40)} {w//2} {int(h*0.10)} 300")   # 5
+    x, y = cell(5, w, h)
+    sh(f"input swipe {x} {y} {x} {int(h*0.08)} 300")   # 5
     wait(1.5)
     for _ in range(2):
         sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
@@ -973,6 +1013,7 @@ def swipe_test(w, h):
         "in_app_fallback_line_58": fallback_ok,
         "fallback_off_after_reveal": fallback_spent_line == 58,
         "quick_swipes_and_last_page": quick_line == 63,
+        "keypad_setup_works": setup_ok,
         "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,

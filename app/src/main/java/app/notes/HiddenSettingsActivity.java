@@ -39,7 +39,8 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
     private TextView trick, service, number, pending, line, celebrity, overlayNote;
-    private LinearLayout overlayRow;
+    private LinearLayout overlayRow, keypadRow;
+    private TextView keypadNote;
     private MaterialSwitch overlaySwitch;
     private final Runnable tick = new Runnable() {
         @Override
@@ -126,10 +127,19 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             updateStatus();
         });
         content.addView(overlayRow, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
-        String[] bottoms = {"60% of the screen", "65% of the screen", "70% of the screen",
-                "75% of the screen", "80% of the screen", "85% of the screen", "The whole screen"};
-        choice("Keypad ends at (move it above your dock)", bottoms, Force.KEYPAD_BOTTOM_CHOICES,
-                Math.round(Force.keypadBottom(this) * 100), "keypadBottom");
+        keypadRow = row("Set up the keypad", v -> {
+            if (Force.armed(this)) {
+                Snackbar.make(content, "Not while the trick is primed", Snackbar.LENGTH_SHORT).show();
+            } else if (!GestureService.setUpKeypad()) {
+                Snackbar.make(content, "Needs the swipe service", Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        keypadNote = value(keypadRow);
+        row("Use the default keypad", v -> {
+            Force.setKeypad(this, null);
+            updateStatus();
+            Snackbar.make(content, "Bottom-right 3x3, with 0 left of the 7", Snackbar.LENGTH_SHORT).show();
+        });
 
         header("Feedback");
         TextView vib = value(row("Vibration", null));
@@ -214,6 +224,10 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         int l = Celebs.currentLine(this);
         String forced = Force.forcedName(this);
         line.setText(l < 0 ? forced + " goes on a random line" : forced + " is on line " + l);
+        keypadRow.setAlpha(armed ? 0.5f : 1f);
+        keypadNote.setText(armed ? "Not while the trick is primed"
+                : (Force.customKeypad(this) ? "Set on your home screen. " : "Default: the bottom-right 3x3, 0 left of the 7. ")
+                + "Tap to choose the apps for 1, 9 and 0");
         overlaySwitch.setChecked(Force.overlay(this));
         overlaySwitch.setEnabled(!armed);
         overlayRow.setEnabled(!armed);

@@ -39,11 +39,34 @@ final class Force {
         return prefs(c).getBoolean("doubleBuzz", true);
     }
 
-    /** Where the keypad ends, as a percentage of the screen height: above the dock. */
-    static final long[] KEYPAD_BOTTOM_CHOICES = {60, 65, 70, 75, 80, 85, 100};
+    /**
+     * The keypad: a 3x3 block of home-screen app positions, plus a 0 key. Stored as the centres
+     * of the 1, 9 and 0 keys, as fractions of the screen width and height. The default is the
+     * bottom-right 3x3 of a four-column home screen, just above the dock, with 0 the app to the
+     * left of the 7 (the dock below the 8 can't turn the page).
+     */
+    static final float[] DEFAULT_KEYPAD = {0.375f, 0.42f, 0.875f, 0.72f, 0.125f, 0.72f};
+    private static final String[] KEYPAD_KEYS = {"k1x", "k1y", "k9x", "k9y", "k0x", "k0y"};
 
-    static float keypadBottom(Context c) {
-        return prefs(c).getLong("keypadBottom", 75) / 100f;
+    static float[] keypad(Context c) {
+        SharedPreferences p = prefs(c);
+        float[] k = new float[6];
+        for (int i = 0; i < 6; i++) k[i] = p.getFloat(KEYPAD_KEYS[i], DEFAULT_KEYPAD[i]);
+        return k;
+    }
+
+    static boolean customKeypad(Context c) {
+        return prefs(c).contains(KEYPAD_KEYS[0]);
+    }
+
+    /** Saves a keypad set up on the home screen; null goes back to the default. */
+    static void setKeypad(Context c, float[] k) {
+        SharedPreferences.Editor e = prefs(c).edit();
+        for (int i = 0; i < 6; i++) {
+            if (k == null) e.remove(KEYPAD_KEYS[i]);
+            else e.putFloat(KEYPAD_KEYS[i], k[i]);
+        }
+        e.apply();
     }
 
     /** The second swipe must come within this time of the first. */
