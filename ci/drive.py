@@ -1063,6 +1063,39 @@ def swipe_test(w, h):
             shot("celebrity-03-note")
             back()
 
+    # A different celebrity every time: Prime moves on to the name that was showing as next,
+    # and line 1 of the note then shows the new next one (line 2 if the forced name is on 1).
+    rotate_ok = False
+    if open_hidden_settings():
+        tap_setting("Change the celebrity every time")
+        wait(1)
+        m = re.search(r"Next: ([^\n]+)", "\n".join(n.text for n in dump("rotation-on")))
+        first_next = m.group(1) if m else None
+        prime("rotation")   # the service is off here, so this stays in the hidden settings
+        texts = [n.text for n in dump("rotation-after-prime")]
+        current = texts[texts.index("Celebrity") + 1] if "Celebrity" in texts else None
+        m = re.search(r"Next: ([^\n]+)", "\n".join(texts))
+        second_next = m.group(1) if m else None
+        back_to_notes()
+        lines = {}
+        n = find_note("Celebrities")
+        if n is not None:
+            tap(n.cx, n.cy)
+            wait(1.5)
+            note = "\n".join(x.text for x in dump("rotation-note"))
+            shot("rotation-01-note")
+            for num, name in re.findall(r"(?m)^(\d+)\. (.+)$", note):
+                lines.setdefault(name.strip(), []).append(int(num))
+            back()
+        forced_lines = lines.get(current, [])
+        next_lines = lines.get(second_next, [])
+        twice = [k for k, v in lines.items() if len(v) > 1]
+        rotate_ok = (first_next is not None and current == first_next
+                     and second_next not in (None, first_next) and len(forced_lines) == 1
+                     and next_lines == [2 if forced_lines == [1] else 1] and not twice)
+        log("rotation: next was", first_next, "| now forced", current, "on", forced_lines,
+            "| new next", second_next, "on", next_lines, "| names twice:", twice)
+
     results = {
         "not_listening_before_prime": te_unprimed == "0",
         "prime_lands_on_first_page": page_after_prime == 0,
@@ -1087,6 +1120,7 @@ def swipe_test(w, h):
         "keypad_setup_works": setup_ok,
         "overlay_lets_touches_through_after_setup": overlay_lets_touches_through,
         "celebrity_setting_changes_name": name_ok,
+        "new_celebrity_every_time": rotate_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }

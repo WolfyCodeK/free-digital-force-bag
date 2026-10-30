@@ -63,26 +63,44 @@ final class Celebs {
         return Math.min(100, names(c).size());
     }
 
-    /** The whole list with the forced name on the given line (1-based). */
+    /**
+     * The whole list with the forced name on the given line (1-based). With "a different
+     * celebrity every time" on, the next celebrity is on line 1, or line 2 when the forced name
+     * is on line 1.
+     */
     static String text(Context c, int line) {
         List<String> all = names(c);
         String forced = Force.forcedName(c);
-        // If the forced name is one of the fillers, the default forced name takes its place, so
-        // no name is on the list twice.
-        List<String> fillers = new ArrayList<>(all.subList(1, all.size()));
-        for (int i = 0; i < fillers.size(); i++) {
-            if (fillers.get(i).equalsIgnoreCase(forced)) fillers.set(i, all.get(0));
+        String next = Force.rotating(c) ? Force.nextName(c) : null;
+        if (next != null && next.equalsIgnoreCase(forced)) next = null;
+        // The rest of the list is celebrities.txt from line 2 on, without the forced and next
+        // names; the file's first name fills the gap one of them leaves, so no name is on the
+        // list twice.
+        List<String> spare = new ArrayList<>();
+        if (!isOneOf(all.get(0), forced, next)) spare.add(all.get(0));
+        List<String> fillers = new ArrayList<>();
+        for (String n : all.subList(1, all.size())) {
+            if (!isOneOf(n, forced, next)) {
+                fillers.add(n);
+            } else if (!spare.isEmpty()) {
+                fillers.add(spare.remove(0));
+            }
         }
-        int count = count(c);
+        int count = Math.min(count(c), 1 + (next != null ? 1 : 0) + fillers.size());
         line = Math.max(1, Math.min(count, line));
+        int nextLine = next == null ? -1 : line == 1 ? 2 : 1;
         StringBuilder sb = new StringBuilder();
         int filler = 0;
         for (int i = 1; i <= count; i++) {
-            String name = i == line ? forced : fillers.get(filler++);
+            String name = i == line ? forced : i == nextLine ? next : fillers.get(filler++);
             sb.append(i).append(". ").append(name);
             if (i < count) sb.append('\n');
         }
         return sb.toString();
+    }
+
+    private static boolean isOneOf(String name, String a, String b) {
+        return name.equalsIgnoreCase(a) || (b != null && name.equalsIgnoreCase(b));
     }
 
     /**

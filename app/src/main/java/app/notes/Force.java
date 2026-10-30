@@ -6,6 +6,10 @@ import android.os.VibrationAttributes;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * The number entered with the swipes, and the trick's own settings (changed on the hidden
  * settings screen). Shared by GestureService, the in-app fallback and the notes screens.
@@ -83,11 +87,70 @@ final class Force {
 
     /** Sets the forced name and rebuilds the Celebrities note; empty goes back to the default. */
     static void setForcedName(Context c, String name) {
+        storeForced(c, name);
+        if (rotating(c) && forcedName(c).equalsIgnoreCase(String.valueOf(nextName(c)))) pickNext(c);
+        Celebs.restore(c);
+        MainActivity.numberChanged();
+    }
+
+    private static void storeForced(Context c, String name) {
         name = name == null ? "" : name.trim().replaceAll("\\s+", " ");
         if (name.equals(Celebs.names(c).get(0))) name = "";
         prefs(c).edit().putString("forced", name).apply();
+    }
+
+    // A different celebrity every time ----------------------------------------------------------
+
+    /**
+     * Whether every Prime moves on to the next celebrity. The next one is shown on line 1 of the
+     * Celebrities note (line 2 when the spectator's number is 1), so it can be read during one
+     * performance and prepared for the next.
+     */
+    static boolean rotating(Context c) {
+        return prefs(c).getBoolean("rotate", false);
+    }
+
+    static void setRotating(Context c, boolean on) {
+        prefs(c).edit().putBoolean("rotate", on).apply();
+        if (on && nextName(c) == null) pickNext(c);
         Celebs.restore(c);
         MainActivity.numberChanged();
+    }
+
+    /** The celebrity the next Prime moves on to, or null. */
+    static String nextName(Context c) {
+        String s = prefs(c).getString("next", "");
+        return s.isEmpty() ? null : s;
+    }
+
+    /**
+     * Chooses the next celebrity: the names of celebrities.txt in a shuffled order, each once
+     * before any comes round again, never the one forced now.
+     */
+    private static void pickNext(Context c) {
+        SharedPreferences p = prefs(c);
+        List<String> names = Celebs.names(c);
+        String forced = forcedName(c);
+        List<String> queue = new ArrayList<>();
+        for (String s : p.getString("queue", "").split("\n")) {
+            if (!s.isEmpty()) queue.add(s);
+        }
+        String next = null;
+        for (int round = 0; round < 2 && next == null; round++) {
+            while (!queue.isEmpty()) {
+                String s = queue.remove(0);
+                if (names.contains(s) && !s.equalsIgnoreCase(forced)) {
+                    next = s;
+                    break;
+                }
+            }
+            if (next == null) {
+                queue = new ArrayList<>(names);
+                Collections.shuffle(queue);
+            }
+        }
+        p.edit().putString("next", next == null ? "" : next)
+                .putString("queue", String.join("\n", queue)).apply();
     }
 
     static void setInt(Context c, String key, int value) {
@@ -114,6 +177,12 @@ final class Force {
      * the next two swipes. The keypad overlay goes off and stays off while the trick is primed.
      */
     static void prime(Context c) {
+        if (rotating(c)) {
+            // This performance forces the celebrity that was showing as next; a new one is next.
+            String next = nextName(c);
+            if (next != null) storeForced(c, next);
+            pickNext(c);
+        }
         reset(c);
         prefs(c).edit().putBoolean("armed", true).putBoolean("overlay", false).apply();
         GestureService.settingsChanged();

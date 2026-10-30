@@ -39,7 +39,9 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
     private TextView trick, service, number, pending, line, celebrity, overlayNote;
-    private LinearLayout overlayRow, keypadRow;
+    private LinearLayout overlayRow, keypadRow, rotateRow;
+    private MaterialSwitch rotateSwitch;
+    private TextView rotateNote;
     private TextView keypadNote;
     private MaterialSwitch overlaySwitch;
     private final Runnable tick = new Runnable() {
@@ -98,6 +100,27 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         content.addView(primeNote);
 
         celebrity = value(row("Celebrity", v -> askName()));
+        rotateRow = new LinearLayout(this);
+        rotateRow.setGravity(Gravity.CENTER_VERTICAL);
+        rotateRow.setPadding(dp(24), dp(12), dp(16), dp(12));
+        rotateRow.setMinimumHeight(dp(56));
+        rotateRow.setBackground(Ui.rippleRounded(this, 0));
+        LinearLayout rotateTexts = new LinearLayout(this);
+        rotateTexts.setOrientation(LinearLayout.VERTICAL);
+        rotateTexts.addView(Ui.text(this, "Change the celebrity every time", 16, Ui.textColor(this),
+                R.font.google_sans_text_regular));
+        rotateNote = value(rotateTexts);
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(0, Ui.WRAP, 1f);
+        rp.setMarginEnd(dp(16));
+        rotateRow.addView(rotateTexts, rp);
+        rotateSwitch = new MaterialSwitch(this);
+        rotateSwitch.setClickable(false);
+        rotateRow.addView(rotateSwitch);
+        rotateRow.setOnClickListener(v -> {
+            Force.setRotating(this, !Force.rotating(this));
+            updateStatus();
+        });
+        content.addView(rotateRow, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
 
         header("Practice");
         overlayRow = new LinearLayout(this);
@@ -224,9 +247,19 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             pending.setText(first + ", waiting for the second swipe (" + Math.max(0, left / 1000) + " s left)");
         }
         celebrity.setText(Force.forcedName(this));
+        boolean rotating = Force.rotating(this);
+        String next = Force.nextName(this);
+        rotateSwitch.setChecked(rotating);
+        rotateNote.setText(rotating && next != null
+                ? "Next: " + next + "\nLine 1 of the Celebrities note always shows the next celebrity "
+                        + "(line 2 if their number is 1). Prime moves on to them."
+                : "Off: the celebrity stays the same until you pick another. On: every Prime moves "
+                        + "on to a new one, shown on line 1 of the note beforehand");
         int l = Celebs.currentLine(this);
         String forced = Force.forcedName(this);
-        line.setText(l < 0 ? forced + " goes on a random line" : forced + " is on line " + l);
+        String where = l < 0 ? forced + " goes on a random line" : forced + " is on line " + l;
+        if (rotating && next != null) where += "; next: " + next + " on line " + (l == 1 ? 2 : 1);
+        line.setText(where);
         keypadRow.setAlpha(armed ? 0.5f : 1f);
         keypadNote.setText(armed ? "Not while the trick is primed"
                 : (Force.customKeypad(this) ? "Set on your home screen. " : "Default: the bottom-right 3x3, 0 left of the 7. ")

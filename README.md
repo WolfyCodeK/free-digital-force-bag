@@ -90,6 +90,9 @@ been renamed and has to be turned on again once (step 3).
    second: the number is in.
 4. Tap the Keep Notes icon and open **Celebrities**. The forced name is on their line. Scroll
    down slowly while you talk.
+   With **Change the celebrity every time** on, glance at line 1 now (or line 2 if their number
+   is 1): that is the celebrity the *next* performance will force, so you can prepare that
+   prediction before you next tap Prime.
 5. **Opening the note switches the trick off**, and so does leaving Keep Notes once a number has
    been entered. From then on the service doesn't even listen on the home screen: nothing can
    buzz, and no swipe or tap can change the note, until you tap **Prime** again. You can hand
@@ -190,6 +193,13 @@ it closes as soon as the app is left. It shows:
   with the current one ticked and the file's first line marked "(default)"; tap a name and the
   Celebrities note is rebuilt at once with it on the same line. If the name you pick is one of
   the other 99, the default name takes its place in the list, so no name is ever there twice.
+- **Change the celebrity every time** (off by default): every **Prime** moves on to a new
+  celebrity, so each performance forces a different name, and you always know the next one in
+  advance: **line 1 of the Celebrities note shows the next celebrity** (line 2 when the
+  spectator's number is 1, because their name is on line 1 then). The order is random, every
+  name once before any comes round again. The note only changes at Prime, never after a
+  reveal, and no name is ever on it twice. The setting also shows the next name, and picking a
+  celebrity by hand still works (it becomes the current one; a new next is chosen if needed).
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
   switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
   the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
@@ -332,7 +342,10 @@ job:
   and that the in-app fallback (service off, Prime, two swipes on the notes list) puts the name
   on line 58 and is off after the reveal;
 - picks a different celebrity from the hidden settings' list (one that is also among the
-  other 99) and checks it moves to the spectator's line without appearing twice.
+  other 99) and checks it moves to the spectator's line without appearing twice;
+- switches on "Change the celebrity every time", primes, and checks the celebrity that was
+  showing as next is now the forced one, a new one is next and on line 1 (or 2), and no name
+  is on the list twice.
 
 Each run writes a `RESULTS` line with every check to its `log.txt`. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
