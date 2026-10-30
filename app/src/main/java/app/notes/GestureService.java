@@ -105,7 +105,7 @@ public class GestureService extends AccessibilityService {
                 public void onMotionEvent(MotionEvent e) {
                     // Touches pass straight through to the launcher, so only their DOWN comes here.
                     if (e.getActionMasked() != MotionEvent.ACTION_DOWN) {
-                        followFinger(e);
+                        followFinger(e, "controller");
                         return;
                     }
                     lastDownAt = SystemClock.uptimeMillis();
@@ -447,18 +447,22 @@ public class GestureService extends AccessibilityService {
      */
     @Override
     public void onMotionEvent(MotionEvent e) {
-        if (capturing && e.getActionMasked() != MotionEvent.ACTION_DOWN) followFinger(e);
+        if (capturing && e.getActionMasked() != MotionEvent.ACTION_DOWN) followFinger(e, "watched");
     }
 
-    private void followFinger(MotionEvent e) {
+    private void followFinger(MotionEvent e, String from) {
         int action = e.getActionMasked();
         if (action == MotionEvent.ACTION_POINTER_DOWN) {
             multiTouch = true;
         } else if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP) {
             curX = e.getX();
             curY = e.getY();
+            if (!moved) log("first move from the " + from);
             moved = true;
-            if (action == MotionEvent.ACTION_UP) onTouchUp();
+            if (action == MotionEvent.ACTION_UP) {
+                log("lift-off from the " + from + " at " + (int) curX + "," + (int) curY);
+                onTouchUp();
+            }
         }
     }
 
