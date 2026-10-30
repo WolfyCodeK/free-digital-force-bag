@@ -9,21 +9,24 @@ exactly that line.
 
 1. A small accessibility service ("Keep Notes") notices where each touch starts on the home
    screen. It never changes what you see: every touch goes straight to your launcher, untouched.
-2. Where each page swipe **starts** picks a digit from an invisible phone keypad covering the
-   whole screen:
+2. Where each sideways swipe **starts** picks a digit from an invisible phone keypad. It covers
+   the full width of the screen, from the top down to just above the dock (75% of the screen
+   height by default, adjustable in the hidden settings):
 
    ```
    1 2 3
    4 5 6
    7 8 9
-   0 0 0   (the whole bottom quarter is 0)
+   0 0 0   (the whole fourth row is 0)
+   - - -   (the dock: not part of the keypad)
    ```
 
    Two swipes make a number from 1 to 100. Single-digit numbers use a leading zero (7 is `0`
-   then `7`) and 100 is `0` then `0`. A swipe only counts if the home screen really moves to
-   another page (the service compares what the home screen shows before and after), and every
-   counted swipe buzzes (a double buzz when the second digit completes the number). Taps that
-   open an app, long presses and pulling down the notification shade don't count.
+   then `7`) and 100 is `0` then `0`. A swipe counts if the home screen turns to another page,
+   or if it is a clear sideways swipe even though the page can't turn (on the last page). Every
+   counted swipe buzzes (a double buzz when the second digit completes the number). Taps,
+   long presses, swipes up into the app drawer and pulling down the notification shade don't
+   count.
 3. Open Keep Notes and open the **Celebrities** note. It is a numbered list of 100 names, and
    the forced name (line 1 of `celebrities.txt`, "Tom Hanks" by default) is on the line with the
    spectator's number.
@@ -95,18 +98,25 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
   switches on a fraction of a second after it appears, so pause for a moment after pressing Home
   before the first swipe. Everywhere else it is completely off, so other apps behave normally
   (no screen-reader effects such as focus boxes in Recents).
-- The home screen **really moves to another page**. Swiping left on the first page or right on
-  the last page bounces back and does **not** count. This is the most common reason a swipe
-  "doesn't work": keep a page on both sides of the one you start on, or always swipe towards a
-  page that exists.
+- It is a **sideways** swipe: the page turns, or, where there's no page to turn to (on the
+  last page, where Keep Notes is), your finger moves clearly sideways (at least about a
+  centimetre, and more sideways than up or down). So if a swipe on the last page didn't buzz,
+  just swipe again there: the page bounces back but the digit still counts. Swipes up (app
+  drawer) or down (notification shade) never count.
 - The swipe doesn't start right at the edge of the screen. With gesture navigation, a swipe from
   the left or right edge is **Back** and one from the bottom edge is **Home** or switches apps,
-  so the page doesn't turn and nothing counts. Start about a thumb's width in from the edges.
-  This matters most for 1, 4 and 7 (left edge), 3, 6 and 9 (right edge) and 0 (bottom).
-- The swipe doesn't start on a widget that scrolls by itself (a calendar or photo widget, for
-  example). The widget moves instead of the page, so it doesn't count.
+  so the service ignores swipes that start within a few millimetres of the side edges or the
+  bottom edge. Start about a thumb's width in. This matters most for 1, 4 and 7 (left edge)
+  and 3, 6 and 9 (right edge).
+- It starts on the keypad, not the dock: swipes on the dock don't turn the page. The keypad
+  ends at 75% of the screen height by default; if your dock reaches higher, lower that in the
+  hidden settings and check with the practice overlay.
 - Your finger lifts within 3 seconds and nothing opens: tapping an icon or long-pressing (which
   opens a menu) never counts.
+
+**Quick swipes are fine.** You can make the two swipes straight after each other, as fast as you
+would normally flick between pages. Each swipe is checked as soon as the next one starts, so a
+quick second swipe never cancels the first.
 
 How the digits pair up:
 
@@ -130,6 +140,12 @@ How the digits pair up:
   opened). Off means completely off: the service stops listening on the home screen, nothing
   buzzes and nothing changes until the next **Prime**. Opening the app or the note *before*
   entering a number doesn't switch it off.
+- **Primed stays primed** until a number has been entered and revealed: turning the screen off,
+  hours of waiting or restarting the phone doesn't change it. Two things to watch: unlock
+  straight back onto the home screen page you left (most launchers keep the page, but check
+  yours), and any page swipes you make in the meantime count as digits. If you've used the
+  phone since priming, tap Prime again before performing (or wait 45 seconds after your last
+  swipe: a lone digit is forgotten by then and a stray number is replaced by the real one).
 - The forced name **stays on the line of the last number** until the next Prime. It never moves
   on its own, so the note looks like any normal note whenever it is opened. Closing the app or
   restarting the phone doesn't change it either.
@@ -163,7 +179,9 @@ it closes as soon as the app is left. It shows:
   last number and how long ago it was entered, a first digit waiting for its partner, and which
   line the forced name is on now.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
-  switched on while the trick is primed, and Prime switches it off.
+  switched on while the trick is primed, and Prime switches it off. **Keypad ends at** moves the
+  keypad's bottom edge (60% to 85% of the screen height, or the whole screen) so the 0 row sits
+  above your dock; the overlay shades the area below it.
 - **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
   second digit gives a double buzz.
 - **Timing**: how long you have between the two swipes (20, 45 or 90 seconds).
@@ -284,13 +302,17 @@ That job:
   leaving the app after entering a number (without opening the note) switches it off too;
 - checks the practice overlay shows on the home screen, lights up a swipe without entering a
   number, and goes off when the trick is primed;
+- makes two quick swipes back to back, the second on the last page where the page can't turn,
+  and checks both count (line 63);
 - checks that touches still reach the launcher and gesture navigation still works with the
   service on, that the icon tap is not counted as a digit, that touch exploration (the
   screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,
   and that the in-app fallback (service off, Prime, two swipes on the notes list) puts the name
-  on line 28 and is off after the reveal.
+  on line 58 and is off after the reveal;
+- changes the celebrity in the hidden settings to a name that is also on the list and checks
+  it moves to the spectator's line without appearing twice.
 
-All of those checks pass on both emulators. Screenshots are uploaded as the `screenshots-apiNN`
+Each run writes a `RESULTS` line with every check to its `log.txt`. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
 (`git fetch origin refs/ci/<branch>/api34`). The service logs what it sees only when its debug
 tag is switched on (`adb shell setprop log.tag.KeepGestures DEBUG`), which only CI does.

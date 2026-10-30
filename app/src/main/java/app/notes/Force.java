@@ -39,6 +39,13 @@ final class Force {
         return prefs(c).getBoolean("doubleBuzz", true);
     }
 
+    /** Where the keypad ends, as a percentage of the screen height: above the dock. */
+    static final long[] KEYPAD_BOTTOM_CHOICES = {60, 65, 70, 75, 80, 85, 100};
+
+    static float keypadBottom(Context c) {
+        return prefs(c).getLong("keypadBottom", 75) / 100f;
+    }
+
     /** The second swipe must come within this time of the first. */
     static long pairMs(Context c) {
         return prefs(c).getLong("pair", 45_000L);

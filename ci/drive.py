@@ -619,6 +619,25 @@ def dismiss_stylus_sheet():
     return False
 
 
+# The keypad covers the top 75% of the screen by default, so the 0 row sits above the dock.
+KEYPAD_BOTTOM = 0.75
+
+
+def cell(d, w, h):
+    """The middle of a digit's keypad cell."""
+    if d == 0:
+        return int(w * 0.5), int(h * KEYPAD_BOTTOM * 7 / 8)
+    row, col = (d - 1) // 3, (d - 1) % 3
+    return int(w * (col + 0.5) / 3), int(h * KEYPAD_BOTTOM * (row + 0.5) / 4)
+
+
+def swipe_from(d, direction, w, h):
+    """A real page swipe starting in a digit's cell: "left" moves to the next page."""
+    x, y = cell(d, w, h)
+    end = int(w * 0.12) if direction == "left" else int(w * 0.88)
+    real_swipe(x, y, end, y)
+
+
 def open_hidden_settings():
     for attempt in range(2):
         launch()
@@ -737,11 +756,11 @@ def swipe_test(w, h):
 
     # Digit 6: second row, right cell; swipe left to page 1. (Not the top row of page 0:
     # Pixel's "At a glance" widget there pages its own cards.)
-    real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))
+    swipe_from(6, "left", w, h)
     wait(2.5)
     shot("home-03-after-digit6")
     # Digit 1: top row, left cell of page 1; swipe right back to page 0.
-    real_swipe(int(w*0.17), int(h*0.17), int(w*0.90), int(h*0.17))
+    swipe_from(1, "right", w, h)
     wait(2.5)
     shot("home-04-after-digit1")
 
@@ -820,9 +839,9 @@ def swipe_test(w, h):
     # wasn't opened.
     home()
     wait(2)
-    real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))   # 6
+    swipe_from(6, "left", w, h)   # 6
     wait(2.5)
-    real_swipe(int(w*0.17), int(h*0.17), int(w*0.90), int(h*0.17))   # 1
+    swipe_from(1, "right", w, h)   # 1
     wait(2.5)
     launch()
     home()
@@ -841,7 +860,7 @@ def swipe_test(w, h):
         overlay_on = overlay_visible()
         shot("practice-01-overlay")
         before = digit_lines()
-        real_swipe(int(w*0.83), int(h*0.40), int(w*0.10), int(h*0.40))   # 6
+        swipe_from(6, "left", w, h)   # 6
         wait(0.9)
         shot("practice-02-overlay-digit6")
         wait(2)
@@ -853,6 +872,19 @@ def swipe_test(w, h):
     overlay_after_prime = overlay_visible()
     log("overlay after priming:", overlay_after_prime)
 
+    # Quick swipes back to back, the second on the last page where the page can't turn: both
+    # count (6 then 3).
+    log("quick swipes, page before:", which_page())
+    swipe_from(6, "left", w, h)
+    swipe_from(3, "left", w, h)
+    wait(2.5)
+    shot("quick-01-after-swipes")
+    log("page after quick swipes:", which_page())
+    log(sh("logcat -d | grep KeepGestures | tail -24"))
+    launch()
+    quick_line = celebrities_line()
+    log("quick swipes: forced name on line", quick_line)
+
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
 
@@ -863,9 +895,11 @@ def swipe_test(w, h):
     prime("fallback")
     back_to_notes()
     wait(1)
-    sh(f"input swipe {w//2} {int(h*0.22)} {w//2} {int(h*0.04)} 300")   # row 0, middle: 2
+    x, y = cell(5, w, h)
+    sh(f"input swipe {x} {y} {x} {int(h*0.05)} 300")   # 5
     wait(1)
-    sh(f"input swipe {w//2} {int(h*0.60)} {w//2} {int(h*0.30)} 300")   # row 2, middle: 8
+    x, y = cell(8, w, h)
+    sh(f"input swipe {x} {y} {x} {int(h*0.20)} 300")   # 8
     wait(1.5)
     # Back to the top (a lone third swipe can't make a number).
     sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
@@ -875,8 +909,8 @@ def swipe_test(w, h):
     if tap_node(nodes, text="Celebrities"):
         wait(1.5)
         text = "\n".join(n.text for n in dump("fallback-celebrities"))
-        fallback_ok = bool(re.search(r"(^|\n)28\. " + re.escape(FORCED) + r"(\n|$)", text))
-        log("in-app fallback, line 28 shows", FORCED, ":", fallback_ok, "| found:",
+        fallback_ok = bool(re.search(r"(^|\n)58\. " + re.escape(FORCED) + r"(\n|$)", text))
+        log("in-app fallback, line 58 shows", FORCED, ":", fallback_ok, "| found:",
             re.findall(r"\d+\. " + re.escape(FORCED), text))
         shot("fallback-01-celebrities")
         back()
@@ -915,7 +949,7 @@ def swipe_test(w, h):
             keanu = re.findall(r"(?:^|\n)(\d+)\. Keanu Reeves(?=\n|$)", text)
             default = re.findall(r"(?:^|\n)(\d+)\. " + re.escape(FORCED) + r"(?=\n|$)", text)
             log("Keanu Reeves on lines", keanu, "|", FORCED, "on lines", default)
-            name_ok = keanu == ["28"] and len(default) == 1
+            name_ok = keanu == ["58"] and len(default) == 1
             shot("celebrity-03-note")
             back()
 
@@ -936,8 +970,9 @@ def swipe_test(w, h):
         "home_has_two_pages": two_pages,
         "raw_touch_pages_launcher": raw_ok,
         "forced_name_on_line_61": ok_line,
-        "in_app_fallback_line_28": fallback_ok,
-        "fallback_off_after_reveal": fallback_spent_line == 28,
+        "in_app_fallback_line_58": fallback_ok,
+        "fallback_off_after_reveal": fallback_spent_line == 58,
+        "quick_swipes_and_last_page": quick_line == 63,
         "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,

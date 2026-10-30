@@ -60,6 +60,12 @@ public class GestureService extends AccessibilityService {
     private static final Pattern CLOCK = Pattern.compile("\\d{1,2}[:.]\\d{2}");
     /** If a touch starts but no DOWN reaches us within this time, re-register. */
     private static final long LOST_DOWN_MS = 300;
+    /**
+     * A swipe that doesn't turn the page (the last page has nothing after it) still counts if it
+     * moves at least this far sideways, mostly sideways, and doesn't start at the very edge of the
+     * screen, where gesture navigation's Back and Home swipes start.
+     */
+    private static final float SIDEWAYS_DP = 56, SIDE_EDGE_DP = 28, BOTTOM_EDGE_DP = 48;
 
     private static final int[][] KEYPAD = {
             {1, 2, 3},
@@ -87,6 +93,9 @@ public class GestureService extends AccessibilityService {
     private String pendingSnapshot;
     private long lastDownAt;
     private long touchStartAt;
+    /** Where the current touch went down, where it is now, and whether that is known. */
+    private float downX, downY, curX, curY;
+    private boolean moved, lifted, multiTouch;
     /** The practice keypad drawn over the home screen, or null until it is first needed. */
     private KeypadOverlay overlay;
     /** Prime asked for the first home-screen page: press Home again once home is showing. */
@@ -96,7 +105,19 @@ public class GestureService extends AccessibilityService {
             new TouchInteractionController.Callback() {
                 @Override
                 public void onMotionEvent(MotionEvent e) {
-                    if (e.getActionMasked() != MotionEvent.ACTION_DOWN) return;
+                    int action = e.getActionMasked();
+                    if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                        multiTouch = true;
+                        return;
+                    }
+                    if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP) {
+                        curX = e.getX();
+                        curY = e.getY();
+                        moved = true;
+                        if (action == MotionEvent.ACTION_UP) onTouchUp();
+                        return;
+                    }
+                    if (action != MotionEvent.ACTION_DOWN) return;
                     lastDownAt = SystemClock.uptimeMillis();
                     log("down " + (int) e.getX() + "," + (int) e.getY() + " state "
                             + TouchInteractionController.stateToString(controller.getState()));
@@ -337,12 +358,7 @@ public class GestureService extends AccessibilityService {
         if (pendingDigit < 0) return;
         long now = SystemClock.uptimeMillis();
         if (type == AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
-            if (pendingEndAt == 0) {
-                pendingEndAt = now;
-                log("touch ended after " + (now - pendingAt) + " ms");
-                handler.postDelayed(firstCheck, CHECK_1_MS);
-                handler.postDelayed(lastCheck, CHECK_2_MS);
-            }
+            touchEnded();
             return;
         }
         if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -361,8 +377,46 @@ public class GestureService extends AccessibilityService {
         CharSequence pkg = e.getPackageName();
         if (pkg == null || !homePackages.contains(pkg.toString())) return;
         if (pendingEndAt != 0 && now - pendingEndAt > CONFIRM_MS) return;
+        if (!mostlySideways()) return;
         log("page changed (" + AccessibilityEvent.eventTypeToString(type) + ")");
         confirm();
+    }
+
+    /** The finger lifted (from the motion events, or the "touch ended" event if those are missing). */
+    private void touchEnded() {
+        if (pendingDigit < 0 || pendingEndAt != 0) return;
+        pendingEndAt = SystemClock.uptimeMillis();
+        log("touch ended after " + (pendingEndAt - pendingAt) + " ms"
+                + (lifted ? ", moved " + (int) (curX - downX) + "," + (int) (curY - downY) : ""));
+        handler.postDelayed(firstCheck, CHECK_1_MS);
+        handler.postDelayed(lastCheck, CHECK_2_MS);
+    }
+
+    private void onTouchUp() {
+        lifted = true;
+        touchEnded();
+    }
+
+    /**
+     * True unless the finger is known to have moved more up or down than sideways (the app
+     * drawer, the notification shade). Without motion events this can't be known, so it's true.
+     */
+    private boolean mostlySideways() {
+        if (multiTouch) return false;
+        return !moved || Math.abs(curX - downX) >= Math.abs(curY - downY);
+    }
+
+    /** A clear sideways swipe that has ended, whether or not the page turned. */
+    private boolean sidewaysSwipe() {
+        if (multiTouch || !lifted) return false;
+        Point size = screenSize();
+        float dp = getResources().getDisplayMetrics().density;
+        if (downX < SIDE_EDGE_DP * dp || downX > size.x - SIDE_EDGE_DP * dp
+                || downY > size.y - BOTTOM_EDGE_DP * dp) {
+            return false;
+        }
+        float dx = Math.abs(curX - downX), dy = Math.abs(curY - downY);
+        return dx >= SIDEWAYS_DP * dp && dx >= 1.5f * dy;
     }
 
     /** Compares the home screen with how it looked when the finger went down. */
@@ -388,8 +442,11 @@ public class GestureService extends AccessibilityService {
             if (last) cancelPending();
             return;
         }
-        if (!now.equals(pendingSnapshot)) {
+        if (!now.equals(pendingSnapshot) && mostlySideways()) {
             log("page changed (home screen looks different)");
+            confirm();
+        } else if (sidewaysSwipe()) {
+            log("sideways swipe; the page didn't turn (no page that way)");
             confirm();
         } else if (last) {
             log("home screen unchanged; ignored");
@@ -468,17 +525,32 @@ public class GestureService extends AccessibilityService {
     }
 
     private void onTouchDown(float x, float y) {
-        cancelPending();
         AccessibilityNodeInfo root = homeRoot();
+        String now = root == null ? "" : snapshot(root);
+        if (pendingDigit >= 0) {
+            // The next swipe started before the last one was checked (quick swipes back to back):
+            // settle the last one now instead of dropping it.
+            boolean changed = !now.isEmpty() && !pendingSnapshot.isEmpty() && !now.equals(pendingSnapshot);
+            if (root != null && pendingEndAt != 0 && pendingEndAt - pendingAt <= MAX_SWIPE_MS
+                    && ((changed && mostlySideways()) || sidewaysSwipe())) {
+                log("settled by the next touch");
+                confirm();
+            } else {
+                cancelPending();
+            }
+        }
+        downX = curX = x;
+        downY = curY = y;
+        moved = lifted = multiTouch = false;
         if (root == null) {
             log("not on the home screen");
             return;
         }
         Point size = screenSize();
-        pendingSnapshot = snapshot(root);
+        pendingSnapshot = now;
         pendingAt = SystemClock.uptimeMillis();
         pendingEndAt = 0;
-        pendingDigit = digitFor(x, y, size.x, size.y);
+        pendingDigit = digitFor(x, y, size.x, size.y, Force.keypadBottom(this));
     }
 
     private void commit(int d) {
@@ -502,9 +574,13 @@ public class GestureService extends AccessibilityService {
         if (debug()) Log.d(TAG, msg);
     }
 
-    static int digitFor(float x, float y, int w, int h) {
+    /**
+     * The keypad covers the screen from the top down to {@code bottom} (a fraction of its height,
+     * so the 0 row can sit above the dock). Anything lower counts as the 0 row.
+     */
+    static int digitFor(float x, float y, int w, int h, float bottom) {
         int col = Math.max(0, Math.min(2, (int) (x / w * 3)));
-        int row = Math.max(0, Math.min(3, (int) (y / h * 4)));
+        int row = Math.max(0, Math.min(3, (int) (y / (h * bottom) * 4)));
         return KEYPAD[row][col];
     }
 

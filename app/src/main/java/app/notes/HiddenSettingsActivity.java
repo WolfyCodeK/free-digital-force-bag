@@ -126,6 +126,10 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             updateStatus();
         });
         content.addView(overlayRow, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
+        String[] bottoms = {"60% of the screen", "65% of the screen", "70% of the screen",
+                "75% of the screen", "80% of the screen", "85% of the screen", "The whole screen"};
+        choice("Keypad ends at (move it above your dock)", bottoms, Force.KEYPAD_BOTTOM_CHOICES,
+                Math.round(Force.keypadBottom(this) * 100), "keypadBottom");
 
         header("Feedback");
         TextView vib = value(row("Vibration", null));

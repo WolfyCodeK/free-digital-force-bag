@@ -1389,7 +1389,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
 
         private void swiped() {
             android.graphics.Rect b = getWindowManager().getMaximumWindowMetrics().getBounds();
-            int d = GestureService.digitFor(downX, downY, b.width(), b.height());
+            int d = GestureService.digitFor(downX, downY, b.width(), b.height(),
+                    Force.keypadBottom(MainActivity.this));
             Force.addDigit(MainActivity.this, d);
         }
     }

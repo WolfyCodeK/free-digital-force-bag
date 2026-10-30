@@ -29,6 +29,8 @@ final class KeypadOverlay extends View {
     private final Paint fill = new Paint();
     private final Paint pill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pillText = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint below = new Paint();
+    private final Paint belowText = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float dp;
     private final int[] loc = new int[2];
     private final RectF r = new RectF();
@@ -62,6 +64,12 @@ final class KeypadOverlay extends View {
         pillText.setTextSize(15 * dp);
         pillText.setTextAlign(Paint.Align.CENTER);
         pillText.setTypeface(font);
+        below.setColor(0x8C000000);
+        belowText.setColor(0xCCFFFFFF);
+        belowText.setTextSize(14 * dp);
+        belowText.setTextAlign(Paint.Align.CENTER);
+        belowText.setTypeface(font);
+        belowText.setShadowLayer(3 * dp, 0, dp, 0xC0000000);
     }
 
     /** A full-screen window that sits above the home screen and lets every touch through. */
@@ -115,16 +123,23 @@ final class KeypadOverlay extends View {
 
     @Override
     protected void onDraw(Canvas c) {
-        // The same grid GestureService.digitFor uses: the whole screen, system bars included.
+        // The same grid GestureService.digitFor uses: the whole screen width, from the top down to
+        // the keypad's bottom edge (above the dock).
         Rect b = getContext().getSystemService(WindowManager.class).getMaximumWindowMetrics().getBounds();
-        float w = b.width(), h = b.height(), cw = w / 3f, ch = h / 4f;
+        float w = b.width(), h = b.height();
+        float kb = h * Force.keypadBottom(getContext()), cw = w / 3f, ch = kb / 4f;
         getLocationOnScreen(loc);
         c.save();
         c.translate(-loc[0], -loc[1]);
 
+        if (kb < h - 1) {
+            c.drawRect(0, kb, w, h, below);
+            c.drawText("Not part of the keypad (counts as 0)", w / 2, kb + 28 * dp, belowText);
+        }
+
         if (flash >= 0 && SystemClock.uptimeMillis() < flashUntil) {
             if (flash == 0) {
-                r.set(0, 3 * ch, w, h);
+                r.set(0, 3 * ch, w, kb);
             } else {
                 int row = (flash - 1) / 3, col = (flash - 1) % 3;
                 r.set(col * cw, row * ch, (col + 1) * cw, (row + 1) * ch);
@@ -133,7 +148,7 @@ final class KeypadOverlay extends View {
         }
 
         for (int i = 1; i <= 2; i++) c.drawLine(i * cw, 0, i * cw, 3 * ch, line);
-        for (int i = 1; i <= 3; i++) c.drawLine(0, i * ch, w, i * ch, line);
+        for (int i = 1; i <= 4; i++) c.drawLine(0, i * ch, w, i * ch, line);
 
         float lift = (digit.descent() + digit.ascent()) / 2;
         for (int d = 1; d <= 9; d++) {
