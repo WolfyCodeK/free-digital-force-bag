@@ -99,14 +99,6 @@ public class HiddenSettingsActivity extends AppCompatActivity {
 
         celebrity = value(row("Celebrity", v -> askName()));
 
-        header("Status");
-        trick = value(row("Trick", null));
-        service = value(row("Swipe service", v -> startActivity(
-                new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))));
-        number = value(row("Number", null));
-        pending = value(row("First digit", null));
-        line = value(row("Celebrities", null));
-
         header("Practice");
         overlayRow = new LinearLayout(this);
         overlayRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -143,6 +135,14 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             updateStatus();
             Snackbar.make(content, "Bottom-right 3x3, with 0 left of the 7", Snackbar.LENGTH_SHORT).show();
         });
+
+        header("Status");
+        trick = value(row("Trick", null));
+        service = value(row("Swipe service", v -> startActivity(
+                new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))));
+        number = value(row("Number", null));
+        pending = value(row("First digit", null));
+        line = value(row("Celebrities", null));
 
         header("Feedback");
         TextView vib = value(row("Vibration", null));

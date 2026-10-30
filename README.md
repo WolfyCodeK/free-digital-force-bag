@@ -190,14 +190,14 @@ it closes as soon as the app is left. It shows:
   at once with that name on the same line. **Default** goes back to line 1 of
   `celebrities.txt`. If the name you type is one of the other 99, the default name takes its
   place in the list, so no name is ever there twice.
-- **Status** (live): whether the trick is primed or off, whether the swipe service is on, the
-  last number and how long ago it was entered, a first digit waiting for its partner, and which
-  line the forced name is on now.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
   switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
   the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
   **Use the default keypad** goes back to the bottom-right 3x3 with 0 left of the 7. Neither
   works while the trick is primed.
+- **Status** (live): whether the trick is primed or off, whether the swipe service is on, the
+  last number and how long ago it was entered, a first digit waiting for its partner, and which
+  line the forced name is on now.
 - **Feedback**: vibration strength (Off, Light, Medium, Strong), a test button, and whether the
   second digit gives a double buzz.
 - **Timing**: how long you have between the two swipes (20, 45 or 90 seconds).
