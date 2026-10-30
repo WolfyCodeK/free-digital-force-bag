@@ -687,6 +687,15 @@ def swipe_test(w, h):
     wait(2)
     te_after = touch_exploration()
     log("touch exploration after leaving the app:", te_after)
+    # Other apps must not see touch exploration (Samsung's Recents draws a focus box if they do).
+    sh("am start -W -a android.settings.SETTINGS")
+    wait(2.5)
+    te_other = touch_exploration()
+    log("touch exploration in another app:", te_other)
+    home()
+    wait(2)
+    te_home_again = touch_exploration()
+    log("touch exploration back on the home screen:", te_home_again)
     # Gesture navigation must still work with the service running (outside the app).
     nav_svc = gesture_home(w, h, "with-service")
     log(sh("logcat -d | grep -E 'KeepGestures|TouchExplorer' | tail -60"))
@@ -721,6 +730,7 @@ def swipe_test(w, h):
         "touch_exploration_on_home": te == "1",
         "touch_exploration_off_in_app": te_in_app == "0",
         "touch_exploration_back_on_after_app": te_after == "1",
+        "touch_exploration_off_in_other_apps": te_other == "0" and te_home_again == "1",
         "icon_tap_opened_app": opened,
         "icon_tap_not_counted_as_digit": tap_not_counted,
         "home_has_two_pages": two_pages,

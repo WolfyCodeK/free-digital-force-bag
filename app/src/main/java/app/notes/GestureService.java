@@ -74,6 +74,7 @@ public class GestureService extends AccessibilityService {
 
     private static GestureService instance;
     private static boolean appInFront;
+    private boolean homeInFront;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Set<String> homePackages = new HashSet<>();
@@ -136,8 +137,34 @@ public class GestureService extends AccessibilityService {
         instance = this;
         resolveHomePackages();
         controller = getTouchInteractionController(Display.DEFAULT_DISPLAY);
+        homeInFront = homeShowing();
         updateCapturing();
     }
+
+    /** True if the home screen is what the user sees (not Recents, the shade or an app). */
+    private boolean homeShowing() {
+        AccessibilityNodeInfo root = homeRoot();
+        if (root == null) return false;
+        CharSequence cls = root.getClassName();
+        if (cls != null && cls.toString().toLowerCase().contains("recents")) return false;
+        for (AccessibilityWindowInfo w : getWindows()) {
+            CharSequence title = w.getTitle();
+            if (title == null || w.getType() != AccessibilityWindowInfo.TYPE_APPLICATION) continue;
+            String t = title.toString().toLowerCase();
+            if (t.contains("recent") || t.contains("overview")) return false;
+            break;
+        }
+        return true;
+    }
+
+    private final Runnable checkHome = () -> {
+        boolean home = homeShowing();
+        if (home != homeInFront) {
+            homeInFront = home;
+            log("home screen " + (home ? "showing" : "gone"));
+            updateCapturing();
+        }
+    };
 
     @Override
     public boolean onUnbind(Intent intent) {
@@ -159,7 +186,10 @@ public class GestureService extends AccessibilityService {
 
     private void updateCapturing() {
         if (controller == null) return;
-        boolean want = !appInFront;
+        // Only while the home screen itself is showing: everywhere else apps would see touch
+        // exploration on and behave as if a screen reader were running (Samsung's Recents, for
+        // one, draws a green focus box around the current app).
+        boolean want = !appInFront && homeInFront;
         if (want == capturing) return;
         capturing = want;
         log("capturing " + want);
@@ -202,6 +232,20 @@ public class GestureService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
         int type = e.getEventType();
+        if (type == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                || type == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+            handler.removeCallbacks(checkHome);
+            handler.postDelayed(checkHome, 120);
+        }
+        if (type == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
+            // Nothing should look as if a screen reader were running: drop any focus box at once.
+            AccessibilityNodeInfo source = e.getSource();
+            if (source != null) {
+                source.performAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+            }
+            return;
+        }
+        if (type == AccessibilityEvent.TYPE_WINDOWS_CHANGED) return;
         if (debug() && e.getPackageName() != null && homePackages.contains(e.getPackageName().toString())) {
             log("event " + AccessibilityEvent.eventTypeToString(type) + " changes=" + e.getContentChangeTypes()
                     + " class=" + e.getClassName() + " text=" + e.getText());
