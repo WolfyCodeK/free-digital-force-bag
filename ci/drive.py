@@ -951,20 +951,18 @@ def swipe_test(w, h):
     quick_line = celebrities_line()
     log("quick swipes: forced name on line", quick_line)
 
-    # Android 15 and later: a sideways swipe on the last page, where the page can't turn, still
-    # counts (6 turns to page 1, the last; then 3 bounces).
-    last_page_line = None
-    if SDK >= 35:
-        prime("4")
-        swipe_from(6, "left", w, h)
-        wait(3)
-        swipe_from(3, "left", w, h)
-        wait(3)
-        shot("lastpage-01-after-swipes")
-        log(sh("logcat -d | grep -E 'KeepGestures: (watching|can.t watch|touch ended|sideways|digit|home screen unchanged)' | tail -12"))
-        launch()
-        last_page_line = celebrities_line()
-        log("last-page swipe: forced name on line", last_page_line)
+    # A swipe on the page with Keep Notes (here page 1, the last), where the page can't turn,
+    # still counts: 6 turns to page 1, then 3 bounces.
+    prime("4")
+    swipe_from(6, "left", w, h)
+    wait(3)
+    swipe_from(3, "left", w, h)
+    wait(3)
+    shot("lastpage-01-after-swipes")
+    log(sh("logcat -d | grep -E 'KeepGestures: (touch ended|Keep Notes page|digit|home screen unchanged)' | tail -12"))
+    launch()
+    last_page_line = celebrities_line()
+    log("last-page swipe: forced name on line", last_page_line)
 
     sh("settings put secure enabled_accessibility_services ''")
     sh("settings put secure accessibility_enabled 0")
@@ -1057,7 +1055,7 @@ def swipe_test(w, h):
         "in_app_fallback_line_58": fallback_ok,
         "fallback_off_after_reveal": fallback_spent_line == 58,
         "quick_swipes": quick_line == 61,
-        "last_page_swipe_android15plus": (last_page_line == 63) if SDK >= 35 else "n/a",
+        "last_page_swipe": last_page_line == 63,
         "keypad_setup_works": setup_ok,
         "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,

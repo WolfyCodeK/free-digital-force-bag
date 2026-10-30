@@ -10,13 +10,11 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.hardware.display.DisplayManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
-import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -24,12 +22,12 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
 
-import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -69,6 +67,13 @@ public class GestureService extends AccessibilityService {
      * screen, where gesture navigation's Back and Home swipes start.
      */
     private static final float SIDEWAYS_DP = 56, SIDE_EDGE_DP = 28, BOTTOM_EDGE_DP = 48;
+    /**
+     * On the page with this app's icon (the last page, where the reveal starts) a swipe can't
+     * turn the page, so a keypad touch there counts without a page turn: if it lasted at least
+     * this long, opened nothing (an app opening cancels it) and wasn't a long press (its menu
+     * cancels it). Only settled at the last check, by which time a tapped app has opened.
+     */
+    private static final long REVEAL_PAGE_MIN_MS = 60;
 
     private static final Region EVERYWHERE = new Region(0, 0, 100_000, 100_000);
 
@@ -322,7 +327,6 @@ public class GestureService extends AccessibilityService {
         } else {
             info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
         }
-        watchTouches(info, want);
         setServiceInfo(info);
         if (want) reassert();
     }
@@ -440,16 +444,6 @@ public class GestureService extends AccessibilityService {
         confirm();
     }
 
-    /**
-     * Android 15 and later: the touchscreen's motion events, watched without taking them (the
-     * launcher still gets every touch). They say where the finger moved and lifted, which the
-     * touch-interaction controller doesn't, so a sideways swipe on the last page can count.
-     */
-    @Override
-    public void onMotionEvent(MotionEvent e) {
-        if (capturing && e.getActionMasked() != MotionEvent.ACTION_DOWN) followFinger(e, "watched");
-    }
-
     private void followFinger(MotionEvent e, String from) {
         int action = e.getActionMasked();
         if (action == MotionEvent.ACTION_POINTER_DOWN) {
@@ -463,33 +457,6 @@ public class GestureService extends AccessibilityService {
                 log("lift-off from the " + from + " at " + (int) curX + "," + (int) curY);
                 onTouchUp();
             }
-        }
-    }
-
-    /**
-     * Asks to watch (not take) the touchscreen's motion events while capturing. Only on Android
-     * 15 and later, where watching exists; the call is looked up at run time because this app
-     * is compiled against Android 14. If it can't be switched on, nothing is asked for at all,
-     * so touches can never end up taken by this service.
-     */
-    private void watchTouches(AccessibilityServiceInfo info, boolean on) {
-        if (Build.VERSION.SDK_INT < 35) return;
-        try {
-            Method observe = AccessibilityServiceInfo.class.getMethod("setObservedMotionEventSources", int.class);
-            if (on) {
-                info.setMotionEventSources(InputDevice.SOURCE_TOUCHSCREEN);
-                observe.invoke(info, InputDevice.SOURCE_TOUCHSCREEN);
-            } else {
-                observe.invoke(info, 0);
-                info.setMotionEventSources(0);
-            }
-            log("watching touches " + on);
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            try {
-                info.setMotionEventSources(0);
-            } catch (RuntimeException ignored) {
-            }
-            log("can't watch touches: " + e);
         }
     }
 
@@ -530,6 +497,35 @@ public class GestureService extends AccessibilityService {
         return dx >= SIDEWAYS_DP * dp && dx >= 1.5f * dy;
     }
 
+    /**
+     * True if the finished touch was on the home screen page that shows this app's icon, and
+     * long enough to be a swipe rather than a brush of the screen.
+     */
+    private boolean onRevealPage() {
+        if (multiTouch || pendingEndAt - pendingAt < REVEAL_PAGE_MIN_MS) return false;
+        AccessibilityNodeInfo root = homeRoot();
+        if (root == null) return false;
+        String name = getString(R.string.app_name).toLowerCase(Locale.ROOT);
+        Point size = screenSize();
+        ArrayDeque<AccessibilityNodeInfo> queue = new ArrayDeque<>();
+        queue.add(root);
+        Rect r = new Rect();
+        for (int seen = 0; !queue.isEmpty() && seen < 400; seen++) {
+            AccessibilityNodeInfo n = queue.poll();
+            CharSequence label = n.getText() != null && n.getText().length() > 0
+                    ? n.getText() : n.getContentDescription();
+            if (label != null && label.toString().toLowerCase(Locale.ROOT).contains(name) && n.isVisibleToUser()) {
+                n.getBoundsInScreen(r);
+                if (r.left >= 0 && r.right <= size.x) return true;
+            }
+            for (int i = 0; i < n.getChildCount(); i++) {
+                AccessibilityNodeInfo child = n.getChild(i);
+                if (child != null) queue.add(child);
+            }
+        }
+        return false;
+    }
+
     /** Compares the home screen with how it looked when the finger went down. */
     private void checkPage(boolean last) {
         if (pendingDigit < 0) return;
@@ -558,6 +554,9 @@ public class GestureService extends AccessibilityService {
             confirm();
         } else if (sidewaysSwipe()) {
             log("sideways swipe; the page didn't turn (no page that way)");
+            confirm();
+        } else if (last && onRevealPage()) {
+            log("swipe on the Keep Notes page; the page can't turn there");
             confirm();
         } else if (last) {
             log("home screen unchanged; ignored");
@@ -643,7 +642,7 @@ public class GestureService extends AccessibilityService {
             // settle the last one now instead of dropping it.
             boolean changed = !now.isEmpty() && !pendingSnapshot.isEmpty() && !now.equals(pendingSnapshot);
             if (root != null && pendingEndAt != 0 && pendingEndAt - pendingAt <= MAX_SWIPE_MS
-                    && ((changed && mostlySideways()) || sidewaysSwipe())) {
+                    && ((changed && mostlySideways()) || sidewaysSwipe() || (!changed && onRevealPage()))) {
                 log("settled by the next touch");
                 confirm();
             } else {
