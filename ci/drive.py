@@ -605,15 +605,36 @@ def enable_service():
     log(sh("logcat -d | grep -iE 'AccessibilityManager|GestureService|keepnotes' | tail -30"))
 
 
+def dismiss_stylus_sheet():
+    """Gboard on Android 16 takes the raw test touches for a stylus and offers a tutorial that
+    swallows typed text. Closes it if it is showing."""
+    nodes = dump()
+    if any("stylus" in n.text.lower() for n in nodes):
+        log("closing the keyboard's stylus tutorial")
+        for n in nodes:
+            if n.text == "Cancel" and n.pkg != PKG:
+                tap(n.cx, n.cy)
+                wait(1)
+                return True
+    return False
+
+
 def open_hidden_settings():
-    launch()
-    wait(1)
-    if not tap_node(dump(), desc="Search Keep"):
-        return False
-    wait(1)
-    sh("input text '*#*#'")
-    wait(2)
-    return find(dump(), text="Prime") is not None
+    for attempt in range(2):
+        launch()
+        wait(1)
+        if not tap_node(dump(), desc="Search Keep"):
+            back_to_notes()
+            continue
+        wait(1)
+        dismiss_stylus_sheet()
+        sh("input text '*#*#'")
+        wait(2)
+        if find(dump(), text="Prime") is not None:
+            return True
+        dismiss_stylus_sheet()
+        back_to_notes()
+    return False
 
 
 def prime(label):
@@ -632,9 +653,11 @@ def prime(label):
 def overlay_visible():
     """True if the practice keypad window is on screen (from the window manager's dump)."""
     out = sh("dumpsys window windows")
+    with open(os.path.join(OUT, "dumpsys-window.txt"), "a") as f:
+        f.write(out + "\n\n")
     blocks = re.split(r"\n\s*Window #\d+ ", out)
     for b in blocks:
-        if PKG in b.split("\n")[0] and "ACCESSIBILITY_OVERLAY" in b:
+        if PKG in b and "ACCESSIBILITY_OVERLAY" in b:
             vis = re.search(r"mViewVisibility=(0x[0-9a-f]+)", b)
             log("  overlay window:", vis.group(0) if vis else "visibility not found",
                 "| isOnScreen=true" if "isOnScreen=true" in b else "")
@@ -858,12 +881,16 @@ def swipe_test(w, h):
         shot("fallback-01-celebrities")
         back()
     # The reveal switched the fallback off too.
+    back_to_notes()
     sh(f"input swipe {int(w*0.17)} {int(h*0.40)} {int(w*0.17)} {int(h*0.10)} 300")   # 4
     wait(1)
     sh(f"input swipe {w//2} {int(h*0.40)} {w//2} {int(h*0.10)} 300")   # 5
     wait(1.5)
-    sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
-    wait(1.5)
+    for _ in range(2):
+        sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.95)} 120")
+        wait(1.5)
+    shot("fallback-02-after-more-swipes")
+    dump("fallback-after-more-swipes")
     fallback_spent_line = celebrities_line()
     log("fallback after the reveal, forced name on line", fallback_spent_line)
 
@@ -873,6 +900,7 @@ def swipe_test(w, h):
     if open_hidden_settings():
         tap_node(dump(), text="Celebrity")
         wait(1.5)
+        dismiss_stylus_sheet()
         sh("input keyevent KEYCODE_MOVE_END " + " ".join(["KEYCODE_DEL"] * 20))
         sh("input text 'Keanu%sReeves'")
         wait(0.5)
@@ -924,6 +952,7 @@ def main():
     log(sh("settings get secure navigation_mode"), "= navigation_mode (0 three-button, 2 gesture)")
     sh("settings put system screen_off_timeout 1800000")
     sh("settings put global hide_error_dialogs 1")
+    sh("settings put secure stylus_handwriting_enabled 0")
     sh("svc power stayon true")
     w, h = screen_size()
     log("screen", w, h, "density", sh("wm density"))
