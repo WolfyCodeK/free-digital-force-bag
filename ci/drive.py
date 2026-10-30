@@ -662,15 +662,20 @@ def open_hidden_settings():
 
 
 def tap_setting(text):
-    """Taps a row of the hidden settings, scrolling it well clear of the navigation bar first."""
+    """Taps a row of the hidden settings, scrolling it well clear of the navigation bar first.
+    Scrolls slowly (no fling) and only taps once the row has stopped moving."""
     w, h = screen_size()
-    for _ in range(4):
+    for _ in range(5):
         n = find(dump(), text=text)
         if n is not None and n.cy < h * 0.85:
-            tap(n.cx, n.cy)
-            return True
-        sh(f"input swipe {w//2} {int(h*0.75)} {w//2} {int(h*0.35)} 300")
-        wait(1)
+            wait(0.6)
+            again = find(dump(), text=text)
+            if again is not None and again.cy == n.cy:
+                tap(n.cx, n.cy)
+                return True
+            continue
+        sh(f"input swipe {w//2} {int(h*0.70)} {w//2} {int(h*0.45)} 1200")
+        wait(1.5)
     log("not found:", text)
     return False
 
@@ -709,10 +714,26 @@ def digit_lines():
     return sh("logcat -d | grep -c 'KeepGestures: digit'").strip()
 
 
+def find_note(text):
+    """Finds a note card on the notes screen, scrolling back up to the top if needed."""
+    w, h = screen_size()
+    for _ in range(5):
+        n = find(dump(), text=text)
+        if n is not None and n.cy > h * 0.15:
+            return n
+        sh(f"input swipe {w//2} {int(h*0.30)} {w//2} {int(h*0.90)} 150")
+        wait(1.2)
+    return None
+
+
 def celebrities_line():
     """Opens Celebrities and returns the line number the forced name is on (or -1)."""
     found = -1
-    if tap_node(dump(), text="Celebrities"):
+    n = find_note("Celebrities")
+    if n is None:
+        log("not found: Celebrities")
+    else:
+        tap(n.cx, n.cy)
         wait(1.5)
         text = "\n".join(n.text for n in dump())
         m = re.search(r"(?:^|\n)(\d+)\. " + re.escape(FORCED) + r"(?:\n|$)", text)
