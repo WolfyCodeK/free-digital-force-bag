@@ -107,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
     private final LinkedHashSet<Long> selected = new LinkedHashSet<>();
     private boolean fabOpen;
     private int navBottom;
+    private boolean lifted;
+    private android.animation.ValueAnimator liftAnim;
 
     private ActivityResultLauncher<PickVisualMediaRequest> pickImage;
     private Recorder recorder;
@@ -297,6 +299,13 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         list.setLayoutManager(layout);
         list.setAdapter(adapter);
         list.setItemAnimator(null);
+        list.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView rv, int dx, int dy) {
+                updateLift();
+            }
+        });
+        searchHome.setOnScrollChangeListener((View v, int x, int y, int ox, int oy) -> updateLift());
         touchHelper = new ItemTouchHelper(new TouchCallback());
         touchHelper.attachToRecyclerView(list);
         refresh.setColorSchemeColors(Ui.color(this, R.color.keep_primary));
@@ -760,6 +769,36 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.Liste
         if (fabs && section == NOTES && !fabOpen) fabLive.show();
         else fabLive.hide();
         refresh.setEnabled(!selecting && !searching && section == NOTES);
+        list.post(this::updateLift);
+    }
+
+    /**
+     * Like Keep, the top bar is the background colour while the content is at the top, and
+     * turns a lighter grey only while something is scrolled underneath it.
+     */
+    private void updateLift() {
+        boolean scrolled = searchHome.getVisibility() == View.VISIBLE
+                ? searchHome.canScrollVertically(-1)
+                : list.getVisibility() == View.VISIBLE && list.canScrollVertically(-1);
+        if (scrolled == lifted && liftAnim == null && header.getBackground() != null) return;
+        lifted = scrolled;
+        int from = ((android.graphics.drawable.ColorDrawable) header.getBackground()).getColor();
+        int to = Ui.color(this, scrolled ? R.color.keep_header : R.color.keep_bg);
+        if (liftAnim != null) liftAnim.cancel();
+        if (from == to) {
+            liftAnim = null;
+            return;
+        }
+        liftAnim = android.animation.ValueAnimator.ofArgb(from, to);
+        liftAnim.setDuration(150);
+        liftAnim.addUpdateListener(a -> header.setBackgroundColor((int) a.getAnimatedValue()));
+        liftAnim.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator a) {
+                liftAnim = null;
+            }
+        });
+        liftAnim.start();
     }
 
     private boolean hasNotes(List<Object> items) {
