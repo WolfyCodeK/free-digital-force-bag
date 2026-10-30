@@ -1034,12 +1034,17 @@ def swipe_test(w, h):
     if open_hidden_settings():
         tap_node(dump(), text="Celebrity")
         wait(1.5)
-        dismiss_stylus_sheet()
-        sh("input keyevent KEYCODE_MOVE_END " + " ".join(["KEYCODE_DEL"] * 20))
-        sh("input text 'Keanu%sReeves'")
-        wait(0.5)
-        shot("celebrity-01-dialog")
-        tap_node(dump(), text="Save")
+        shot("celebrity-01-list")
+        picked = False
+        for _ in range(16):
+            n = find(dump(), text="Keanu Reeves")
+            if n is not None and h * 0.2 < n.cy < h * 0.8:
+                tap(n.cx, n.cy)
+                picked = True
+                break
+            sh(f"input swipe {w//2} {int(h*0.70)} {w//2} {int(h*0.35)} 600")
+            wait(1)
+        log("picked Keanu Reeves from the list:", picked)
         wait(1)
         shot("celebrity-02-settings")
         back_to_notes()

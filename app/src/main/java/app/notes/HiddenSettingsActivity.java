@@ -264,38 +264,37 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * Picks the forced name from celebrities.txt: every name, A to Z, the current one ticked
+     * and the file's first line marked as the default.
+     */
     private void askName() {
-        EditText e = new EditText(this);
-        e.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        e.setSingleLine(true);
-        e.setText(Force.forcedName(this));
-        e.setSelectAllOnFocus(true);
-        FrameLayout box = new FrameLayout(this);
-        box.setPadding(dp(24), dp(8), dp(24), 0);
-        box.addView(e);
         String def = Celebs.names(this).get(0);
-        androidx.appcompat.app.AlertDialog d = new MaterialAlertDialogBuilder(this)
+        String current = Force.forcedName(this);
+        java.util.List<String> names = new java.util.ArrayList<>(Celebs.names(this));
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        int checked = -1;
+        for (int i = 0; i < names.size(); i++) {
+            if (names.get(i).equalsIgnoreCase(current)) checked = i;
+        }
+        if (checked < 0) {
+            // A name typed in an earlier version: keep it on the list so it stays visible.
+            names.add(0, current);
+            checked = 0;
+        }
+        String[] labels = new String[names.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = names.get(i).equals(def) ? names.get(i) + " (default)" : names.get(i);
+        }
+        new MaterialAlertDialogBuilder(this)
                 .setTitle("Celebrity")
-                .setMessage("The name on the spectator's line. The default, " + def
-                        + ", is line 1 of celebrities.txt.")
-                .setView(box)
+                .setSingleChoiceItems(labels, checked, (d, which) -> {
+                    Force.setForcedName(this, names.get(which));
+                    updateStatus();
+                    d.dismiss();
+                })
                 .setNegativeButton("Cancel", null)
-                .setNeutralButton("Default", (x, w) -> {
-                    Force.setForcedName(this, "");
-                    updateStatus();
-                })
-                .setPositiveButton("Save", (x, w) -> {
-                    Force.setForcedName(this, e.getText().toString());
-                    updateStatus();
-                })
-                .create();
-        d.setOnShowListener(x -> {
-            e.requestFocus();
-            if (d.getWindow() != null) {
-                d.getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-            }
-        });
-        d.show();
+                .show();
     }
 
     private void askNumber() {

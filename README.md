@@ -186,10 +186,10 @@ Open Keep Notes, tap the search bar and type `*#*#`. Nothing in the app points t
 it closes as soon as the app is left. It shows:
 
 - **Prime**: the button to tap before every performance (see above).
-- **Celebrity**: the forced name. Tap it, type any name and Save; the Celebrities note is rebuilt
-  at once with that name on the same line. **Default** goes back to line 1 of
-  `celebrities.txt`. If the name you type is one of the other 99, the default name takes its
-  place in the list, so no name is ever there twice.
+- **Celebrity**: the forced name. Tap it for a list of every name in `celebrities.txt`, A to Z,
+  with the current one ticked and the file's first line marked "(default)"; tap a name and the
+  Celebrities note is rebuilt at once with it on the same line. If the name you pick is one of
+  the other 99, the default name takes its place in the list, so no name is ever there twice.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
   switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
   the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
@@ -278,7 +278,8 @@ yourself are kept. The text lives in `addStarterNotes` in
 
 ## Changing the names
 
-On the phone: **Celebrity** in the hidden settings changes the forced name (see Hidden settings).
+On the phone: **Celebrity** in the hidden settings picks the forced name from the list (see
+Hidden settings).
 
 In the code: edit `app/src/main/assets/celebrities.txt`. Line 1 is the default forced name and
 the other 99 lines are the rest of the list. This is the only file to edit. Pushing rebuilds
@@ -330,8 +331,8 @@ job:
   screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,
   and that the in-app fallback (service off, Prime, two swipes on the notes list) puts the name
   on line 58 and is off after the reveal;
-- changes the celebrity in the hidden settings to a name that is also on the list and checks
-  it moves to the spectator's line without appearing twice.
+- picks a different celebrity from the hidden settings' list (one that is also among the
+  other 99) and checks it moves to the spectator's line without appearing twice.
 
 Each run writes a `RESULTS` line with every check to its `log.txt`. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
