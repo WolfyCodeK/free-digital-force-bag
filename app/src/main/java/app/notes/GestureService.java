@@ -99,6 +99,8 @@ public class GestureService extends AccessibilityService {
     private boolean moved, lifted, multiTouch;
     /** The practice keypad drawn over the home screen, or null until it is first needed. */
     private KeypadOverlay overlay;
+    /** Whether the overlay's window takes touches (only while setting the keypad up). */
+    private boolean overlayTakesTouches;
     /** Prime asked for the first home-screen page: press Home again once home is showing. */
     private boolean wantFirstPage;
     /** Setting the keypad up: the overlay asks for the 1, 9 and 0 apps on the home screen. */
@@ -302,6 +304,7 @@ public class GestureService extends AccessibilityService {
             }
             overlay = null;
         }
+        overlayTakesTouches = false;
     }
 
     private void updateCapturing() {
@@ -345,9 +348,16 @@ public class GestureService extends AccessibilityService {
                 overlay = new KeypadOverlay(this, this::keypadSetUp, this::snapToApp);
                 overlay.setSettingUp(calibrating);
                 wm.addView(overlay, KeypadOverlay.layoutParams(calibrating));
-            } else if (overlay.isSettingUp() != calibrating) {
-                overlay.setSettingUp(calibrating);
-                wm.updateViewLayout(overlay, KeypadOverlay.layoutParams(calibrating));
+                overlayTakesTouches = calibrating;
+            } else {
+                if (overlay.isSettingUp() != calibrating) overlay.setSettingUp(calibrating);
+                // The window's flag, not what the view draws, decides whether touches reach the
+                // home screen. Set-up is ended by the overlay itself, so check the window too:
+                // outside set-up every touch must go straight through to the launcher.
+                if (overlayTakesTouches != calibrating) {
+                    wm.updateViewLayout(overlay, KeypadOverlay.layoutParams(calibrating));
+                    overlayTakesTouches = calibrating;
+                }
             }
         } catch (RuntimeException e) {
             log("overlay failed: " + e);

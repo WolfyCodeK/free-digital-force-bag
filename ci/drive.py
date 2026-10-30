@@ -938,12 +938,16 @@ def swipe_test(w, h):
         shot("setup-03-swiped-new-2")
         setup_ok = "KeepGestures: practice digit 2" in sh("logcat -d | grep 'practice digit'")
         log("keypad set up on the home screen, new 2 counted:", setup_ok)
+        # The overlay must let touches through again once set-up is over: the swipe really
+        # turned the page (it used to stay touchable and swallow every touch).
+        overlay_lets_touches_through = which_page() == 0
+        log("after set-up the overlay lets touches through (page turned):", overlay_lets_touches_through)
         log(sh("logcat -d | grep -E 'KeepGestures: (keypad|outside|practice)' | tail -8"))
         if open_hidden_settings():
             tap_setting("Use the default keypad")
             wait(1)
     else:
-        setup_ok = False
+        setup_ok = overlay_lets_touches_through = False
     # Priming switches the overlay off for good.
     prime("3")
     overlay_after_prime = overlay_visible()
@@ -1071,6 +1075,7 @@ def swipe_test(w, h):
         "quick_swipes": quick_line == 61,
         "last_page_swipe": last_page_line == 63,
         "keypad_setup_works": setup_ok,
+        "overlay_lets_touches_through_after_setup": overlay_lets_touches_through,
         "celebrity_setting_changes_name": name_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
@@ -1114,7 +1119,8 @@ def main():
         f.write("\n".join(LOG))
     crashed = "FATAL EXCEPTION" in open(os.path.join(OUT, "logcat.txt")).read()
     log("app crashed:", crashed)
-    must = ("forced_name_on_line_61", "icon_tap_opened_app", "prime_lands_on_first_page", "off_after_reveal")
+    must = ("forced_name_on_line_61", "icon_tap_opened_app", "prime_lands_on_first_page", "off_after_reveal",
+            "overlay_lets_touches_through_after_setup")
     if crashed or not all(results[k] for k in must):
         sys.exit(1)
 
