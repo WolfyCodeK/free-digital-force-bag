@@ -61,11 +61,14 @@ Needs Android 13 or newer.
    you to the first page. On Samsung this is the "main page": pinch the home screen and check
    the house icon is on the first page.
 6. **Check the keypad**: open the hidden settings (type `*#*#` in the Keep Notes search bar),
-   switch on **Show the keypad on the home screen** and press Home. The ten keys are outlined
-   over your apps. If they don't line up with your bottom-right 3x3, tap **Set up the keypad**:
-   it goes to your home screen and asks you to tap the app for 1 (top-left of the 3x3), then
-   9 (bottom-right), then 0. Nothing opens while you tap, and **Cancel** stops it. **Use the
-   default keypad** goes back to the standard layout.
+   switch on **Show the keypad on the home screen** and press Home. Each of the ten keys is a
+   box exactly one app (icon and label) big, with its digit in a small badge in the corner. The
+   default is measured from a four-column Samsung home screen. If the boxes don't sit exactly
+   on your apps, tap **Set up the keypad**: it goes to your home screen and asks you to tap the
+   app for 1 (top-left of the 3x3), then 9 (bottom-right), then 0. Each tap snaps to the app
+   under your finger, so the boxes line up with the launcher's own grid, and after the 9 you
+   see the whole 3x3 before choosing the 0. Nothing opens while you tap, and **Cancel** stops
+   it. **Use the default keypad** goes back to the standard layout.
 7. **Practise** with the overlay on: every swipe that counts lights up its key and buzzes, with
    the two-digit number shown above the keypad. Practice swipes never enter a number. Switch
    the overlay off again in the hidden settings; **Prime** also switches it off.

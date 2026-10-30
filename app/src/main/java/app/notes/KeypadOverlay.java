@@ -49,6 +49,13 @@ final class KeypadOverlay extends View {
     private final RectF r = new RectF();
     private final RectF cancel = new RectF();
     private final Consumer<float[]> onSetUp;
+    private final Snap snap;
+    private final Paint badge = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /** Finds the middle of the app under a set-up tap (see GestureService.snapToApp). */
+    interface Snap {
+        float[] at(float x, float y);
+    }
 
     private int flash = -1;
     private long flashUntil;
@@ -70,9 +77,10 @@ final class KeypadOverlay extends View {
      * {@code onSetUp} gets the new keypad (see Force.keypad) when it has been set up, or null if
      * setting it up was cancelled.
      */
-    KeypadOverlay(Context c, Consumer<float[]> onSetUp) {
+    KeypadOverlay(Context c, Consumer<float[]> onSetUp, Snap snap) {
         super(c);
         this.onSetUp = onSetUp;
+        this.snap = snap;
         dp = c.getResources().getDisplayMetrics().density;
         Typeface font = ResourcesCompat.getFont(c, R.font.google_sans_medium);
         line.setStyle(Paint.Style.STROKE);
@@ -92,6 +100,8 @@ final class KeypadOverlay extends View {
         pillText.setTypeface(font);
         dim.setColor(0x73000000);
         mark.setColor(0xFFFBBC04);
+        badge.setColor(0xE6202124);
+        digit.setTextSize(15 * dp);
     }
 
     /** A full-screen window above the home screen; it lets touches through unless setting up. */
@@ -165,14 +175,15 @@ final class KeypadOverlay extends View {
             return true;
         }
         Rect b = screen();
-        taps[step * 2] = e.getRawX() / b.width();
-        taps[step * 2 + 1] = e.getRawY() / b.height();
+        float[] p = snap.at(e.getRawX(), e.getRawY());
+        taps[step * 2] = p[0] / b.width();
+        taps[step * 2 + 1] = p[1] / b.height();
         problem = null;
         if (step == 1 && (taps[2] - taps[0]) * b.width() < 24 * dp
                 || step == 1 && (taps[3] - taps[1]) * b.height() < 24 * dp) {
             problem = "9 goes below and right of 1. Tap 1 again";
             step = 0;
-        } else if (step == 2 && GestureService.digitFor(e.getRawX(), e.getRawY(), b.width(), b.height(),
+        } else if (step == 2 && GestureService.digitFor(p[0], p[1], b.width(), b.height(),
                 new float[]{taps[0], taps[1], taps[2], taps[3], -1, -1}) > 0) {
             problem = "0 goes outside the 3x3. Tap 0 again";
         } else if (step == 2) {
@@ -207,23 +218,36 @@ final class KeypadOverlay extends View {
 
     private void drawKeypad(Canvas c, float w, float h) {
         float[] k = Force.keypad(getContext());
+        drawKeys(c, w, h, k, true);
+        float ch = (k[3] - k[1]) * h / 2;
+        float top = Math.min(k[1], k[5]) * h - ch / 2;
+        drawPill(c, status, w / 2, top - 28 * dp > 72 * dp ? top - 28 * dp : k[3] * h + ch / 2 + 28 * dp);
+    }
+
+    /**
+     * One box per key, exactly one app (icon and label) big, so the boxes line up with the apps
+     * and with each other; the digit sits in a small badge in the corner so the app stays visible.
+     */
+    private void drawKeys(Canvas c, float w, float h, float[] k, boolean withZero) {
         float x1 = k[0] * w, y1 = k[1] * h, cw = (k[2] - k[0]) * w / 2, ch = (k[3] - k[1]) * h / 2;
-        digit.setTextSize(Math.min(cw, ch) * 0.5f);
         boolean lit = flash >= 0 && SystemClock.uptimeMillis() < flashUntil;
-        for (int d = 0; d <= 9; d++) {
+        float inset = 3 * dp, radius = 16 * dp;
+        for (int d = withZero ? 0 : 1; d <= 9; d++) {
             float cx = d == 0 ? k[4] * w : x1 + (d - 1) % 3 * cw;
             float cy = d == 0 ? k[5] * h : y1 + (d - 1) / 3 * ch;
-            r.set(cx - cw / 2 + 2 * dp, cy - ch / 2 + 2 * dp, cx + cw / 2 - 2 * dp, cy + ch / 2 - 2 * dp);
-            c.drawRoundRect(r, 14 * dp, 14 * dp, lit && flash == d ? fill : cell);
-            c.drawRoundRect(r, 14 * dp, 14 * dp, line);
-            c.drawText(String.valueOf(d), cx, cy - (digit.descent() + digit.ascent()) / 2, digit);
+            r.set(cx - cw / 2 + inset, cy - ch / 2 + inset, cx + cw / 2 - inset, cy + ch / 2 - inset);
+            c.drawRoundRect(r, radius, radius, lit && flash == d ? fill : cell);
+            c.drawRoundRect(r, radius, radius, line);
+            float bx = r.left + 15 * dp, by = r.top + 15 * dp;
+            c.drawCircle(bx, by, 11 * dp, badge);
+            c.drawText(String.valueOf(d), bx, by - (digit.descent() + digit.ascent()) / 2, digit);
         }
-        float top = Math.min(y1, k[5] * h) - ch / 2;
-        drawPill(c, status, w / 2, top - 28 * dp > 72 * dp ? top - 28 * dp : y1 + 2.5f * ch + 28 * dp);
     }
 
     private void drawSetUp(Canvas c, float w, float h) {
         c.drawRect(0, 0, w, h, dim);
+        // Once 1 and 9 are in, show the 3x3 they make, so it can be checked against the apps.
+        if (step == 2) drawKeys(c, w, h, new float[]{taps[0], taps[1], taps[2], taps[3], 0, 0}, false);
         for (int i = 0; i < step; i++) {
             c.drawCircle(taps[i * 2] * w, taps[i * 2 + 1] * h, 10 * dp, mark);
             c.drawText(i == 0 ? "1" : "9", taps[i * 2] * w, taps[i * 2 + 1] * h - 18 * dp, pillText);

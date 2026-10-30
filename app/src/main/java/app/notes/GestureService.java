@@ -162,6 +162,38 @@ public class GestureService extends AccessibilityService {
         return true;
     }
 
+    /**
+     * The middle of the app (icon and label) under a point on the home screen, so a tap during
+     * keypad set-up lines the key up with the launcher's own grid. The point itself if no app is
+     * there.
+     */
+    private float[] snapToApp(float x, float y) {
+        AccessibilityNodeInfo root = homeRoot();
+        if (root == null) return new float[]{x, y};
+        float dp = getResources().getDisplayMetrics().density;
+        Rect best = null;
+        Rect b = new Rect();
+        ArrayDeque<AccessibilityNodeInfo> queue = new ArrayDeque<>();
+        queue.add(root);
+        for (int seen = 0; !queue.isEmpty() && seen < 3000; seen++) {
+            AccessibilityNodeInfo n = queue.poll();
+            n.getBoundsInScreen(b);
+            if (!b.contains((int) x, (int) y)) continue;
+            boolean app = n.isClickable() && (n.getText() != null || n.getContentDescription() != null)
+                    && b.width() >= 40 * dp && b.width() <= 180 * dp
+                    && b.height() >= 40 * dp && b.height() <= 180 * dp;
+            if (app && (best == null || b.width() * b.height() < best.width() * best.height())) {
+                best = new Rect(b);
+            }
+            for (int i = 0; i < n.getChildCount(); i++) {
+                AccessibilityNodeInfo child = n.getChild(i);
+                if (child != null) queue.add(child);
+            }
+        }
+        log("set-up tap " + (int) x + "," + (int) y + (best != null ? " -> app " + best.toShortString() : ", no app there"));
+        return best == null ? new float[]{x, y} : new float[]{best.exactCenterX(), best.exactCenterY()};
+    }
+
     /** The overlay finished setting the keypad up (k) or it was cancelled (null). */
     private void keypadSetUp(float[] k) {
         calibrating = false;
@@ -306,7 +338,7 @@ public class GestureService extends AccessibilityService {
         try {
             if (overlay == null) {
                 if (!show) return;
-                overlay = new KeypadOverlay(this, this::keypadSetUp);
+                overlay = new KeypadOverlay(this, this::keypadSetUp, this::snapToApp);
                 overlay.setSettingUp(calibrating);
                 wm.addView(overlay, KeypadOverlay.layoutParams(calibrating));
             } else if (overlay.isSettingUp() != calibrating) {

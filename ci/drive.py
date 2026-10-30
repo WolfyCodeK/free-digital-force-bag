@@ -330,7 +330,7 @@ def run_full_tour(mode):
         wait(3)
     # Long-press selection and its colour sheet.
     nodes = dump()
-    n = find(nodes, text="To do")
+    n = find(nodes, text="Oyakodon")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {n.cx} {n.cy} 900")
         wait(1)
@@ -358,21 +358,21 @@ def run_full_tour(mode):
     # Swipe a note to archive it.
     nodes = dump()
     sh("setprop log.tag.KeepGestures DEBUG")
-    n = find(nodes, text="To do")
+    n = find(nodes, text="Oyakodon")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {w - 10} {n.cy} 250")
         wait(0.6)
         shot(f"{p}-32-swiped-archive")
         wait(1)
-        archived = find(dump(), text="To do") is None
+        archived = find(dump(), text="Oyakodon") is None
         log("swipe to archive (input swipe):", archived)
         if not archived:
-            n = find(dump(), text="To do")
+            n = find(dump(), text="Oyakodon")
             if n:
                 real_swipe(n.cx, n.cy, w - 10, n.cy, 8)
                 wait(1)
                 shot(f"{p}-32b-swiped-archive-raw")
-                log("swipe to archive (raw touch):", find(dump(), text="To do") is None)
+                log("swipe to archive (raw touch):", find(dump(), text="Oyakodon") is None)
         log(sh("logcat -d | grep -E 'KeepGestures: card' | tail -6"))
         wait(4)
     # Drawer destinations.
@@ -622,7 +622,7 @@ def dismiss_stylus_sheet():
 
 # The default keypad (Force.DEFAULT_KEYPAD): centres of the 1, 9 and 0 keys as fractions of the
 # screen. The bottom-right 3x3 of a four-column home screen, 0 to the left of the 7.
-KEYPAD = (0.375, 0.42, 0.875, 0.72, 0.125, 0.72)
+KEYPAD = (0.350, 0.4825, 0.771, 0.706, 0.139, 0.706)
 
 
 def cell(d, w, h, k=KEYPAD):
@@ -659,13 +659,16 @@ def open_hidden_settings():
 
 
 def tap_setting(text):
-    """Taps a row of the hidden settings, scrolling down to it if needed."""
-    for _ in range(3):
-        if tap_node(dump(), text=text):
+    """Taps a row of the hidden settings, scrolling it well clear of the navigation bar first."""
+    w, h = screen_size()
+    for _ in range(4):
+        n = find(dump(), text=text)
+        if n is not None and n.cy < h * 0.85:
+            tap(n.cx, n.cy)
             return True
-        w, h = screen_size()
         sh(f"input swipe {w//2} {int(h*0.75)} {w//2} {int(h*0.35)} 300")
         wait(1)
+    log("not found:", text)
     return False
 
 
@@ -896,7 +899,7 @@ def swipe_test(w, h):
         shot("setup-02-done")
         wait(1)
         x, y = cell(2, w, h, custom)
-        real_swipe(x, y, int(w * 0.05), y)
+        real_swipe(x, y, int(w * 0.95), y)   # turns the page back to page 0
         wait(2.5)
         shot("setup-03-swiped-new-2")
         setup_ok = "KeepGestures: practice digit 2" in sh("logcat -d | grep 'practice digit'")

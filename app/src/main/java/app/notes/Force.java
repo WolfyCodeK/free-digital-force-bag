@@ -41,11 +41,12 @@ final class Force {
 
     /**
      * The keypad: a 3x3 block of home-screen app positions, plus a 0 key. Stored as the centres
-     * of the 1, 9 and 0 keys, as fractions of the screen width and height. The default is the
-     * bottom-right 3x3 of a four-column home screen, just above the dock, with 0 the app to the
-     * left of the 7 (the dock below the 8 can't turn the page).
+     * of the 1, 9 and 0 keys (each the middle of an app's icon and label), as fractions of the
+     * screen width and height; the 3x3 spacing comes from the 1 and 9. The default is the
+     * bottom-right 3x3 of a four-column Samsung home screen (measured on a 1080x2400 Galaxy):
+     * the three rows above the page dots, with 0 the app to the left of the 7.
      */
-    static final float[] DEFAULT_KEYPAD = {0.375f, 0.42f, 0.875f, 0.72f, 0.125f, 0.72f};
+    static final float[] DEFAULT_KEYPAD = {0.350f, 0.4825f, 0.771f, 0.706f, 0.139f, 0.706f};
     private static final String[] KEYPAD_KEYS = {"k1x", "k1y", "k9x", "k9y", "k0x", "k0y"};
 
     static float[] keypad(Context c) {
