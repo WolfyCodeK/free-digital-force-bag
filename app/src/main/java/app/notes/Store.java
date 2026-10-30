@@ -36,6 +36,7 @@ final class Store {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Runnable saveTask = this::saveNow;
     private long nextId = 1;
+    private int loadedVersion;
 
     static synchronized Store get(Context c) {
         if (instance == null) instance = new Store(c.getApplicationContext());
@@ -47,7 +48,11 @@ final class Store {
         file = new File(app.getFilesDir(), "keep.json");
         mediaDir = new File(app.getFilesDir(), "media");
         mediaDir.mkdirs();
-        if (!load()) seed();
+        if (!load()) {
+            seed();
+        } else if (loadedVersion < 2) {
+            replaceOldNotes();
+        }
         purgeTrash();
     }
 
@@ -217,7 +222,7 @@ final class Store {
         final String json;
         try {
             JSONObject root = new JSONObject();
-            root.put("version", 1);
+            root.put("version", 2);
             root.put("nextId", nextId);
             root.put("labels", new JSONArray(labels));
             JSONArray arr = new JSONArray();
@@ -249,6 +254,7 @@ final class Store {
         try {
             String s = new String(af.readFully(), StandardCharsets.UTF_8);
             JSONObject root = new JSONObject(s);
+            loadedVersion = root.optInt("version", 1);
             nextId = root.optLong("nextId", 1);
             JSONArray lb = root.optJSONArray("labels");
             if (lb != null) for (int i = 0; i < lb.length(); i++) labels.add(lb.getString(i));
@@ -270,59 +276,176 @@ final class Store {
 
     private void seed() {
         long now = System.currentTimeMillis();
-        long order = 20;
-
         Note c = new Note();
         c.id = nextId++;
         c.special = "celebrities";
         c.title = Celebs.TITLE;
         c.text = Celebs.text(app, Celebs.line(app));
         c.created = c.edited = now - 23 * DAY - 5 * 3600_000L;
-        c.order = order--;
+        c.order = 100;
         notes.add(c);
+        addStarterNotes(now, c.order);
+        saveNow();
+    }
 
-        Note shop = list("Shopping", now - 2 * DAY, order--,
-                "Milk", "Eggs", "Bread", "Coffee", "Apples", "+Washing up liquid", "+Bin bags");
+    /**
+     * The first version's starter notes, recognised by title and first line. They are swapped
+     * for the current ones once; the user's own notes and the Celebrities note stay.
+     */
+    private static final String[][] OLD_NOTES = {
+            {"Shopping", "Milk"}, {"Gift ideas", "Mum \u2013 scarf"}, {"To do", "Call dentist"},
+            {"Car service", "Garage on Friday"}, {"Packing", "Passport"}, {"Pasta bake", "200g pasta"},
+            {"Books to read", "The Midnight Library"},
+    };
+
+    private void replaceOldNotes() {
+        for (Note n : new ArrayList<>(notes)) {
+            String first = n.list ? (n.items.isEmpty() ? "" : n.items.get(0).text)
+                    : n.text == null ? "" : n.text;
+            for (String[] old : OLD_NOTES) {
+                if (old[0].equals(n.title) && first.startsWith(old[1])) {
+                    if (n.reminder != 0) Reminders.cancel(app, n);
+                    notes.remove(n);
+                    break;
+                }
+            }
+        }
+        Note c = celebrities();
+        addStarterNotes(System.currentTimeMillis(), c != null ? c.order : maxOrder() + 1);
+        saveNow();
+    }
+
+    /** Everyday notes around the Celebrities note: two above it, the rest below. */
+    private void addStarterNotes(long now, long celebs) {
+        long above = celebs + 2;
+        long below = celebs - 1;
+
+        Note shop = list("Shopping", now - 64 * DAY, above--,
+                "Chicken thighs", "Eggs", "Spring onions", "Silken tofu", "White miso", "Mirin",
+                "Panko", "Kewpie", "Frozen udon", "Shiitake", "Ginger",
+                "+Rice", "+Nori", "+Milk", "+Coffee beans");
+        shop.edited = now - 20 * 3600_000L;
         notes.add(shop);
 
-        Note gifts = text("Gift ideas",
-                "Mum – scarf, the grey one\nDad – that cycling book\nSam – headphones\nGrandma – photo calendar",
-                now - 9 * DAY, order--);
-        notes.add(gifts);
+        Note work = list("Work", now - 30 * DAY, above--,
+                "Fix flaky checkout test", "Review Dan's PR (auth refactor)",
+                "Update API docs for /v2/orders", "Ask Priya about swapping on-call",
+                "+Submit timesheet", "+Move standup notes to Confluence");
+        work.edited = now - 2 * DAY;
+        notes.add(work);
 
-        Note todo = text("To do",
-                "Call dentist\nRenew parking permit\nBook flights for June\nReturn library books",
-                now - 4 * DAY, order--);
-        todo.color = 3;
-        notes.add(todo);
+        notes.add(text("Oyakodon",
+                "2 chicken thighs, bite size\n1 onion, sliced thin\n3 eggs, barely beaten\n\n"
+                        + "150ml dashi\n2 tbsp soy\n2 tbsp mirin\n1 tbsp sugar\n\n"
+                        + "Onion in the sauce 3-4 min, chicken 5 min, 2/3 of the egg, lid on 30s, "
+                        + "rest of the egg, off the heat. Over rice + spring onion",
+                now - 12 * DAY, below--));
 
-        Note car = text("Car service", "Garage on Friday – ask about the brakes", now - 6 * DAY, order--);
+        notes.add(text("To do",
+                "Book dentist\nRenew passport\nCancel Netflix trial\nFix bike puncture\nSend Jake the photos",
+                now - 5 * DAY, below--));
+
+        notes.add(text("git",
+                "git rebase -i HEAD~3\ngit stash push -m \"wip\"\ngit commit --amend --no-edit\n"
+                        + "git reflog (when I've broken everything)\ngit bisect start / good / bad\n"
+                        + "git push --force-with-lease, NOT --force",
+                now - 34 * DAY, below--));
+
+        notes.add(list("Packing", now - 9 * DAY, below--,
+                "Plug adapter (type A)", "Pocket wifi confirmation", "Suica on phone", "Hand towel",
+                "Coin purse", "+Passport", "+Charger", "+Headphones"));
+
+        Note rail = text("Renew railcard", "Expires end of the month", now - 3 * DAY, below--);
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, 4);
         cal.set(Calendar.HOUR_OF_DAY, 9);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        car.reminder = cal.getTimeInMillis();
-        notes.add(car);
+        rail.reminder = cal.getTimeInMillis();
+        notes.add(rail);
 
-        Note packing = list("Packing", now - 15 * DAY, order--,
-                "+Passport", "+Phone charger", "Adapter plug", "Sunglasses", "Swimsuit", "Book for the plane");
-        notes.add(packing);
+        notes.add(text("Bug - dates off by one",
+                "Only for users in BST. toISOString() converts to UTC so anything after 11pm "
+                        + "lands on the next day\n\nFix: keep it as a local date string, "
+                        + "formatInTimeZone for display\nAdd a test with TZ=Europe/London",
+                now - 16 * DAY, below--));
 
-        Note pasta = text("Pasta bake",
-                "200g pasta\n1 tin chopped tomatoes\n2 cloves garlic\nMozzarella\nFresh basil\n\n200°C for 25 min",
-                now - 31 * DAY, order--);
-        pasta.color = 2;
-        notes.add(pasta);
+        notes.add(text("Katsu curry",
+                "Chicken breast, butterflied\nFlour > egg > panko\nFry 170\u00b0C ~6 min\n\n"
+                        + "Sauce: onion, carrot, garlic, ginger, 1 tbsp curry powder, 1 tbsp flour, "
+                        + "400ml stock, 1 tsp honey, splash of soy. Blend",
+                now - 26 * DAY, below--));
 
-        Note books = text("Books to read",
-                "The Midnight Library\nProject Hail Mary\nKlara and the Sun\nThe Thursday Murder Club",
-                now - 47 * DAY, order--);
-        notes.add(books);
+        notes.add(text("Gym",
+                "Push - bench 3x8, OHP 3x8, dips, lateral raises\n"
+                        + "Pull - pull-ups, rows 3x10, face pulls, curls\n"
+                        + "Legs - squat 3x5, RDL 3x8, lunges, calf raises",
+                now - 19 * DAY, below--));
 
-        saveNow();
-        Reminders.schedule(app, car);
+        notes.add(text("Retro",
+                "Went well: deploys way faster since the pipeline change\n"
+                        + "Not so well: Wednesday was all meetings\n"
+                        + "Action: PR reviews within 24h, no-meeting Thursday mornings",
+                now - 8 * DAY, below--));
+
+        notes.add(list("To watch", now - 40 * DAY, below--,
+                "Dandadan", "Vinland Saga S2", "Monster", "Shogun", "+Frieren", "+Severance S2"));
+
+        notes.add(text("Side project ideas",
+                "CLI to rename photos by EXIF date\nDiscord bot for the group chat (who's in for 5-a-side)\n"
+                        + "Rewrite the portfolio site in Astro\nRecipe scraper -> markdown",
+                now - 58 * DAY, below--));
+
+        notes.add(text("Japan trip",
+                "Tokyo 5 nights, Kyoto 3, Osaka 2\nJR pass - check if still worth it\n"
+                        + "teamLab Planets - book ahead\nFushimi Inari early morning\nKuromon market\n"
+                        + "Ichiran, Afuri, Tsuta",
+                now - 120 * DAY, below--));
+
+        notes.add(text("Things to learn",
+                "Rust - ownership / borrowing properly\nKotlin coroutines\n"
+                        + "System design: rate limiter, URL shortener, caching\nPostgres indexes (EXPLAIN ANALYZE)",
+                now - 75 * DAY, below--));
+
+        notes.add(text("Miso soup",
+                "500ml dashi (1 tsp granules)\n2-3 tbsp miso, whisk in off the boil\n"
+                        + "Tofu, wakame, spring onion",
+                now - 70 * DAY, below--));
+
+        notes.add(text("Gift ideas",
+                "Mum - that cookbook from the market\nDad - bike lights\nJess - Uniqlo voucher",
+                now - 45 * DAY, below--));
+
+        notes.add(list("Recipes to try", now - 88 * DAY, below--,
+                "Karaage", "Gyoza from scratch", "Nikujaga", "Okonomiyaki", "Chashu",
+                "+Tamagoyaki", "+Teriyaki salmon"));
+
+        notes.add(text("Laptop setup",
+                "brew install git node pnpm python@3.12\nVS Code: Prettier, ESLint, GitLens, Vim\n"
+                        + "zsh + starship\nssh-keygen -t ed25519, add to GitHub",
+                now - 95 * DAY, below--));
+
+        notes.add(text("Tamagoyaki",
+                "3 eggs\n1 tbsp dashi\n1 tsp sugar\n1 tsp mirin\npinch of salt\n\n"
+                        + "Low heat, roll in thirds, oil between layers",
+                now - 150 * DAY, below--));
+
+        notes.add(text("Bills",
+                "Rent - 1st\nSpotify - 3rd\nCouncil tax - 15th\nPhone - 22nd\nGym - 28th",
+                now - 200 * DAY, below--));
+
+        Note meters = text("Old flat meter readings", "Electric 34512\nGas 08812\nTaken 31/03",
+                now - 210 * DAY, below--);
+        meters.archived = true;
+        notes.add(meters);
+
+        Note xmas = list("Christmas", now - 300 * DAY, below--,
+                "+Mum", "+Dad", "+Jess", "+Secret Santa (under \u00a320)", "+Cards");
+        xmas.archived = true;
+        notes.add(xmas);
+
+        Reminders.schedule(app, rail);
     }
 
     private Note text(String title, String body, long when, long order) {

@@ -226,6 +226,18 @@ tested on a real phone, on Samsung One UI Home or on other launchers. If you nev
 - The app is called "Keep notes" on phones set to UK English and "Keep Notes" elsewhere, exactly
   like Google Keep.
 
+## The other notes
+
+The app starts with about twenty everyday notes, all in the default colour, so it looks like a
+phone that has been used for months: a shopping list with Japanese cooking bits, work to-dos,
+a sprint retro, git commands, a bug write-up, recipes (oyakodon, katsu curry, tamagoyaki), a
+Japan trip plan, a gym split and so on, plus two old notes in the Archive. The Celebrities
+note is third, just below the shopping and work lists. They are ordinary notes: edit or delete
+them and add your own. Updating from an earlier build swaps the old starter notes (Shopping
+with milk and eggs, Pasta bake, Car service and the rest) for the new ones once; notes you wrote
+yourself are kept. The text lives in `addStarterNotes` in
+`app/src/main/java/app/notes/Store.java`.
+
 ## Changing the names
 
 Edit `app/src/main/assets/celebrities.txt`: line 1 is the forced name and the other 99 lines are

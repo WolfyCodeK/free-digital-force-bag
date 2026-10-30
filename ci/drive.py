@@ -329,7 +329,7 @@ def run_full_tour(mode):
         wait(3)
     # Long-press selection and its colour sheet.
     nodes = dump()
-    n = find(nodes, text="Gift ideas")
+    n = find(nodes, text="To do")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {n.cx} {n.cy} 900")
         wait(1)
@@ -340,7 +340,7 @@ def run_full_tour(mode):
             back()
         back()
     # A checklist note and the editor's sheets.
-    if step(f"{p}-25-checklist", text="Packing", settle=2):
+    if step(f"{p}-25-checklist", text="Work", settle=2):
         if step(f"{p}-26-add-sheet", desc="Add"):
             back()
         if step(f"{p}-27-colour-sheet", desc_has="Change col"):
@@ -350,28 +350,28 @@ def run_full_tour(mode):
         step(f"{p}-29-format", desc="Formatting options")
         back()
     # A text note.
-    if step(f"{p}-30-text-note", text="To do", settle=2):
+    if step(f"{p}-30-text-note", text="Oyakodon", settle=2):
         if step(f"{p}-31-reminder-sheet", desc="Reminder"):
             back()
         back()
     # Swipe a note to archive it.
     nodes = dump()
     sh("setprop log.tag.KeepGestures DEBUG")
-    n = find(nodes, text="Gift ideas")
+    n = find(nodes, text="To do")
     if n:
         sh(f"input swipe {n.cx} {n.cy} {w - 10} {n.cy} 250")
         wait(0.6)
         shot(f"{p}-32-swiped-archive")
         wait(1)
-        archived = find(dump(), text="Gift ideas") is None
+        archived = find(dump(), text="To do") is None
         log("swipe to archive (input swipe):", archived)
         if not archived:
-            n = find(dump(), text="Gift ideas")
+            n = find(dump(), text="To do")
             if n:
                 real_swipe(n.cx, n.cy, w - 10, n.cy, 8)
                 wait(1)
                 shot(f"{p}-32b-swiped-archive-raw")
-                log("swipe to archive (raw touch):", find(dump(), text="Gift ideas") is None)
+                log("swipe to archive (raw touch):", find(dump(), text="To do") is None)
         log(sh("logcat -d | grep -E 'KeepGestures: card' | tail -6"))
         wait(4)
     # Drawer destinations.
