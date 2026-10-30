@@ -235,8 +235,10 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         overlaySwitch.setEnabled(!armed);
         overlayRow.setEnabled(!armed);
         overlayRow.setAlpha(armed ? 0.5f : 1f);
-        overlayNote.setText(armed ? "Off while the trick is primed"
-                : !serviceOn ? "Needs the swipe service"
+        // The same length whatever the service is doing, so the rows below never jump (the
+        // Swipe service row says whether it is on).
+        overlayNote.setText(armed ? "Off while the trick is primed. Draws the keypad over your home "
+                + "screen; each swipe that counts lights up its cell"
                 : "Draws the keypad over your home screen. Each swipe that counts lights up its "
                         + "cell and buzzes, without entering a number");
     }

@@ -661,6 +661,11 @@ def open_hidden_settings():
     return False
 
 
+# Note: `uiautomator dump` suspends other accessibility services while it reads the screen,
+# so Keep Notes' service is briefly off during every dump(). Never dump() while something
+# depends on the service staying connected (keypad set-up mode, a pending swipe).
+
+
 def tap_setting(text):
     """Taps a row of the hidden settings, scrolling it well clear of the navigation bar first.
     Scrolls slowly (no fling) and only taps once the row has stopped moving."""
@@ -672,6 +677,7 @@ def tap_setting(text):
             wait(0.6)
             again = find(dump(), text=text)
             if again is not None and again.cy == n.cy:
+                wait(1.2)   # the service reconnects after the dump
                 log(f"tapping '{text}' at {n.cx},{n.cy}")
                 tap(n.cx, n.cy)
                 wait(0.4)
