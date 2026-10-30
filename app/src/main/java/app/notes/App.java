@@ -43,6 +43,13 @@ public class App extends Application {
 
             @Override
             public void onActivityResumed(Activity a) {
+                // After a performance with "change the celebrity every time" on, locking the
+                // phone primes the next one, so the screen mustn't time out during the reveal.
+                if (Force.rotating(a) && !Force.armed(a) && Force.current(a) >= 1) {
+                    a.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                } else {
+                    a.getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
                 if (resumed++ == 0) {
                     handler.removeCallbacks(left);
                     GestureService.setAppInFront(true);
@@ -74,6 +81,19 @@ public class App extends Application {
         boolean screenOn = getSystemService(PowerManager.class).isInteractive();
         if (external || !screenOn) return;
         Force.performed(this);
+        putAway();
+    }
+
+    /**
+     * Puts the app back to a plain state: the Celebrities note restored, secondary screens
+     * closed and the notes screen starting fresh. Also used while the screen is off, when
+     * locking the phone primes the next performance (see GestureService).
+     */
+    static void putAway(android.content.Context c) {
+        ((App) c.getApplicationContext()).putAway();
+    }
+
+    private void putAway() {
         Celebs.restore(this);
         Store.get(this).flush();
         for (Activity a : new ArrayList<>(alive)) {

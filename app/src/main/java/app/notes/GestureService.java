@@ -3,7 +3,11 @@ package app.notes;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.TouchInteractionController;
+import android.app.KeyguardManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Point;
@@ -105,6 +109,28 @@ public class GestureService extends AccessibilityService {
     private boolean wantFirstPage;
     /** Setting the keypad up: the overlay asks for the 1, 9 and 0 apps on the home screen. */
     private boolean calibrating;
+    /** The phone was locked after a performance and the next one primed: go to page 1 on unlock. */
+    private boolean firstPageOnUnlock;
+    private boolean screenWatched;
+
+    /**
+     * With "change the celebrity every time" on, locking the phone after a performance primes
+     * the next one, and unlocking lands on the home screen's first page, ready to go.
+     */
+    private final BroadcastReceiver screen = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            String action = i.getAction();
+            if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                onScreenOff();
+            } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
+                onUnlocked();
+            } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                KeyguardManager keyguard = getSystemService(KeyguardManager.class);
+                if (keyguard == null || !keyguard.isKeyguardLocked()) onUnlocked();
+            }
+        }
+    };
 
     private final TouchInteractionController.Callback callback =
             new TouchInteractionController.Callback() {
@@ -249,6 +275,38 @@ public class GestureService extends AccessibilityService {
         controller = getTouchInteractionController(Display.DEFAULT_DISPLAY);
         homeInFront = homeShowing();
         updateCapturing();
+        if (!screenWatched) {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+            filter.addAction(Intent.ACTION_SCREEN_ON);
+            filter.addAction(Intent.ACTION_USER_PRESENT);
+            registerReceiver(screen, filter, Context.RECEIVER_NOT_EXPORTED);
+            screenWatched = true;
+        }
+    }
+
+    private void onScreenOff() {
+        // Only after the reveal (the note was opened, or the app left with the number in). The
+        // app keeps the screen on after a performance, so this is the power button, not a
+        // timeout in the middle of the reveal.
+        if (!Force.rotating(this) || Force.armed(this) || Force.current(this) < 1) return;
+        log("locked after a performance: priming the next one");
+        Force.prime(this);
+        App.putAway(this);
+        firstPageOnUnlock = true;
+        try {
+            // Behind the lock screen, so unlocking shows the home screen, not the note.
+            startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (RuntimeException e) {
+            log("couldn't show the home screen: " + e);
+        }
+    }
+
+    private void onUnlocked() {
+        if (!firstPageOnUnlock) return;
+        firstPageOnUnlock = false;
+        log("unlocked: first page");
+        goToFirstPage();
     }
 
     /** True if the home screen is what the user sees (not Recents, the shade or an app). */
@@ -295,6 +353,13 @@ public class GestureService extends AccessibilityService {
 
     private void stop() {
         if (instance == this) instance = null;
+        if (screenWatched) {
+            try {
+                unregisterReceiver(screen);
+            } catch (RuntimeException ignored) {
+            }
+            screenWatched = false;
+        }
         handler.removeCallbacksAndMessages(null);
         capturing = false;
         if (overlay != null) {

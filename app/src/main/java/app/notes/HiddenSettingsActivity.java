@@ -252,7 +252,8 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         rotateSwitch.setChecked(rotating);
         rotateNote.setText(rotating && next != null
                 ? "Next: " + next + "\nLine 1 of the Celebrities note always shows the next celebrity "
-                        + "(line 2 if their number is 1). Prime moves on to them."
+                        + "(line 2 if their number is 1). After a performance, just lock the phone: "
+                        + "that primes the next one, and unlocking lands on your first home page."
                 : "Off: the celebrity stays the same until you pick another. On: every Prime moves "
                         + "on to a new one, shown on line 1 of the note beforehand");
         int l = Celebs.currentLine(this);

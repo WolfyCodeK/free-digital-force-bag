@@ -1096,6 +1096,46 @@ def swipe_test(w, h):
         log("rotation: next was", first_next, "| now forced", current, "on", forced_lines,
             "| new next", second_next, "on", next_lines, "| names twice:", twice)
 
+    # Still with "change the celebrity every time" on: locking the phone after a performance
+    # primes the next one, and unlocking lands on the first home page, primed, with the
+    # celebrity that line 1 showed as next.
+    lock_ok = False
+    enable_service()
+    if prime("lock"):
+        swipe_from(6, "left", w, h)
+        wait(2.5)
+        swipe_from(1, "right", w, h)
+        wait(2.5)
+        launch()
+        next_before = None
+        n = find_note("Celebrities")
+        if n is not None:
+            tap(n.cx, n.cy)
+            wait(1.5)
+            note = "\n".join(x.text for x in dump("lock-note"))
+            m = re.search(r"(?m)^1\. (.+)$", note)
+            next_before = m.group(1).strip() if m else None
+        # Lock the phone with the note still open (the reveal), then wake it and unlock.
+        sh("input keyevent KEYCODE_SLEEP")
+        wait(3)
+        sh("input keyevent KEYCODE_WAKEUP")
+        wait(1)
+        sh("wm dismiss-keyguard")
+        wait(5)
+        shot("lock-01-after-unlock")
+        te_after_lock = touch_exploration()
+        on_home = home_package() in top_package()
+        page_after_lock = which_page()
+        current = None
+        if open_hidden_settings():
+            texts = [x.text for x in dump("lock-settings")]
+            current = texts[texts.index("Celebrity") + 1] if "Celebrity" in texts else None
+        log(sh("logcat -d | grep -E 'KeepGestures: (locked|unlocked|home again)' | tail -6"))
+        log("after lock + unlock: home", on_home, "| page", page_after_lock, "| listening", te_after_lock,
+            "| next was", next_before, "| now", current)
+        lock_ok = (on_home and page_after_lock == 0 and te_after_lock == "1"
+                   and next_before is not None and current == next_before)
+
     results = {
         "not_listening_before_prime": te_unprimed == "0",
         "prime_lands_on_first_page": page_after_prime == 0,
@@ -1121,6 +1161,7 @@ def swipe_test(w, h):
         "overlay_lets_touches_through_after_setup": overlay_lets_touches_through,
         "celebrity_setting_changes_name": name_ok,
         "new_celebrity_every_time": rotate_ok,
+        "lock_primes_next_show": lock_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }

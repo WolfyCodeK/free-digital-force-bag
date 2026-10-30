@@ -92,7 +92,8 @@ been renamed and has to be turned on again once (step 3).
    down slowly while you talk.
    With **Change the celebrity every time** on, glance at line 1 now (or line 2 if their number
    is 1): that is the celebrity the *next* performance will force, so you can prepare that
-   prediction before you next tap Prime.
+   prediction. When you have the phone back, lock it: the next performance is primed, and
+   unlocking lands on the first home page, ready to go.
 5. **Opening the note switches the trick off**, and so does leaving Keep Notes once a number has
    been entered. From then on the service doesn't even listen on the home screen: nothing can
    buzz, and no swipe or tap can change the note, until you tap **Prime** again. You can hand
@@ -200,6 +201,12 @@ it closes as soon as the app is left. It shows:
   name once before any comes round again. The note only changes at Prime, never after a
   reveal, and no name is ever on it twice. The setting also shows the next name, and picking a
   celebrity by hand still works (it becomes the current one; a new next is chosen if needed).
+  **You don't need to prime by hand with it on**: after a performance (the note was opened, or
+  you left Keep Notes with the number in), **lock the phone** and the next performance is primed
+  there and then. When you unlock, you are on the first page of the home screen, primed, with
+  the next celebrity. To keep that from happening in the middle of a reveal, Keep Notes keeps
+  the screen awake after a performance while it is open, so only the power button locks it.
+  Locking before the reveal changes nothing, and with the setting off nothing of this happens.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
   switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
   the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
@@ -345,7 +352,8 @@ job:
   other 99) and checks it moves to the spectator's line without appearing twice;
 - switches on "Change the celebrity every time", primes, and checks the celebrity that was
   showing as next is now the forced one, a new one is next and on line 1 (or 2), and no name
-  is on the list twice.
+  is on the list twice; then performs, locks the phone with the note open, unlocks, and checks
+  it is on the first home page, primed, with the celebrity that line 1 showed.
 
 Each run writes a `RESULTS` line with every check to its `log.txt`. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`
