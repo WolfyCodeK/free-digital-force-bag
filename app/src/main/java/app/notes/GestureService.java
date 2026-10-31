@@ -10,9 +10,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Region;
+import android.hardware.HardwareBuffer;
 import android.hardware.display.DisplayManager;
 import android.os.Handler;
 import android.os.Looper;
@@ -114,6 +116,13 @@ public class GestureService extends AccessibilityService {
     /** The phone was locked after a performance and the next one primed: go to page 1 on unlock. */
     private boolean firstPageOnUnlock;
     private boolean screenWatched;
+    /**
+     * A picture of the home screen's first page, taken after priming lands there, to cover the
+     * jump back to it after an unlock. Kept in memory only, for the life of the app's process.
+     */
+    private static Bitmap firstPage;
+    private FirstPageCover cover;
+    private long unlockPollUntil;
 
     /**
      * With "change the celebrity every time" on, locking the phone after a performance primes
@@ -127,9 +136,11 @@ public class GestureService extends AccessibilityService {
                 onScreenOff();
             } else if (Intent.ACTION_USER_PRESENT.equals(action)) {
                 onUnlocked();
-            } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                KeyguardManager keyguard = getSystemService(KeyguardManager.class);
-                if (keyguard == null || !keyguard.isKeyguardLocked()) onUnlocked();
+            } else if (Intent.ACTION_SCREEN_ON.equals(action) && firstPageOnUnlock) {
+                // Watch for the unlock closely: the cover must be up before the home screen is.
+                unlockPollUntil = SystemClock.uptimeMillis() + 60_000;
+                handler.removeCallbacks(pollUnlock);
+                handler.post(pollUnlock);
             }
         }
     };
@@ -265,6 +276,8 @@ public class GestureService extends AccessibilityService {
         wantFirstPage = false;
         log("home again for the first page");
         performGlobalAction(GLOBAL_ACTION_HOME);
+        handler.removeCallbacks(this.captureFirstPage);
+        handler.postDelayed(this.captureFirstPage, 1500);
     };
 
     private final Runnable giveUpFirstPage = () -> wantFirstPage = false;
@@ -286,7 +299,21 @@ public class GestureService extends AccessibilityService {
         }
     }
 
+    private final Runnable pollUnlock = new Runnable() {
+        @Override
+        public void run() {
+            if (!firstPageOnUnlock) return;
+            KeyguardManager keyguard = getSystemService(KeyguardManager.class);
+            if (keyguard == null || !keyguard.isKeyguardLocked()) {
+                onUnlocked();
+            } else if (SystemClock.uptimeMillis() < unlockPollUntil) {
+                handler.postDelayed(this, 16);
+            }
+        }
+    };
+
     private void onScreenOff() {
+        handler.removeCallbacks(pollUnlock);
         // Only after the reveal (the note was opened, or the app left with the number in). The
         // app keeps the screen on after a performance, so this is the power button, not a
         // timeout in the middle of the reveal.
@@ -302,14 +329,66 @@ public class GestureService extends AccessibilityService {
         } catch (RuntimeException e) {
             log("couldn't show the home screen: " + e);
         }
+        // Ready (hidden) now, so showing it on unlock takes a single frame.
+        if (firstPage != null && cover == null) {
+            try {
+                cover = new FirstPageCover(this, firstPage);
+                cover.setVisibility(View.GONE);
+                getSystemService(WindowManager.class).addView(cover, KeypadOverlay.layoutParams(true));
+            } catch (RuntimeException e) {
+                log("couldn't prepare the cover: " + e);
+                cover = null;
+            }
+        }
     }
 
     private void onUnlocked() {
         if (!firstPageOnUnlock) return;
         firstPageOnUnlock = false;
-        log("unlocked: first page");
+        handler.removeCallbacks(pollUnlock);
+        if (cover != null) {
+            cover.setVisibility(View.VISIBLE);
+            handler.postDelayed(removeCover, 1100);
+            log("unlocked: covered the move to the first page");
+        } else {
+            log("unlocked: first page");
+        }
         goToFirstPage();
     }
+
+    private final Runnable removeCover = () -> {
+        if (cover != null) {
+            try {
+                getSystemService(WindowManager.class).removeView(cover);
+            } catch (RuntimeException ignored) {
+            }
+            cover = null;
+            log("cover removed");
+        }
+    };
+
+    /** Takes the picture of the first page, when it is what the home screen shows. */
+    private final Runnable captureFirstPage = () -> {
+        if (!Force.rotating(this) || !Force.armed(this) || appInFront || !homeInFront || calibrating
+                || cover != null || (overlay != null && overlay.getVisibility() == View.VISIBLE)) {
+            return;
+        }
+        takeScreenshot(Display.DEFAULT_DISPLAY, getMainExecutor(), new TakeScreenshotCallback() {
+            @Override
+            public void onSuccess(ScreenshotResult result) {
+                HardwareBuffer buffer = result.getHardwareBuffer();
+                Bitmap shot = Bitmap.wrapHardwareBuffer(buffer, result.getColorSpace());
+                if (shot != null) firstPage = shot.copy(Bitmap.Config.ARGB_8888, false);
+                buffer.close();
+                log("first page captured");
+            }
+
+            @Override
+            public void onFailure(int errorCode) {
+                log("first page capture failed: " + errorCode);
+            }
+        });
+    };
 
     /** True if the home screen is what the user sees (not Recents, the shade or an app). */
     private boolean homeShowing() {
@@ -372,6 +451,13 @@ public class GestureService extends AccessibilityService {
             overlay = null;
         }
         overlayTakesTouches = false;
+        if (cover != null) {
+            try {
+                getSystemService(WindowManager.class).removeView(cover);
+            } catch (RuntimeException ignored) {
+            }
+            cover = null;
+        }
     }
 
     private void updateCapturing() {

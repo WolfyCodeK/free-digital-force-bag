@@ -1099,12 +1099,14 @@ def swipe_test(w, h):
     # Still with "change the celebrity every time" on: locking the phone after a performance
     # primes the next one, and unlocking lands on the first home page, primed, with the
     # celebrity that line 1 showed as next.
-    lock_ok = False
+    lock_ok = cover_ok = False
     enable_service()
     if prime("lock"):
+        # 6 turns to page 1 (the last, with Keep Notes), 3 bounces there: the home screen is
+        # left on page 1, so unlocking has a jump back to page 0 to hide.
         swipe_from(6, "left", w, h)
         wait(2.5)
-        swipe_from(1, "right", w, h)
+        swipe_from(3, "left", w, h)
         wait(2.5)
         launch()
         next_before = None
@@ -1121,6 +1123,8 @@ def swipe_test(w, h):
         sh("input keyevent KEYCODE_WAKEUP")
         wait(1)
         sh("wm dismiss-keyguard")
+        wait(0.3)
+        shot("lock-00-just-unlocked")
         wait(5)
         shot("lock-01-after-unlock")
         te_after_lock = touch_exploration()
@@ -1130,7 +1134,10 @@ def swipe_test(w, h):
         if open_hidden_settings():
             texts = [x.text for x in dump("lock-settings")]
             current = texts[texts.index("Celebrity") + 1] if "Celebrity" in texts else None
-        log(sh("logcat -d | grep -E 'KeepGestures: (locked|unlocked|home again)' | tail -6"))
+        cover_log = sh("logcat -d | grep -E 'KeepGestures: (first page captured|unlocked|cover removed|locked)'")
+        log(cover_log)
+        cover_ok = ("first page captured" in cover_log and "covered the move to the first page" in cover_log
+                    and "cover removed" in cover_log)
         log("after lock + unlock: home", on_home, "| page", page_after_lock, "| listening", te_after_lock,
             "| next was", next_before, "| now", current)
         lock_ok = (on_home and page_after_lock == 0 and te_after_lock == "1"
@@ -1184,6 +1191,7 @@ def swipe_test(w, h):
         "celebrity_setting_changes_name": name_ok,
         "new_celebrity_every_time": rotate_ok,
         "lock_primes_next_show": lock_ok,
+        "unlock_jump_covered": cover_ok,
         "keep_notes_page_swipes_ignored": keep_lock_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,

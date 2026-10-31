@@ -205,7 +205,12 @@ it closes as soon as the app is left. It shows:
   **You don't need to prime by hand with it on**: after a performance (the note was opened, or
   you left Keep Notes with the number in), **lock the phone** and the next performance is primed
   there and then. When you unlock, you are on the first page of the home screen, primed, with
-  the next celebrity. To keep that from happening in the middle of a reveal, Keep Notes keeps
+  the next celebrity. Android only lets the app move the home screen once the phone is
+  unlocked, so for that first second a picture of your first page (taken when priming last
+  landed there, kept in memory only, never saved) covers the screen while the home screen
+  jumps back underneath: you never see page 3 or the scroll. It takes taps while it shows and
+  is always gone after about a second. Until the first prime with the setting on there is no
+  picture, and the jump shows. To keep that from happening in the middle of a reveal, Keep Notes keeps
   the screen awake after a performance while it is open, so only the power button locks it.
   Locking before the reveal changes nothing, and with the setting off nothing of this happens.
 - **Lock the number in on the Keep Notes page** (off by default): swipes that start on the
