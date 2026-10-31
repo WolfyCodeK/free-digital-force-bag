@@ -90,8 +90,8 @@ been renamed and has to be turned on again once (step 3).
    second: the number is in.
 4. Tap the Keep Notes icon and open **Celebrities**. The forced name is on their line. Scroll
    down slowly while you talk.
-   With **Change the celebrity every time** on, glance at line 1 now (or line 2 if their number
-   is 1): that is the celebrity the *next* performance will force, so you can prepare that
+   With **Change the celebrity every time** on, glance at the next celebrity's line now (line 1
+   unless you changed it; the line below if their number is that line): that is the celebrity the *next* performance will force, so you can prepare that
    prediction. When you have the phone back, lock it: the next performance is primed, and
    unlocking lands on the first home page, ready to go.
 5. **Opening the note switches the trick off**, and so does leaving Keep Notes once a number has
@@ -197,8 +197,10 @@ it closes as soon as the app is left. It shows:
   the other 99, the default name takes its place in the list, so no name is ever there twice.
 - **Change the celebrity every time** (off by default): every **Prime** moves on to a new
   celebrity, so each performance forces a different name, and you always know the next one in
-  advance: **line 1 of the Celebrities note shows the next celebrity** (line 2 when the
-  spectator's number is 1, because their name is on line 1 then). The order is random, every
+  advance: **one line of the Celebrities note always shows the next celebrity**. It is line 1
+  unless you change it with **Next celebrity's line** (any line from 1 to 100, say 7); when the
+  spectator's number is that line, their name is there, so the next celebrity goes on the line
+  below (8), or the line above if you chose 100. The order is random, every
   name once before any comes round again. The note only changes at Prime, never after a
   reveal, and no name is ever on it twice. The setting also shows the next name, and picking a
   celebrity by hand still works (it becomes the current one; a new next is chosen if needed).
@@ -312,7 +314,10 @@ On the phone: **Celebrity** in the hidden settings picks the forced name from th
 Hidden settings).
 
 In the code: edit `app/src/main/assets/celebrities.txt`. Line 1 is the default forced name and
-the other 99 lines are the rest of the list. This is the only file to edit. Pushing rebuilds
+the other 99 lines are the rest of the list. Keep exactly 100 different names, since a spectator
+can name any number from 1 to 100, and only names that are easy to write out for a prediction
+(Arnold Schwarzenegger was swapped for Tom Cruise for that reason): with "Change the celebrity
+every time" on, any of them can come up. This is the only file to edit. Pushing rebuilds
 the APK.
 
 Vibration strength and the timings are changed in the hidden settings (type `*#*#` in search).
@@ -366,9 +371,10 @@ job:
 - picks a different celebrity from the hidden settings' list (one that is also among the
   other 99) and checks it moves to the spectator's line without appearing twice;
 - switches on "Change the celebrity every time", primes, and checks the celebrity that was
-  showing as next is now the forced one, a new one is next and on line 1 (or 2), and no name
+  showing as next is now the forced one, a new one is next and on line 7 (the line it set; 8 if
+  the forced name is on 7), and no name
   is on the list twice; then performs, locks the phone with the note open, unlocks, and checks
-  it is on the first home page, primed, with the celebrity that line 1 showed.
+  it is on the first home page, primed, with the celebrity that line 7 showed.
 
 Each run writes a `RESULTS` line with every check to its `log.txt`. Screenshots are uploaded as the `screenshots-apiNN`
 artifact and also kept under the git ref `refs/ci/<branch>/apiNN`

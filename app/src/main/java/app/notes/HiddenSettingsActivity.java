@@ -38,7 +38,7 @@ public class HiddenSettingsActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
-    private TextView trick, service, number, pending, line, celebrity, overlayNote;
+    private TextView trick, service, number, pending, line, celebrity, nextLineValue, overlayNote;
     private LinearLayout overlayRow, keypadRow;
     private SwitchRow rotate, lockIn;
     private TextView keypadNote;
@@ -103,6 +103,7 @@ public class HiddenSettingsActivity extends AppCompatActivity {
             Force.setRotating(this, !Force.rotating(this));
             updateStatus();
         });
+        nextLineValue = value(row("Next celebrity's line", v -> askNextLine()));
         lockIn = switchRow("Lock the number in on the Keep Notes page", v -> {
             Force.setKeepPageLocks(this, !Force.keepPageLocks(this));
             updateStatus();
@@ -243,16 +244,21 @@ public class HiddenSettingsActivity extends AppCompatActivity {
                         + "you get there with the number entered it is locked in until you prime again"
                 : "Off: swipes on the Keep Notes page count like any other (so a missed swipe can "
                         + "be repeated there)");
+        int nl = Force.nextLine(this);
+        nextLineValue.setText("Line " + nl + " (line " + (nl < 100 ? nl + 1 : nl - 1) + " if their number is "
+                + nl + "). Where \"Change the celebrity every time\" shows the next celebrity");
         rotate.note.setText(rotating && next != null
-                ? "Next: " + next + "\nLine 1 of the Celebrities note always shows the next celebrity "
-                        + "(line 2 if their number is 1). After a performance, just lock the phone: "
-                        + "that primes the next one, and unlocking lands on your first home page."
+                ? "Next: " + next + "\nLine " + nl + " of the Celebrities note always shows the next "
+                        + "celebrity. After a performance, just lock the phone: that primes the next "
+                        + "one, and unlocking lands on your first home page."
                 : "Off: the celebrity stays the same until you pick another. On: every Prime moves "
                         + "on to a new one, shown on line 1 of the note beforehand");
         int l = Celebs.currentLine(this);
         String forced = Force.forcedName(this);
         String where = l < 0 ? forced + " goes on a random line" : forced + " is on line " + l;
-        if (rotating && next != null) where += "; next: " + next + " on line " + (l == 1 ? 2 : 1);
+        if (rotating && next != null) {
+            where += "; next: " + next + " on line " + Celebs.nextLine(this, l, Celebs.count(this));
+        }
         line.setText(where);
         keypadRow.setAlpha(armed ? 0.5f : 1f);
         keypadNote.setText(armed ? "Not while the trick is primed"
@@ -322,6 +328,43 @@ public class HiddenSettingsActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void askNextLine() {
+        EditText e = new EditText(this);
+        e.setInputType(InputType.TYPE_CLASS_NUMBER);
+        e.setHint("1 to 100");
+        e.setText(String.valueOf(Force.nextLine(this)));
+        e.setSelectAllOnFocus(true);
+        FrameLayout box = new FrameLayout(this);
+        box.setPadding(dp(24), dp(8), dp(24), 0);
+        box.addView(e);
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle("Next celebrity's line")
+                .setMessage("The line of the Celebrities note that shows the next celebrity. If the "
+                        + "spectator's number is this line, it goes on the line below.")
+                .setView(box)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Set", (d, w) -> {
+                    try {
+                        int n = Integer.parseInt(e.getText().toString().trim());
+                        if (n >= 1 && n <= 100) {
+                            Force.setNextLine(this, n);
+                            updateStatus();
+                            return;
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                    Snackbar.make(content, "Enter a line from 1 to 100", Snackbar.LENGTH_SHORT).show();
+                })
+                .create();
+        dialog.setOnShowListener(x -> {
+            e.requestFocus();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            }
+        });
+        dialog.show();
     }
 
     private void askNumber() {

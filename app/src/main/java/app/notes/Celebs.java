@@ -65,8 +65,7 @@ final class Celebs {
 
     /**
      * The whole list with the forced name on the given line (1-based). With "a different
-     * celebrity every time" on, the next celebrity is on line 1, or line 2 when the forced name
-     * is on line 1.
+     * celebrity every time" on, the next celebrity is on its chosen line (see nextLine).
      */
     static String text(Context c, int line) {
         List<String> all = names(c);
@@ -88,7 +87,7 @@ final class Celebs {
         }
         int count = Math.min(count(c), 1 + (next != null ? 1 : 0) + fillers.size());
         line = Math.max(1, Math.min(count, line));
-        int nextLine = next == null ? -1 : line == 1 ? 2 : 1;
+        int nextLine = next == null ? -1 : nextLine(c, line, count);
         StringBuilder sb = new StringBuilder();
         int filler = 0;
         for (int i = 1; i <= count; i++) {
@@ -97,6 +96,16 @@ final class Celebs {
             if (i < count) sb.append('\n');
         }
         return sb.toString();
+    }
+
+    /**
+     * The line the next celebrity goes on: the one chosen on the hidden settings screen, or the
+     * line below it when the forced name is there (above it, if that is the last line).
+     */
+    static int nextLine(Context c, int forcedLine, int count) {
+        int l = Math.min(Force.nextLine(c), count);
+        if (l != forcedLine) return l;
+        return l < count ? l + 1 : l - 1;
     }
 
     private static boolean isOneOf(String name, String a, String b) {

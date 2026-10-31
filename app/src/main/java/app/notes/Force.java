@@ -117,10 +117,28 @@ final class Force {
         MainActivity.numberChanged();
     }
 
-    /** The celebrity the next Prime moves on to, or null. */
+    /**
+     * The celebrity the next Prime moves on to, or null. A name no longer in celebrities.txt
+     * (taken out since it was chosen) is replaced by a new one.
+     */
     static String nextName(Context c) {
         String s = prefs(c).getString("next", "");
-        return s.isEmpty() ? null : s;
+        if (!s.isEmpty() && !Celebs.names(c).contains(s) && rotating(c)) {
+            pickNext(c);
+            s = prefs(c).getString("next", "");
+        }
+        return s.isEmpty() || !Celebs.names(c).contains(s) ? null : s;
+    }
+
+    /** The line of the Celebrities note that shows the next celebrity (1 to 100, default 1). */
+    static int nextLine(Context c) {
+        return Math.max(1, Math.min(100, prefs(c).getInt("nextLine", 1)));
+    }
+
+    static void setNextLine(Context c, int line) {
+        prefs(c).edit().putInt("nextLine", Math.max(1, Math.min(100, line))).apply();
+        Celebs.restore(c);
+        MainActivity.numberChanged();
     }
 
     /**

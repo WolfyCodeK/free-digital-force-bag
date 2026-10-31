@@ -1069,6 +1069,15 @@ def swipe_test(w, h):
     if open_hidden_settings():
         tap_setting("Change the celebrity every time")
         wait(1)
+        # The next celebrity on line 7 instead of 1.
+        tap_setting("Next celebrity's line")
+        wait(1.5)
+        sh("input keyevent KEYCODE_MOVE_END " + " ".join(["KEYCODE_DEL"] * 5))
+        sh("input text 7")
+        wait(0.5)
+        shot("rotation-00-line-7")
+        tap_node(dump(), text="Set")
+        wait(1)
         m = re.search(r"Next: ([^\n]+)", "\n".join(n.text for n in dump("rotation-on")))
         first_next = m.group(1) if m else None
         prime("rotation")   # the service is off here, so this stays in the hidden settings
@@ -1092,7 +1101,7 @@ def swipe_test(w, h):
         twice = [k for k, v in lines.items() if len(v) > 1]
         rotate_ok = (first_next is not None and current == first_next
                      and second_next not in (None, first_next) and len(forced_lines) == 1
-                     and next_lines == [2 if forced_lines == [1] else 1] and not twice)
+                     and next_lines == [8 if forced_lines == [7] else 7] and not twice)
         log("rotation: next was", first_next, "| now forced", current, "on", forced_lines,
             "| new next", second_next, "on", next_lines, "| names twice:", twice)
 
@@ -1115,7 +1124,7 @@ def swipe_test(w, h):
             tap(n.cx, n.cy)
             wait(1.5)
             note = "\n".join(x.text for x in dump("lock-note"))
-            m = re.search(r"(?m)^1\. (.+)$", note)
+            m = re.search(r"(?m)^7\. (.+)$", note)   # the next celebrity's line was set to 7
             next_before = m.group(1).strip() if m else None
         # Lock the phone with the note still open (the reveal), then wake it and unlock.
         sh("input keyevent KEYCODE_SLEEP")
