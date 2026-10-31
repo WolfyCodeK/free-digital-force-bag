@@ -1,0 +1,56 @@
+ACCESSIBILITY MANAGER (dumpsys accessibility)
+
+currentUserId=0
+hasMagnificationConnection=false
+Magnifier on display#0
+    MagnificationConfig[mode: 1, activated: false, scale: 1.0, centerX: 540.0, centerY: 1168.5] 
+    Magnification region=SkRegion((0,0,1080,2337))
+    IdOfLastServiceToMagnify=-1
+    SupportWindowMagnification=true
+    WindowMagnificationConnectionState=DISCONNECTED
+User state[
+     attributes:{id=0, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=6, magnificationModes={0=1}, magnificationCapabilities=3, audioDescriptionByDefaultEnabled=false, magnificationFollowTypingEnabled=true, alwaysOnMagnificationEnabled=true}
+     button mode: 1
+     shortcut key:{}
+     button:{}
+     button target:{null}
+     gesture:{}
+     qs shortcut targets:{}
+     a11y tiles in QS panel:{}
+     Bound services:{Service[label=Keep Notes, feedbackType[FEEDBACK_GENERIC], capabilities=131, eventTypes=[TYPE_WINDOW_STATE_CHANGED, TYPE_TOUCH_EXPLORATION_GESTURE_START, TYPE_VIEW_SCROLLED, TYPE_ANNOUNCEMENT, TYPE_VIEW_ACCESSIBILITY_FOCUSED, TYPE_TOUCH_INTERACTION_START, TYPE_TOUCH_INTERACTION_END, TYPE_WINDOWS_CHANGED], notificationTimeout=0, requestA11yBtn=false]}
+     Enabled services:{{io.github.wolfycodek.keepnotes/app.notes.GestureService}}
+     Binding services:{}
+     Crashed services:{}
+     Client list info:{
+          Client list callbacks: 11
+          Client list killed: false
+          Client list broadcasts count: -1
+          Registered clients:{
+[com.google.android.inputmethod.latin][com.google.android.apps.nexuslauncher][com.google.android.apps.wellbeing][com.google.android.as][com.google.android.apps.messaging][com.google.android.apps.photos][io.github.wolfycodek.keepnotes][com.google.android.tts][com.google.android.googlequicksearchbox][com.android.chrome][com.google.android.tts]}]
+Global Info [ Top focused display Id = 0
+     Active Window Id = 1109
+     Top Focused Window Id = 1109
+     Accessibility Focused Window Id = -1 ]
+
+Display[0] : 
+A11yWindow[AccessibilityWindowInfo[title=null, displayId=0, id=1108, taskId=-1, type=TYPE_SYSTEM, layer=1, region=SkRegion((0,0,1080,128)), bounds=Rect(0, 0 - 1080, 128), focused=false, active=false, pictureInPicture=false, transitionTime=900438, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=null, displayId=0, taskId=-1, type=2000, layer=0, token=android.os.BinderProxy@3ff511d, region=SkRegion((0,0,1080,128)), bounds=Rect(0, 0 - 1080, 128), parent=null, focused=false, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 0.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[en_US]]]
+,
+A11yWindow[AccessibilityWindowInfo[title=Keep Notes, displayId=0, id=1109, taskId=14, type=TYPE_APPLICATION, layer=0, region=SkRegion((0,0,1080,2400)), bounds=Rect(0, 0 - 1080, 2400), focused=true, active=true, pictureInPicture=false, transitionTime=900438, hasParent=false, isAnchored=false, hasChildren=false]]
+WindowInfo[WindowInfo[title=Keep Notes, displayId=0, taskId=14, type=1, layer=1, token=android.os.BinderProxy@8458a6b, region=SkRegion((0,0,1080,2400)), bounds=Rect(0, 0 - 1080, 2400), parent=null, focused=true, children=null, accessibility anchor=9223372034707292159, pictureInPicture=false, watchOutsideTouch=false, mTransformMatrix=Matrix{[1.0, 0.0, 0.0][0.0, 1.0, 0.0][0.0, 0.0, 1.0]}, mMagnificationSpec=<scale:1.0,offsetX:0.0,offsetY:0.0>, locales=[en_US]]]
+
+
+Window attributes:[{594=AccessibilityWindowAttributes{mAccessibilityWindowTitle=SettingsmLocales=[en_US]}, 1102=AccessibilityWindowAttributes{mAccessibilityWindowTitle=Navigation bar Edge PanelmLocales=[en_US]}, 1103=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[en_US]}, 1104=AccessibilityWindowAttributes{mAccessibilityWindowTitle=Navigation barmLocales=[en_US]}, 1105=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[en_US]}, 1106=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[en_US]}, 1107=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[en_US]}, 1108=AccessibilityWindowAttributes{mAccessibilityWindowTitle=nullmLocales=[en_US]}, 1109=AccessibilityWindowAttributes{mAccessibilityWindowTitle=Keep NotesmLocales=[en_US]}, 1110=AccessibilityWindowAttributes{mAccessibilityWindowTitle=English (US) (QWERTY)mLocales=[en_US]}, 1111=AccessibilityWindowAttributes{mAccessibilityWindowTitle=HomemLocales=[en_US]}}]
+Global client list info:{
+    Client list callbacks: 9
+    Client list killed: false
+    Client list broadcasts count: -1
+    Registered clients:{
+[android, com.android.emulator.multidisplay, com.android.providers.settings, com.android.dynsystem, com.android.settings, com.android.inputdevices, com.android.location.fused, com.android.localtransport, com.android.DeviceAsWebcam, com.android.keychain, com.android.server.telecom][com.google.android.settings.intelligence][com.google.android.googlequicksearchbox][com.google.android.gms][com.google.android.googlesdksetup][com.android.providers.settings, com.android.inputdevices, android, com.android.location.fused, com.android.dynsystem, com.android.keychain, com.android.DeviceAsWebcam, com.android.emulator.multidisplay, com.android.server.telecom, com.android.settings, com.android.localtransport][com.google.android.documentsui][com.google.android.permissioncontroller][com.android.systemui]
+
+Proxy manager state:
+    Number of proxy connections: 0
+    Registered proxy connections:
+Accessibility Display Listener:
+    SystemUI uid: 10184
+    1 valid display: 0

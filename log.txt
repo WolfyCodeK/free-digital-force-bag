@@ -1,0 +1,384 @@
+android 16 sdk 36
+2 = navigation_mode (0 three-button, 2 gesture)
+screen 1080 2400 density Physical density: 420
+Performing Streamed Install
+Success
+
+screenshot ci-out/dark-01-notes.png
+screenshot ci-out/dark-02-celebrities.png
+screenshot ci-out/dark-03-celebrities-scrolled.png
+screenshot ci-out/dark-10-drawer.png
+screenshot ci-out/dark-11-search.png
+screenshot ci-out/dark-12-search-milk.png
+screenshot ci-out/dark-13-search-lists.png
+screenshot ci-out/dark-14-list-view.png
+screenshot ci-out/dark-15-grid-view.png
+screenshot ci-out/dark-16-sort.png
+screenshot ci-out/dark-17-fab-menu.png
+screenshot ci-out/dark-18-new-list.png
+screenshot ci-out/dark-19-new-list-typed.png
+screenshot ci-out/dark-20-after-new-list.png
+screenshot ci-out/dark-21-live.png
+screenshot ci-out/dark-21b-live-opened.png
+screenshot ci-out/dark-22-selected.png
+screenshot ci-out/dark-23-colour.png
+screenshot ci-out/dark-24-select-more.png
+screenshot ci-out/dark-25-checklist.png
+screenshot ci-out/dark-26-add-sheet.png
+screenshot ci-out/dark-27-colour-sheet.png
+screenshot ci-out/dark-28-more-sheet.png
+screenshot ci-out/dark-29-format.png
+screenshot ci-out/dark-30-text-note.png
+screenshot ci-out/dark-31-reminder-sheet.png
+screenshot ci-out/dark-32-swiped-archive.png
+swipe to archive (input swipe): True
+
+screenshot ci-out/dark-40-reminders.png
+screenshot ci-out/dark-41-archive.png
+screenshot ci-out/dark-42-deleted.png
+screenshot ci-out/dark-43-create.png
+screenshot ci-out/dark-44-settings.png
+screenshot ci-out/dark-45-help.png
+screenshot ci-out/dark-49a-search-again.png
+screenshot ci-out/dark-49b-hidden-settings.png
+screenshot ci-out/dark-50-account.png
+screenshot ci-out/dark-51-fab.png
+screenshot ci-out/dark-52-drawing.png
+screenshot ci-out/dark-53-drawing-strokes.png
+screenshot ci-out/dark-54-drawing-note.png
+screenshot ci-out/dark-55-notes-after-drawing.png
+screenshot ci-out/light-01-notes.png
+launcher: com.google.android.apps.nexuslauncher
+launcher dbs: ['app_icons.db', 'app_icons.db-journal', 'launcher_4_by_5.db', 'launcher_4_by_5.db-journal']
+sqlite3 on device: True
+launcher_4_by_5.db rows:
+0|0|0|1|1|-101|Phone
+1|1|0|1|1|-101|Messages
+2|2|0|1|1|-101|Chrome
+0|1|4|1|1|-100|Gmail
+0|2|4|1|1|-100|Photos
+0|3|4|1|1|-100|YouTube
+
+after restart launcher_4_by_5.db 1|0|0|0|-101|Phone
+2|1|1|0|-101|Messages
+3|2|2|0|-101|Chrome
+4|0|1|4|-100|Gmail
+5|0|2|4|-100|Photos
+6|0|3|4|-100|YouTube
+9001|0|1|2|-100|Keep Notes
+9002|1|1|2|-100|Keep Notes
+icons added: True
+icon on page 0: <android.widget.TextView text='Keep Notes' desc='Keep Notes' id= (314, 853, 519, 1126)>
+screenshot ci-out/home-01-page0.png
+  visible: ['Keep Notes', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+after baseline swipe left, page: 1
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+back, page: 0
+home screen has a second page: True
+touch devices: [('/dev/input/event2', 'virtio_input_multi_touch_1'), ('/dev/input/event3', 'virtio_input_multi_touch_2'), ('/dev/input/event4', 'virtio_input_multi_touch_3'), ('/dev/input/event5', 'virtio_input_multi_touch_4'), ('/dev/input/event6', 'virtio_input_multi_touch_5'), ('/dev/input/event7', 'virtio_input_multi_touch_6'), ('/dev/input/event8', 'virtio_input_multi_touch_7'), ('/dev/input/event9', 'virtio_input_multi_touch_8'), ('/dev/input/event10', 'virtio_input_multi_touch_9'), ('/dev/input/event11', 'virtio_input_multi_touch_10'), ('/dev/input/event12', 'virtio_input_multi_touch_11')]
+touch device: ('/dev/input/event2', {'M': 2147483647, 'X': 32767, 'Y': 32767, 'P': 1024})
+  visible: ['Keep Notes', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+raw touch baseline: left -> 1 , right -> 0
+resumed: topResumedActivity=ActivityRecord{186542128 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t11}
+  bottom swipe 6 steps -> home
+gesture-nav home without-service : True
+screenshot ci-out/nav-without-service.png
+enabled setting: io.github.wolfycodek.keepnotes/app.notes.GestureService
+   attributes:{id=0, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=6, magnificationModes={0=1}, magnificationCapabilities=3, audioDescriptionByDefaultEnable
+   Bound services:{Service[label=Keep Notes, feedbackType[FEEDBACK_GENERIC], capabilities=131, eventTypes=[TYPE_WINDOW_STATE_CHANGED, TYPE_TOUCH_EXPLORATION_GESTURE_START, TYPE_VIEW_SCROLLED, TYPE_ANNOUNCEMENT, TYPE_VIEW_ACCESSIBILITY_FOCUSED, TYPE_TOUCH_INTERACTION_START, TYPE_TOUCH_INTERACTION_END, TYPE_WINDOWS_CHANGED], notificationTimeout=0, requestA11yBtn=false]}
+   Enabled services:{{io.github.wolfycodek.keepnotes/app.notes.GestureService}}
+   Binding services:{}
+   Crashed services:{}
+10-31 14:02:57.608   610  1098 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:02:57.608   610  1098 D AccessibilityManagerService: restoreCurrentUserForTestAutomationIfNeededLocked(): ignoring because device doesn't support visible background users
+10-31 14:03:00.220   610  1329 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 14:03:00.220   610  1329 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:03:00.224   610  2109 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:03:01.235   610  1098 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:03:01.237   610  1098 D AccessibilityManagerService: restoreCurrentUserForTestAutomationIfNeededLocked(): ignoring because device doesn't support visible background users
+10-31 14:03:10.755   610   737 I ActivityManager: Force stopping io.github.wolfycodek.keepnotes appid=10216 user=0: from pid 7813
+10-31 14:03:10.757   610   737 I ActivityManager: Killing 7036:io.github.wolfycodek.keepnotes/u0a216 (adj 900): stop io.github.wolfycodek.keepnotes due to from pid 7813
+10-31 14:03:10.762   610   737 W ActivityTaskManager: Force removing ActivityRecord{131039618 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity t9 f}}: app died, no saved state
+10-31 14:03:10.763   610   750 W UsageStatsService: Unexpected activity event reported! (io.github.wolfycodek.keepnotes/app.notes.MainActivity event : 23 instanceId : 69494992)
+10-31 14:03:10.764   610   737 I AppsFilter: interaction: PackageSetting{823d77a com.android.microdroid.empty_payload/10202} -> PackageSetting{75a64b io.github.wolfycodek.keepnotes/10216} BLOCKED
+10-31 14:03:10.767  1198  1198 D CarrierSvcBindHelper: onHandleForceStop: [io.github.wolfycodek.keepnotes]
+10-31 14:03:10.767   610   961 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10216 package io.github.wolfycodek.keepnotes isStopped true
+10-31 14:03:10.777   610  2029 V ActivityManager: Got obituary of 7036:io.github.wolfycodek.keepnotes
+10-31 14:03:10.971   610  1161 V SettingsShellCmd: putForUser(userId=0, table=secure, key=enabled_accessibility_services, value=io.github.wolfycodek.keepnotes/app.notes.GestureService, tag=null, makeDefault=false, overrideableByRestore=false)
+10-31 14:03:10.972   610   610 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:03:10.973   610   610 I AppsFilter: interaction: PackageSetting{823d77a com.android.microdroid.empty_payload/10202} -> PackageSetting{f16d715 io.github.wolfycodek.keepnotes/10216} BLOCKED
+10-31 14:03:10.978   610   961 I AppWidgetServiceImpl: Updating package stopped masked state for uid 10216 package io.github.wolfycodek.keepnotes isStopped false
+10-31 14:03:11.006   610   690 I ActivityManager: Start proc 7852:io.github.wolfycodek.keepnotes/u0a216 for service {io.github.wolfycodek.keepnotes/app.notes.GestureService}
+10-31 14:03:11.012  7852  7852 I codek.keepnotes: Late-enabling -Xcheck:jni
+10-31 14:03:11.032  7852  7852 I codek.keepnotes: Using CollectorTypeCMC GC.
+10-31 14:03:11.033  7852  7852 W codek.keepnotes: Unexpected CPU variant for x86: x86_64.
+10-31 14:03:11.033  7852  7852 W codek.keepnotes: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+10-31 14:03:11.149  7852  7852 D nativeloader: Configuring clns-9 for other apk /data/app/~~j1ibNkCuUt7Bc2dc0l6_ZA==/io.github.wolfycodek.keepnotes-xJWbEfppAckKIj8WlppZTw==/base.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~j1ibNkCuUt7Bc2dc0l6_ZA==/io.github.wolfycodek.keepnotes-xJWbEfppAckKIj8WlppZTw==/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/io.github.wolfycodek.keepnotes
+10-31 14:03:11.152  7852  7852 I codek.keepnotes: AssetManager2(0x74d28e2fd0b8) locale list changing from [] to [en-US]
+10-31 14:03:11.155  7852  7852 V GraphicsEnvironment: io.github.wolfycodek.keepnotes is not listed in per-application setting
+10-31 14:03:11.155  7852  7852 V GraphicsEnvironment: io.github.wolfycodek.keepnotes is not listed in ANGLE allowlist or settings, returning default
+10-31 14:03:11.192   610   610 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:03:16.447  7852  7899 D ProfileInstaller: Installing profile for io.github.wolfycodek.keepnotes
+touch exploration on home before priming: 0
+  visible: ['Keep Notes', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+before priming, page: 1
+screenshot ci-out/prime-1-settings.png
+screenshot ci-out/prime-1-home.png
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+after priming, page: 0
+touch exploration on home after priming: 1
+screenshot ci-out/home-03-after-digit6.png
+screenshot ci-out/home-04-after-digit1.png
+10-31 14:03:59.915  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:03:59.915  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:03:59.916  7852  7852 D KeepGestures: event TYPE_VIEW_SCROLLED changes=0 class=android.widget.ScrollView text=[]
+10-31 14:03:59.916  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=64 class=android.view.View text=[]
+10-31 14:04:02.564  7852  7852 D KeepGestures: down 378,1158 state STATE_DELEGATING
+10-31 14:04:02.743  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:04:02.957  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:03.136  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:03.249  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:03.316  7852  7852 D KeepGestures: touch ended after 748 ms
+10-31 14:04:03.507  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:03.719  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:04.147  7852  7852 D KeepGestures: snapshot 137 -> 202 chars
+10-31 14:04:04.147  7852  7852 D KeepGestures: page changed (home screen looks different)
+10-31 14:04:04.149  7852  7852 D KeepGestures: digit 1, number 61
+10-31 14:04:04.149  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:04:04.150  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:04:04.150  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:04:04.150  7852  7852 D KeepGestures: event TYPE_VIEW_SCROLLED changes=0 class=android.widget.ScrollView text=[]
+10-31 14:04:04.151  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=64 class=android.view.View text=[]
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Gmail'] []
+page after both swipes: 0
+resumed: topResumedActivity=ActivityRecord{207967595 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity t13}
+tap on home icon opened app: True
+10-31 14:04:09.526  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=4 class=android.widget.TextView text=[]
+10-31 14:04:09.563  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=4 class=android.widget.TextView text=[]
+10-31 14:04:09.695  7852  7852 D KeepGestures: event TYPE_VIEW_CLICKED changes=0 class=android.widget.TextView text=[Keep Notes]
+10-31 14:04:09.814  7852  7852 D KeepGestures: capturing false
+10-31 14:04:11.540  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=2 class=android.widget.TextView text=[]
+10-31 14:04:11.794  7852  7852 D KeepGestures: home screen gone
+touch exploration while app in front: 0
+screenshot ci-out/e2e-01-app.png
+screenshot ci-out/e2e-02-celebrities.png
+line 61 shows Tom Hanks : True | found: ['61. Tom Hanks']
+screenshot ci-out/e2e-03-celebrities-line61.png
+touch exploration after the reveal: 0
+after the reveal: digits counted: False | forced name on line 61
+screenshot ci-out/prime-2-settings.png
+screenshot ci-out/prime-2-home.png
+touch exploration after priming again: 1
+touch exploration in another app: 0
+touch exploration back on the home screen: 1
+resumed: topResumedActivity=ActivityRecord{186542128 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t11}
+  bottom swipe 6 steps -> home
+gesture-nav home with-service : True
+screenshot ci-out/nav-with-service.png
+10-31 14:04:26.602  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:04:26.650  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:04:26.938  7852  7852 D KeepGestures: home screen showing
+10-31 14:04:31.066  7852  7852 D KeepGestures: event TYPE_VIEW_SCROLLED changes=0 class=android.widget.ScrollView text=[]
+10-31 14:04:37.806  7852  7852 D KeepGestures: home screen gone
+10-31 14:05:05.115  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 2 of 2]
+10-31 14:05:05.115  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 2 of 2]
+10-31 14:05:05.425  7852  7852 D KeepGestures: home screen showing
+10-31 14:05:05.425  7852  7852 D KeepGestures: capturing true
+10-31 14:05:05.608  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:05.818  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:06.032  7852  7852 D KeepGestures: home again for the first page
+10-31 14:05:06.113  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:05:06.325  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:05:06.508  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:05:06.752  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:05:06.754  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:05:06.853  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:05:06.874  7852  7852 D KeepGestures: event TYPE_VIEW_SCROLLED changes=0 class=android.widget.ScrollView text=[]
+10-31 14:05:06.881  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=64 class=android.view.View text=[]
+10-31 14:05:09.252  7852  7852 D KeepGestures: home screen gone
+10-31 14:05:09.252  7852  7852 D KeepGestures: capturing false
+10-31 14:05:12.297  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:12.720  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:05:12.769  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:12.807  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:12.815  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:05:13.004  7852  7852 D KeepGestures: home screen showing
+10-31 14:05:13.004  7852  7852 D KeepGestures: capturing true
+10-31 14:05:16.080  7852  7852 D KeepGestures: home screen gone
+10-31 14:05:16.081  7852  7852 D KeepGestures: capturing false
+10-31 14:05:18.822  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=4097 class=android.widget.FrameLayout text=[]
+10-31 14:05:18.971  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Recent apps]
+10-31 14:05:18.971  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=16 class=android.widget.ListView text=[Recent apps]
+10-31 14:05:18.981  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.184  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.292  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.394  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:19.401  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=4097 class=android.widget.FrameLayout text=[]
+10-31 14:05:19.419  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.419  7852  7852 D KeepGestures: event TYPE_ANNOUNCEMENT changes=0 class=android.widget.ListView text=[]
+10-31 14:05:19.636  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.869  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:19.869  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:19.869  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Recent apps]
+10-31 14:05:19.869  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:19.876  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:20.112  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.ListView text=[]
+10-31 14:05:22.727  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:22.728  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:22.806  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=4097 class=android.widget.FrameLayout text=[]
+10-31 14:05:22.810  7852  7852 D KeepGestures: event TYPE_ANNOUNCEMENT changes=0 class=android.widget.ListView text=[]
+10-31 14:05:23.048  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:23.049  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:05:23.050  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.widget.FrameLayout text=[]
+10-31 14:05:23.052  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=32 class=android.widget.ListView text=[Recent apps]
+10-31 14:05:23.140  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:05:23.140  7852  7852 D KeepGestures: event TYPE_WINDOW_STATE_CHANGED changes=0 class=com.google.android.apps.nexuslauncher.NexusLauncherActivity text=[Home screen 1 of 2]
+10-31 14:05:23.361  7852  7852 D KeepGestures: home screen showing
+10-31 14:05:23.361  7852  7852 D KeepGestures: capturing true
+touch exploration after leaving the app with a number: 0
+tapping 'Show the keypad on the home screen' at 461,1886
+screenshot ci-out/tapped-show-the-keypad-on-the-home-screen.png
+screenshot ci-out/practice-00-settings.png
+  overlay window: mViewVisibility=0x0 | isOnScreen=true
+screenshot ci-out/practice-01-overlay.png
+screenshot ci-out/practice-02-overlay-digit6.png
+practice overlay shown: True | practice swipe lit up without counting: True
+tapping 'Set up the keypad' at 540,1561
+screenshot ci-out/tapped-set-up-the-keypad.png
+screenshot ci-out/setup-01-ask-for-1.png
+screenshot ci-out/setup-02-done.png
+screenshot ci-out/setup-03-swiped-new-2.png
+keypad set up on the home screen, new 2 counted: True
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Keep Notes'] []
+after set-up the overlay lets touches through (page turned): True
+10-31 14:04:09.279  7852  7852 D KeepGestures: outside the keypad
+10-31 14:06:17.280  7852  7852 D KeepGestures: practice digit 6
+10-31 14:06:57.229  7852  7852 D KeepGestures: keypad set up
+10-31 14:07:01.592  7852  7852 D KeepGestures: practice digit 2
+tapping 'Use the default keypad' at 540,1811
+screenshot ci-out/tapped-use-the-default-keypad.png
+screenshot ci-out/prime-3-settings.png
+screenshot ci-out/prime-3-home.png
+  no overlay window
+overlay after priming: False
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Keep Notes'] []
+quick swipes, page before: 0
+screenshot ci-out/quick-01-after-swipes.png
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Keep Notes'] []
+page after quick swipes: 0
+10-31 14:08:01.559  7852  7852 D KeepGestures: touch ended after 670 ms
+10-31 14:08:01.821  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.001  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.319  7852  7852 D KeepGestures: snapshot 207 -> 142 chars
+10-31 14:08:02.319  7852  7852 D KeepGestures: page changed (home screen looks different)
+10-31 14:08:02.320  7852  7852 D KeepGestures: digit 6
+10-31 14:08:02.322  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:08:02.322  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:08:02.322  7852  7852 D KeepGestures: down 378,1158 state STATE_DELEGATING
+10-31 14:08:02.344  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.493  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:08:02.549  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.693  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.791  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:02.854  7852  7852 D KeepGestures: touch ended after 525 ms
+10-31 14:08:03.023  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:03.257  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.view.View text=[]
+10-31 14:08:03.609  7852  7852 D KeepGestures: snapshot 142 -> 207 chars
+10-31 14:08:03.609  7852  7852 D KeepGestures: page changed (home screen looks different)
+10-31 14:08:03.612  7852  7852 D KeepGestures: digit 1, number 61
+10-31 14:08:03.615  7852  7852 D KeepGestures: event TYPE_VIEW_FOCUSED changes=0 class=android.view.ViewGroup text=[]
+10-31 14:08:03.615  7852  7852 D KeepGestures: event TYPE_WINDOW_CONTENT_CHANGED changes=1 class=android.widget.FrameLayout text=[]
+10-31 14:08:03.644  7852  7852 D KeepGestures: event TYPE_VIEW_SCROLLED changes=0 class=android.widget.ScrollView text=[]
+10-31 14:08:07.270  7852  7852 D KeepGestures: capturing true
+quick swipes: forced name on line 61
+screenshot ci-out/prime-4-settings.png
+screenshot ci-out/prime-4-home.png
+screenshot ci-out/lastpage-01-after-swipes.png
+10-31 14:05:33.556  7852  7852 D KeepGestures: touch ended after 609 ms
+10-31 14:05:34.418  7852  7852 D KeepGestures: digit 1, number 61
+10-31 14:06:16.477  7852  7852 D KeepGestures: touch ended after 696 ms
+10-31 14:07:00.692  7852  7852 D KeepGestures: touch ended after 504 ms
+10-31 14:08:01.559  7852  7852 D KeepGestures: touch ended after 670 ms
+10-31 14:08:02.320  7852  7852 D KeepGestures: digit 6
+10-31 14:08:02.854  7852  7852 D KeepGestures: touch ended after 525 ms
+10-31 14:08:03.612  7852  7852 D KeepGestures: digit 1, number 61
+10-31 14:08:41.919  7852  7852 D KeepGestures: touch ended after 639 ms
+10-31 14:08:42.634  7852  7852 D KeepGestures: digit 6
+10-31 14:08:45.602  7852  7852 D KeepGestures: touch ended after 439 ms
+10-31 14:08:46.808  7852  7852 D KeepGestures: digit 3, number 63
+last-page swipe: forced name on line 63
+screenshot ci-out/prime-fallback-settings.png
+screenshot ci-out/prime-fallback-home.png
+in-app fallback, line 58 shows Tom Hanks : True | found: ['58. Tom Hanks']
+screenshot ci-out/fallback-01-celebrities.png
+screenshot ci-out/fallback-02-after-more-swipes.png
+fallback after the reveal, forced name on line 58
+screenshot ci-out/celebrity-01-list.png
+picked Keanu Reeves from the list: True
+screenshot ci-out/celebrity-02-settings.png
+Keanu Reeves on lines ['58'] | Tom Hanks on lines ['46']
+screenshot ci-out/celebrity-03-note.png
+tapping 'Change the celebrity every time' at 461,942
+screenshot ci-out/tapped-change-the-celebrity-every-time.png
+tapping 'Next celebrity's line' at 540,1305
+screenshot ci-out/tapped-next-celebrity-s-line.png
+screenshot ci-out/rotation-00-line-7.png
+screenshot ci-out/prime-rotation-settings.png
+screenshot ci-out/prime-rotation-home.png
+screenshot ci-out/rotation-01-note.png
+rotation: next was Robert Pattinson | now forced Robert Pattinson on [81] | new next Prince Harry on [7] | names twice: []
+enabled setting: io.github.wolfycodek.keepnotes/app.notes.GestureService
+   attributes:{id=0, touchExplorationEnabled=false, serviceHandlesDoubleTap=false, requestMultiFingerGestures=false, requestTwoFingerPassthrough=false, sendMotionEventsEnabledfalse, displayMagnificationEnabled=false, autoclickEnabled=false, nonInteractiveUiTimeout=0, interactiveUiTimeout=0, installedServiceCount=6, magnificationModes={0=1}, magnificationCapabilities=3, audioDescriptionByDefaultEnable
+   Bound services:{Service[label=Keep Notes, feedbackType[FEEDBACK_GENERIC], capabilities=131, eventTypes=[TYPE_WINDOW_STATE_CHANGED, TYPE_TOUCH_EXPLORATION_GESTURE_START, TYPE_VIEW_SCROLLED, TYPE_ANNOUNCEMENT, TYPE_VIEW_ACCESSIBILITY_FOCUSED, TYPE_TOUCH_INTERACTION_START, TYPE_TOUCH_INTERACTION_END, TYPE_WINDOWS_CHANGED], notificationTimeout=0, requestA11yBtn=false]}
+   Enabled services:{{io.github.wolfycodek.keepnotes/app.notes.GestureService}}
+   Binding services:{}
+   Crashed services:{}
+10-31 14:12:11.258  1019  1059 V WindowManagerShell: start default transition animation, info = {id=120 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0xe1739f6 sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},{m=TO_BACK f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0xdd0d1f7 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}]}
+10-31 14:12:11.266   610   680 V WindowManager: Sent Transition (#120) createdAt=10-31 14:12:10.928 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=14 effectiveUid=10216 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=io.github.wolfycodek.keepnotes/app.notes.MainActivity } baseActivity=ComponentInfo{io.github.wolfycodek.keepnotes/app.notes.MainActivity} topActivity=ComponentInfo{io.github.wolfycodek.keepnotes/app.notes.EditorActivity} origActivity=null realActivity=ComponentInfo{io.github.wolfycodek.keepnotes/app.notes.MainActivity} numActivities=2 lastActiveTime=895450 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{6e76768 Task{467648f #14 type=standard A=10216:io.github.wolfycodek.keepnotes}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{6b68813 app.notes.EditorActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(276, 692 - 804, 1772) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 128 - 1080, 2337) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 120 }
+10-31 14:12:11.266   610   680 V WindowManager:         {m=OPEN f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0x622004d sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},
+10-31 14:12:11.266   610   680 V WindowManager:         {m=TO_BACK f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0x2a8e170 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}
+10-31 14:12:12.055   610   778 I ImeTracker: io.github.wolfycodek.keepnotes:35c7431e: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-31 14:12:12.068  1535  1535 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1293 onStartInput(EditorInfo{EditorInfo{packageName=io.github.wolfycodek.keepnotes, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-31 14:12:12.069   610  2179 W PackageConfigPersister: App-specific configuration not found for packageName: io.github.wolfycodek.keepnotes and userId: 0
+10-31 14:12:12.256 10265 10265 I ImeTracker: io.github.wolfycodek.keepnotes:35c7431e: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+10-31 14:12:12.575   610  1277 D AccessibilityManagerService: changeCurrentUserForTestAutomationIfNeededLocked(0): ignoring because device doesn't support visible background users
+10-31 14:12:12.575   610  1277 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:12:12.577   610  2179 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:12:13.583 11476 11476 I AccessibilityNodeInfoDumper: Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@1bc64a; boundsInParent: Rect(0, 0 - 1080, 0); boundsInScreen: Rect(0, 296 - 1080, 296); boundsInWindow: Rect(0, 296 - 1080, 296); packageName: io.github.wolfycodek.keepnotes; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; granularScrollingSupported: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]; isTextSelectable: false
+10-31 14:12:13.583 11476 11476 I AccessibilityNodeInfoDumper: Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@1bd54e; boundsInParent: Rect(0, 0 - 1080, 0); boundsInScreen: Rect(0, 6581 - 1080, 2189); boundsInWindow: Rect(0, 6581 - 1080, 2189); packageName: io.github.wolfycodek.keepnotes; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; granularScrollingSupported: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]; isTextSelectable: false
+10-31 14:12:13.583 11476 11476 I AccessibilityNodeInfoDumper: Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@1bdcd0; boundsInParent: Rect(0, 0 - 1080, 315); boundsInScreen: Rect(0, 6581 - 1080, 2189); boundsInWindow: Rect(0, 6581 - 1080, 2189); packageName: io.github.wolfycodek.keepnotes; className: android.view.View; text: null; error: null; maxTextLength: -1; stateDescription: null; contentDescription: null; tooltipText: null; containerTitle: null; viewIdResName: null; uniqueId: null; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; granularScrollingSupported: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]; isTextSelectable: false
+10-31 14:12:13.584   610  1098 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:12:13.585   610  1098 D AccessibilityManagerService: restoreCurrentUserForTestAutomationIfNeededLocked(): ignoring because device doesn't support visible background users
+10-31 14:12:14.738   610   680 V WindowManager:         {m=CLOSE f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0x622004d sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},
+10-31 14:12:14.738   610   680 V WindowManager:         {m=TO_FRONT f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0x2a8e170 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}
+10-31 14:12:14.738  1019  1059 V WindowManagerShell:         {m=CLOSE f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0x880efe8 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},
+10-31 14:12:14.738  1019  1059 V WindowManagerShell:         {m=TO_FRONT f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0xd6f0601 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}
+10-31 14:12:14.738  1019  1059 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=121 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=CLOSE f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0x880efe8 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},{m=TO_FRONT f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0xd6f0601 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}]}
+10-31 14:12:14.738  1019  1059 V WindowManagerShell: start default transition animation, info = {id=121 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=CLOSE f=FILLS_TASK leash=Surface(name=ActivityRecord{77759646 u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity)/@0x880efe8 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.EditorActivity opt={t=FROM_STYLE mUserId=0}},{m=TO_FRONT f=FILLS_TASK leash=Surface(name=ActivityRecord{266901486 u0 io.github.wolfycodek.keepnotes/app.notes.MainActivity)/@0xd6f0601 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 bc=ff1e1f24 component=io.github.wolfycodek.keepnotes/app.notes.MainActivity opt={t=FROM_STYLE mUserId=0}}]}
+10-31 14:12:15.000   610   778 I ImeTracker: io.github.wolfycodek.keepnotes:857028c2: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-31 14:12:15.117  1535  1535 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1293 onStartInput(EditorInfo{EditorInfo{packageName=io.github.wolfycodek.keepnotes, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+10-31 14:12:15.129   610  1098 W PackageConfigPersister: App-specific configuration not found for packageName: io.github.wolfycodek.keepnotes and userId: 0
+10-31 14:12:15.678 10265 10265 I ImeTracker: io.github.wolfycodek.keepnotes:857028c2: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+10-31 14:12:15.824   610   918 D CoreBackPreview: Window{4ae4caa u0 io.github.wolfycodek.keepnotes/app.notes.EditorActivity}: Setting back callback null
+10-31 14:12:15.897   610  1328 V SettingsShellCmd: putForUser(userId=0, table=secure, key=enabled_accessibility_services, value=io.github.wolfycodek.keepnotes/app.notes.GestureService, tag=null, makeDefault=false, overrideableByRestore=false)
+10-31 14:12:15.899   610   610 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+10-31 14:12:15.915   610   610 V AccessibilityManagerService: onUserStateChangedLocked for userId: 0, forceUpdate: false
+screenshot ci-out/prime-lock-settings.png
+screenshot ci-out/prime-lock-home.png
+screenshot ci-out/lock-00-just-unlocked.png
+screenshot ci-out/lock-01-after-unlock.png
+resumed: topResumedActivity=ActivityRecord{186542128 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t11}
+  visible: ['Sat, Oct 31', 'Keep Notes', 'Gmail', 'Photos', 'YouTube', 'Phone', 'Messages', 'Chrome', 'Keep Notes'] []
+10-31 14:12:50.335 10265 10265 D KeepGestures: first page captured
+10-31 14:13:07.368 10265 10265 D KeepGestures: locked after a performance: priming the next one
+10-31 14:13:09.674 10265 10265 D KeepGestures: unlocked: covered the move to the first page
+10-31 14:13:10.977 10265 10265 D KeepGestures: cover removed
+10-31 14:13:13.090 10265 10265 D KeepGestures: first page captured
+after lock + unlock: home True | page 0 | listening 1 | next was Tom Holland | now Tom Holland
+tapping 'Lock the number in on the Keep Notes page' at 461,1553
+screenshot ci-out/tapped-lock-the-number-in-on-the-keep-notes-page.png
+screenshot ci-out/keeplock-00-settings.png
+adb shell logcat -d | grep -c 'KeepGestures: on the Keep Notes page: ignored' -> 1 
+Keep Notes page lock: digits unchanged True | ignored 2
+RESULTS {'not_listening_before_prime': True, 'prime_lands_on_first_page': True, 'touch_exploration_on_home': True, 'touch_exploration_off_in_app': True, 'off_after_reveal': True, 'touch_exploration_back_on_after_prime': True, 'off_after_leaving_with_number': True, 'practice_overlay_shown': True, 'practice_swipe_not_counted': True, 'overlay_off_after_prime': True, 'touch_exploration_off_in_other_apps': True, 'icon_tap_opened_app': True, 'icon_tap_not_counted_as_digit': True, 'home_has_two_pages': True, 'raw_touch_pages_launcher': True, 'forced_name_on_line_61': True, 'in_app_fallback_line_58': True, 'fallback_off_after_reveal': True, 'quick_swipes': True, 'last_page_swipe': True, 'keypad_setup_works': True, 'overlay_lets_touches_through_after_setup': True, 'celebrity_setting_changes_name': True, 'new_celebrity_every_time': True, 'lock_primes_next_show': True, 'unlock_jump_covered': True, 'keep_notes_page_swipes_ignored': True, 'gesture_nav_home_baseline': True, 'gesture_nav_home_with_service': True}
