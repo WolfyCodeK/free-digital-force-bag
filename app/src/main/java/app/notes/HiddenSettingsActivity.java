@@ -39,9 +39,8 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout content;
     private TextView trick, service, number, pending, line, celebrity, overlayNote;
-    private LinearLayout overlayRow, keypadRow, rotateRow;
-    private MaterialSwitch rotateSwitch;
-    private TextView rotateNote;
+    private LinearLayout overlayRow, keypadRow;
+    private SwitchRow rotate, lockIn;
     private TextView keypadNote;
     private MaterialSwitch overlaySwitch;
     private final Runnable tick = new Runnable() {
@@ -100,27 +99,14 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         content.addView(primeNote);
 
         celebrity = value(row("Celebrity", v -> askName()));
-        rotateRow = new LinearLayout(this);
-        rotateRow.setGravity(Gravity.CENTER_VERTICAL);
-        rotateRow.setPadding(dp(24), dp(12), dp(16), dp(12));
-        rotateRow.setMinimumHeight(dp(56));
-        rotateRow.setBackground(Ui.rippleRounded(this, 0));
-        LinearLayout rotateTexts = new LinearLayout(this);
-        rotateTexts.setOrientation(LinearLayout.VERTICAL);
-        rotateTexts.addView(Ui.text(this, "Change the celebrity every time", 16, Ui.textColor(this),
-                R.font.google_sans_text_regular));
-        rotateNote = value(rotateTexts);
-        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(0, Ui.WRAP, 1f);
-        rp.setMarginEnd(dp(16));
-        rotateRow.addView(rotateTexts, rp);
-        rotateSwitch = new MaterialSwitch(this);
-        rotateSwitch.setClickable(false);
-        rotateRow.addView(rotateSwitch);
-        rotateRow.setOnClickListener(v -> {
+        rotate = switchRow("Change the celebrity every time", v -> {
             Force.setRotating(this, !Force.rotating(this));
             updateStatus();
         });
-        content.addView(rotateRow, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
+        lockIn = switchRow("Lock the number in on the Keep Notes page", v -> {
+            Force.setKeepPageLocks(this, !Force.keepPageLocks(this));
+            updateStatus();
+        });
 
         header("Practice");
         overlayRow = new LinearLayout(this);
@@ -228,7 +214,8 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     private void updateStatus() {
         boolean armed = Force.armed(this);
         boolean serviceOn = serviceEnabled();
-        trick.setText(armed ? "Primed: the next two swipes enter the number"
+        trick.setText(armed && Force.lockedIn(this) ? "Primed: the number is locked in (Keep Notes page reached)"
+                : armed ? "Primed: the next two swipes enter the number"
                 : Force.current(this) >= 1 ? "Off since the number was revealed. Tap Prime before performing"
                 : "Not primed. Tap Prime before performing");
         service.setText(serviceOn ? "On" : "Off: two swipes on the notes list instead");
@@ -249,8 +236,14 @@ public class HiddenSettingsActivity extends AppCompatActivity {
         celebrity.setText(Force.forcedName(this));
         boolean rotating = Force.rotating(this);
         String next = Force.nextName(this);
-        rotateSwitch.setChecked(rotating);
-        rotateNote.setText(rotating && next != null
+        rotate.sw.setChecked(rotating);
+        lockIn.sw.setChecked(Force.keepPageLocks(this));
+        lockIn.note.setText(Force.keepPageLocks(this)
+                ? "On: swipes that start on the page with the Keep Notes icon never count, and once "
+                        + "you get there with the number entered it is locked in until you prime again"
+                : "Off: swipes on the Keep Notes page count like any other (so a missed swipe can "
+                        + "be repeated there)");
+        rotate.note.setText(rotating && next != null
                 ? "Next: " + next + "\nLine 1 of the Celebrities note always shows the next celebrity "
                         + "(line 2 if their number is 1). After a performance, just lock the phone: "
                         + "that primes the next one, and unlocking lands on your first home page."
@@ -358,6 +351,35 @@ public class HiddenSettingsActivity extends AppCompatActivity {
     }
 
     // Building blocks --------------------------------------------------------------------------
+
+    /** A setting with a title, a line of explanation and a switch; the whole row toggles it. */
+    private static final class SwitchRow {
+        LinearLayout row;
+        TextView note;
+        MaterialSwitch sw;
+    }
+
+    private SwitchRow switchRow(String title, View.OnClickListener click) {
+        SwitchRow s = new SwitchRow();
+        s.row = new LinearLayout(this);
+        s.row.setGravity(Gravity.CENTER_VERTICAL);
+        s.row.setPadding(dp(24), dp(12), dp(16), dp(12));
+        s.row.setMinimumHeight(dp(56));
+        s.row.setBackground(Ui.rippleRounded(this, 0));
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        texts.addView(Ui.text(this, title, 16, Ui.textColor(this), R.font.google_sans_text_regular));
+        s.note = value(texts);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, Ui.WRAP, 1f);
+        tp.setMarginEnd(dp(16));
+        s.row.addView(texts, tp);
+        s.sw = new MaterialSwitch(this);
+        s.sw.setClickable(false);
+        s.row.addView(s.sw);
+        s.row.setOnClickListener(click);
+        content.addView(s.row, new LinearLayout.LayoutParams(Ui.MATCH, Ui.WRAP));
+        return s;
+    }
 
     private interface Choice {
         void on(int which);

@@ -1136,6 +1136,28 @@ def swipe_test(w, h):
         lock_ok = (on_home and page_after_lock == 0 and te_after_lock == "1"
                    and next_before is not None and current == next_before)
 
+    # "Lock the number in on the Keep Notes page": swipes that start on a page showing the Keep
+    # Notes icon don't count. Here both home pages show it (outside the dock), so two keypad
+    # swipes while primed must enter nothing.
+    keep_lock_ok = False
+    if open_hidden_settings():
+        tap_setting("Lock the number in on the Keep Notes page")
+        wait(1)
+        shot("keeplock-00-settings")
+        home()
+        home()
+        wait(2)
+        before = digit_lines()
+        ignored_before = sh("logcat -d | grep -c 'KeepGestures: on the Keep Notes page: ignored'").strip()
+        swipe_from(6, "left", w, h)
+        wait(2.5)
+        swipe_from(1, "right", w, h)
+        wait(2.5)
+        ignored_after = sh("logcat -d | grep -c 'KeepGestures: on the Keep Notes page: ignored'").strip()
+        keep_lock_ok = digit_lines() == before and int(ignored_after or 0) - int(ignored_before or 0) >= 2
+        log("Keep Notes page lock: digits unchanged", digit_lines() == before, "| ignored",
+            int(ignored_after or 0) - int(ignored_before or 0))
+
     results = {
         "not_listening_before_prime": te_unprimed == "0",
         "prime_lands_on_first_page": page_after_prime == 0,
@@ -1162,6 +1184,7 @@ def swipe_test(w, h):
         "celebrity_setting_changes_name": name_ok,
         "new_celebrity_every_time": rotate_ok,
         "lock_primes_next_show": lock_ok,
+        "keep_notes_page_swipes_ignored": keep_lock_ok,
         "gesture_nav_home_baseline": nav_base,
         "gesture_nav_home_with_service": nav_svc,
     }

@@ -116,8 +116,9 @@ A swipe counts as a digit (and buzzes) only if **all** of these are true:
   There the page can't turn, so a swipe counts anyway: if a swipe on the last page didn't
   buzz, just swipe again there; the page bounces back but the digit counts (the buzz comes
   about a second after you lift your finger). Tapping Keep Notes on that page never counts:
-  the app opening cancels it. Keep Notes must be on the last page itself, not in the dock
-  (in the dock it would be on every page and this rule would apply everywhere).
+  the app opening cancels it. Keep Notes must be on the last page itself; an icon in the
+  dock doesn't count. With **Lock the number in on the Keep Notes page** on, it's the other way
+  round: swipes on that page never count (see Hidden settings).
 - Android only tells the service where a touch **starts**, not which way the finger went. So
   a swipe **up** into the app drawer that starts on a keypad key can count as a digit; don't
   open the app drawer while the trick is primed. Pulling down the notification shade doesn't
@@ -207,6 +208,13 @@ it closes as soon as the app is left. It shows:
   the next celebrity. To keep that from happening in the middle of a reveal, Keep Notes keeps
   the screen awake after a performance while it is open, so only the power button locks it.
   Locking before the reveal changes nothing, and with the setting off nothing of this happens.
+- **Lock the number in on the Keep Notes page** (off by default): swipes that start on the
+  page with the Keep Notes icon never count, and once you reach that page with the number
+  entered, it is locked in: no swipe anywhere (back on page 1 or 2 either) changes it until you
+  prime again. So after swipe one and swipe two you can hand the phone over on page 3. The swipe
+  from page 2 to page 3 starts on page 2, so it still counts. With this on, a missed swipe
+  can't be repeated on the last page: swipe back to page 2 and forward again instead (both of
+  those count). An icon in the dock doesn't make every page the Keep Notes page.
 - **Practice**: **Show the keypad on the home screen**, the practice overlay. It can't be
   switched on while the trick is primed, and Prime switches it off. **Set up the keypad** picks
   the apps for 1, 9 and 0 on your home screen (the 3x3 is worked out from the 1 and the 9);
@@ -343,6 +351,8 @@ job:
   the home screen and checks a swipe from the new "2" counts as 2;
 - makes two quick swipes straight after each other and checks both count (line 61), and
   checks a swipe on the Keep Notes page, where the page can't turn, still counts (line 63);
+- with "Lock the number in on the Keep Notes page" on, checks swipes that start on a page
+  showing the Keep Notes icon enter nothing;
 - checks that touches still reach the launcher and gesture navigation still works with the
   service on, that the icon tap is not counted as a digit, that touch exploration (the
   screen-reader mode) is on only on the home screen and off in Keep Notes and in other apps,

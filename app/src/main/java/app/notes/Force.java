@@ -209,6 +209,31 @@ final class Force {
         GestureService.settingsChanged();
     }
 
+    /**
+     * "Lock the number in on the Keep Notes page": swipes that start on the page with this
+     * app's icon never count, and once that page is reached with the number entered, nothing
+     * changes it until the next Prime.
+     */
+    static boolean keepPageLocks(Context c) {
+        return prefs(c).getBoolean("keepPageLock", false);
+    }
+
+    static void setKeepPageLocks(Context c, boolean on) {
+        prefs(c).edit().putBoolean("keepPageLock", on).remove("lockedIn").apply();
+    }
+
+    /** True once the number has been locked in on the Keep Notes page (until the next Prime). */
+    static boolean lockedIn(Context c) {
+        return keepPageLocks(c) && prefs(c).getBoolean("lockedIn", false);
+    }
+
+    /** Locks the number in, if the trick is primed and a whole number has been entered. */
+    static void lockIn(Context c) {
+        if (keepPageLocks(c) && armed(c) && current(c) >= 1 && pendingDigit(c) < 0) {
+            prefs(c).edit().putBoolean("lockedIn", true).apply();
+        }
+    }
+
     // The number -------------------------------------------------------------------------------
 
     static void save(Context c, int n) {
@@ -241,7 +266,7 @@ final class Force {
      * Returns false if the digit was ignored (the trick isn't primed).
      */
     static synchronized boolean addDigit(Context c, int d) {
-        if (!armed(c)) return false;
+        if (!armed(c) || lockedIn(c)) return false;
         int first = pendingDigit(c);
         if (first < 0) {
             prefs(c).edit().putInt("d1", d).putLong("d1t", System.currentTimeMillis()).apply();
@@ -271,7 +296,8 @@ final class Force {
      * random line.
      */
     private static void reset(Context c) {
-        prefs(c).edit().remove("n").remove("t").remove("r").remove("d1").remove("d1t").apply();
+        prefs(c).edit().remove("n").remove("t").remove("r").remove("d1").remove("d1t")
+                .remove("lockedIn").apply();
         Celebs.forgetLine(c);
         Celebs.restore(c);
         MainActivity.numberChanged();

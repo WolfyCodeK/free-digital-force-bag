@@ -78,6 +78,8 @@ public class GestureService extends AccessibilityService {
      * cancels it). Only settled at the last check, by which time a tapped app has opened.
      */
     private static final long REVEAL_PAGE_MIN_MS = 60;
+    /** Below this fraction of the screen height is the dock, which shows on every page. */
+    private static final float DOCK_TOP = 0.80f;
 
     private static final Region EVERYWHERE = new Region(0, 0, 100_000, 100_000);
 
@@ -578,6 +580,14 @@ public class GestureService extends AccessibilityService {
      */
     private boolean onRevealPage() {
         if (multiTouch || pendingEndAt - pendingAt < REVEAL_PAGE_MIN_MS) return false;
+        return keepNotesPageShowing();
+    }
+
+    /**
+     * True if the home screen page showing has this app's icon on it (the last page, where the
+     * reveal starts). An icon in the dock doesn't count: the dock is on every page.
+     */
+    private boolean keepNotesPageShowing() {
         AccessibilityNodeInfo root = homeRoot();
         if (root == null) return false;
         String name = getString(R.string.app_name).toLowerCase(Locale.ROOT);
@@ -591,7 +601,7 @@ public class GestureService extends AccessibilityService {
                     ? n.getText() : n.getContentDescription();
             if (label != null && label.toString().toLowerCase(Locale.ROOT).contains(name) && n.isVisibleToUser()) {
                 n.getBoundsInScreen(r);
-                if (r.left >= 0 && r.right <= size.x) return true;
+                if (r.left >= 0 && r.right <= size.x && r.centerY() < size.y * DOCK_TOP) return true;
             }
             for (int i = 0; i < n.getChildCount(); i++) {
                 AccessibilityNodeInfo child = n.getChild(i);
@@ -732,6 +742,13 @@ public class GestureService extends AccessibilityService {
             return;
         }
         if (calibrating) return;
+        if (Force.keepPageLocks(this) && keepNotesPageShowing()) {
+            // "Lock the number in on the Keep Notes page": nothing that starts here counts, and
+            // a number that has got here is kept until the next Prime.
+            Force.lockIn(this);
+            log("on the Keep Notes page: ignored");
+            return;
+        }
         Point size = screenSize();
         int d = digitFor(x, y, size.x, size.y, Force.keypad(this));
         if (d < 0) {
@@ -747,6 +764,11 @@ public class GestureService extends AccessibilityService {
     private void commit(int d) {
         if (Force.addDigit(this, d)) {
             log("digit " + d + (Force.pendingDigit(this) < 0 ? ", number " + Force.current(this) : ""));
+            // The swipe that completed the number turned onto the Keep Notes page: lock it in.
+            if (Force.pendingDigit(this) < 0 && Force.keepPageLocks(this) && keepNotesPageShowing()) {
+                Force.lockIn(this);
+                log("number locked in on the Keep Notes page");
+            }
         } else if (overlay != null && Force.overlay(this)) {
             // Practice: light the cell and buzz, but leave the real number alone.
             boolean complete = overlay.swiped(d);
